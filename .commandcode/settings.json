@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Shell(for p in effect @effect/sql @effect/sql-d1 @effect/sql-libsql @effect/sql-sqlite-node @effect/sql-sqlite-bun @effect/platform @effect/platform-cloudflare @effect/platform-node @effect/tsgo alchemy @effect-aws/client-s3 typescript oxlint oxfmt; do v=$(npm view \"$p\" version 2>/dev/null); echo \"$p => ${v:-NOT_FOUND}\"; done)",
+      "Shell(git init -q && printf 'node_modules\\ndist\\n.env\\n.env.*\\n!.env.example\\n*.sqlite\\n*.sqlite-*\\n.alchemy/\\n.wrangler/\\n.DS_Store\\n' > .gitignore && git add -A && git -c user.name=\"${GIT_AUTHOR_NAME:-Firhan Ramadhan}\" -c user.email=\"${GIT_AUTHOR_EMAIL:-firhan@localhost}\" commit -q -F - <<'EOF' Add glossary and initial ADRs Capture the domain vocabulary and the four settled decisions: render-by-id, draft-as-status, whole-Rupiah money, fixed taxonomy. Co-authored-by: CommandCodeBot <noreply@commandcode.ai> EOF git log --oneline; echo \"---\"; git ls-files)"
+    ],
+    "deny": [],
+    "defaultMode": "default"
+  }
+}
