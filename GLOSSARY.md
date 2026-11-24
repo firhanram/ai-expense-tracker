@@ -17,9 +17,13 @@ An image the user supplies as evidence of a payment, from which a Draft Expense 
 _Avoid_: Bill, invoice, photo, screenshot
 
 **Category**:
-One of a fixed, seeded set of spending classifications that an Expense belongs to, used to group Report figures. The agent assigns one; the user may change it.
+One of a fixed, seeded set of spending classifications that an Expense belongs to, used to group Report figures. The agent assigns one; the user may change it. The set is closed: `Other` is a failure of classification, not a place for miscellaneous spending.
 _Avoid_: Tag, label, type, bucket
 
 **Report**:
-An aggregation of confirmed Expenses over a date range, expressed as figures and rendered as a chart.
+An aggregation of confirmed Expenses over a date range, expressed as figures and rendered as a chart. Figures are computed by the server, never by the agent, and are grouped by Category or by month.
 _Avoid_: Summary, stats, analytics
+
+**Chat**:
+The single, continuous conversation through which the user records Expenses. It is never split into threads, and it is the only way a Draft Expense is created.
+_Avoid_: Session, thread, conversation history
