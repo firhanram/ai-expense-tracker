@@ -1,5 +1,14 @@
 export { Api } from "./Api.ts"
 export {
+  ChatGroup,
+  ChatHistoryPage,
+  ChatHistoryPageSize,
+  ChatMessage,
+  ChatRole,
+  ModelUnreachable,
+  SendChatMessage,
+} from "./chat/ChatApi.ts"
+export {
   CategoryId,
   CreateExpense,
   EditExpense,

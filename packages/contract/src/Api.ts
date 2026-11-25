@@ -1,4 +1,5 @@
 import { HttpApi, HttpApiMiddleware } from "effect/http-api"
+import { ChatGroup } from "./chat/ChatApi.ts"
 import { ExpensesGroup } from "./expenses/ExpensesApi.ts"
 import { HealthGroup } from "./health/HealthApi.ts"
 
@@ -6,5 +7,6 @@ import { HealthGroup } from "./health/HealthApi.ts"
 export class Api extends HttpApi.make("expense-tracker")
   .add(HealthGroup)
   .add(ExpensesGroup)
+  .add(ChatGroup)
   .prefix("/api")
   .middleware(HttpApiMiddleware.ProblemDetails) {}
