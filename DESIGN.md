@@ -49,7 +49,7 @@ The conversation column is `max-width: 720px`, centered, with `24px` gutters, so
 - **Connection dot:** `6px`, green `#16A34A` when online, with no label — online is the normal state and should be quiet. When offline the dot turns `--text-muted` and the word "offline" appears beside it at `--text-sm` `--text-muted`.
 - **Right:** a segmented switch, **Chat | Expenses**, each tab an icon plus label at `--text-sm`. Track is `--surface-2`, radius `8px`, `3px` padding. The active tab is `--surface` with `--shadow-xs` and `--text`; the inactive tab is transparent with `--text-muted`. The active tab is the current page.
 
-Nothing else — no menu, no settings, no avatar.
+The brand is also a button: it opens the account menu (below). Nothing else — no settings page, no avatar.
 
 ### Chat, mobile < 768px
 
@@ -187,7 +187,7 @@ Streaming: text appears token by token with a `1px` caret block that disappears 
 - Amount at `--text-2xl`, `--font-num`, tabular numerals, top-left after the optional thumbnail.
 - Category is a chip, `--surface-2`, with a `✎` that opens an inline `<select>` — the correction path for a wrong Category (ADR-0004). Changing it is a `PATCH` on the draft.
 - Merchant and date on one line at `--text-sm` `--text-muted`, separated by `·`.
-- **Confirm** is the only primary button in the app. **Discard** is secondary.
+- **Confirm** is the only primary button in the conversation. **Discard** is secondary. (The sign-in and setup screens have their own primary button; they are never on screen at the same time as a card.)
 - If `needs_review`, a `--warn-bg` badge reading "Check amount" sits above the amount. This is the receipt the model wasn't sure about.
 - Thumbnail appears only when there is a Receipt; tapping it opens the image full-screen.
 - **Editable fields**: amount, Category, merchant, note, date. Tapping the amount or merchant turns it into an input in place. This is the "agent was wrong, fix it without retyping" path.
@@ -232,7 +232,7 @@ Same geometry as the Draft card, minus the thumbnail, with the Category chip fol
 - Each Category's colour is the chart ramp cycled over the seeded order in ADR-0004, so it is fixed per Category, not per position. With eleven Categories and five colours, two Categories in one chart can share a colour; the label beside each bar is what identifies it.
 - Negative amounts (refunds) render below the axis in `--danger` at `--text-sm`.
 - Zero results: a single line, "No expenses in this range", at `--text-muted`. Never an empty axis.
-- Recharts is wrapped, never exposed: the component takes `from`, `to`, `groupBy`, `chartType` and does the rest.
+- Recharts is wrapped, never exposed: the component takes `from`, `to` and `groupBy` and does the rest.
 
 ### Expense list row
 
@@ -290,6 +290,66 @@ Opens from the Date chip as a popover (`--surface`, `1px` `--line`, radius `12px
 
 "Today" means the client's date (ADR-0009); the server never decides it.
 
+### Sign-in screen
+
+Shown when `GET /auth/status` reports a passkey exists but no session. No top bar — there is nowhere to go yet.
+
+```
+                    ▣ expense
+
+           Sign in with your passkey.
+
+        [ ⬚ Sign in with passkey        ]
+```
+
+- Centred vertically and horizontally in a `320px` column on `--bg`, with the same faint radial wash as the empty state.
+- The `28×28` logo tile and "expense" at `--text-md` weight 600, then one line of `--text-md` `--text-muted`.
+- One full-width primary button (`--accent`, radius `6px`, `40px` tall) with a scan-face icon: "Sign in with passkey". Pressing it opens the browser's passkey prompt directly; there is no username field, because the passkey is discoverable.
+- While waiting for the prompt, the label becomes "Waiting for passkey…" and the button is disabled.
+- If the owner cancels, or the prompt fails, one `--text-sm` `--text-muted` line appears under the button: "Sign-in was cancelled. Try again." Nothing in red — cancelling is not an error.
+- If the browser has no passkey support: "This browser can't use passkeys." in `--text-sm` `--danger`.
+
+### Setup screen
+
+Shown only when no passkey exists. It is the first thing the owner sees after deploying, and normally never again.
+
+```
+                    ▣ expense
+
+             Set up your passkey
+   Enter the setup token from your deployment's
+   environment. You'll only do this once.
+
+        [ Setup token                    ]
+        [ ⬚ Create passkey               ]
+```
+
+- Same column and background as the sign-in screen. Title at `--text-lg`, explanation at `--text-sm` `--text-muted`.
+- One input, `40px`, `--surface`, `1px` `--line`, radius `6px`, `--font-num`, masked. Then the primary button "Create passkey", disabled until the field has text.
+- A wrong token shows "That token doesn't match." under the field in `--text-sm` `--danger`, with the field's border in `--danger`. After five attempts in a minute: "Too many attempts. Wait a minute."
+- With no `SETUP_TOKEN` configured, the field and button are replaced by one line: "Setup is turned off. Set `SETUP_TOKEN` in the deployment to register a passkey."
+- After a successful registration the app opens directly; the screen says nothing about deleting the token, because the README does.
+
+### Account menu
+
+Opened by the brand in the top bar. A popover (`--surface`, `1px` `--line`, radius `12px`, `--shadow-pop`, `280px`) left-aligned under the brand.
+
+```
+  Passkeys
+  ⬚ iPhone        This device      ⋯
+  ⬚ MacBook       Used 3 days ago  ⋯
+  + Add passkey
+  ─────────────────────────────────
+  ⇥ Sign out
+```
+
+- A `--text-xs` `--text-muted` "Passkeys" label, then one row per passkey: a key icon, the name at `--text-sm`, and either "This device" or "Used <relative date>" at `--text-xs` `--text-muted`. Its `⋯` offers Rename and Remove.
+- Remove asks in place, like a list row: "Remove? Yes / No", Yes in `--danger`. On the last remaining passkey, Remove is disabled with the hint "Your only passkey".
+- "Add passkey" starts registration from the current session; the new passkey is named after the device and can be renamed.
+- A `--line` divider, then "Sign out".
+
+This is the only menu in the app, and it holds nothing but access.
+
 ### Empty state
 
 ```
@@ -331,7 +391,8 @@ The page behind the empty state carries a faint radial wash of `--line` from the
 |---|---|
 | Model unreachable | A system line, not a card: `--text-sm`, `--danger`, "Couldn't reach the model. Retry." with Retry as a text button. |
 | UI parse failed | The stored prose renders as text, plus a `--text-sm` line "Showing text only" and Retry. Never a blank area. |
-| API 401 | No screen of its own: the token is set at deployment, not typed by the user. A system line in `--danger`: "Not authorised. Check the API token." |
+| Session expired | Any `401` returns to the sign-in screen. The composer's unsent text is kept in memory and restored after signing in. |
+| Step limit reached | The agent stopped after five steps without finishing. A system line in `--text-muted`: "That took too many steps. Try rephrasing." with Retry. |
 | Network offline | A `--warn-bg` bar above the composer: "Offline. Messages will send when reconnected." The top bar's dot turns grey with an "offline" label. No modal. |
 
 A parse failure is the most likely error in this system (ADR-0006 assumes ~7% first-pass failure), so its presentation is part of the design rather than a fallback: the user still gets their answer as text, and the failure is stated in one small line rather than apologised for in a paragraph.
@@ -353,7 +414,7 @@ Three durations, no more: `120ms` for colour and opacity, `200ms` for layout cha
 Non-negotiable, and cheap if done now:
 
 - Text contrast ≥ `4.5:1`; control edges, focus rings and state fills ≥ `3:1`. The token table above is chosen to satisfy this in both themes, including `--ring` against `--surface`.
-- Every control has a name: the Category chip's edit is "Edit category", not an unlabelled icon. Row actions are named per row. The icon-only Receipt button on mobile is "Attach receipt"; the Date chip is "Expense date: Today".
+- Every control has a name: the Category chip's edit is "Edit category", not an unlabelled icon. Row actions are named per row. The icon-only Receipt button on mobile is "Attach receipt"; the Date chip is "Expense date: Today". The brand button is "Account menu".
 - Focus is always visible: `2px` `--focus` ring, `2px` offset. Never `outline: none`. The composer's `--ring` border is a focus *style*, not a replacement for the keyboard ring on its controls.
 - The Chat | Expenses switch is navigation, not tabs: two links with `aria-current="page"` on the active one.
 - The conversation is a `role="log"` with `aria-live="polite"`. Streaming announcements are throttled so a screen reader is not spammed per token.
@@ -378,7 +439,7 @@ Constraints that follow from that:
 
 ## What this design does not do
 
-- No sidebar, no tabs inside the conversation, no settings page, no sign-in screen.
+- No sidebar, no tabs inside the conversation, no settings page. The only screens outside the Chat and the Expense list are sign-in and one-time setup.
 - No avatar, persona greeting or assistant character; the agent is a system, and dressing it as a character would imply opinions it does not have.
 - No markdown rendering of assistant prose beyond paragraphs and emphasis. The agent's structured output is UI, not markdown.
 - No skeleton shimmer. Static skeleton bars only; shimmer pulls attention to absence.

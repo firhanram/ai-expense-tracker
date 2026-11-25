@@ -12,21 +12,21 @@ Letting the model name categories produces `Clothing`, `clothes`, `Cloths`, and 
 
 ## The seeded set
 
-Eleven rows, in this order. The order is also the chart colour order, so it is part of the seed, not incidental.
+Eleven rows, in this order. The order is also the chart colour order, so it is part of the seed, not incidental. Each row has a `slug` that never changes; the model, the API and stored generated UI refer to Categories by slug, so renaming a display name breaks nothing.
 
-| # | Category | Indonesian | Covers |
-|---|---|---|---|
-| 1 | Groceries | Belanja dapur | Indomaret, Alfamart, Superindo, pasar |
-| 2 | Dining | Makan & minum | warung, restaurants, coffee, GoFood / GrabFood orders |
-| 3 | Transport | Transportasi | Gojek / Grab rides, KRL / MRT, bensin, parkir, tol |
-| 4 | Utilities | Tagihan | PLN token / listrik, PDAM, internet, pulsa & data, gas |
-| 5 | Housing | Tempat tinggal | rent / kos, IPL (estate service fees), home repairs |
-| 6 | Shopping | Belanja | clothes, electronics, household goods, haircuts and personal care |
-| 7 | Health | Kesehatan | apotek, doctor, BPJS premium, insurance |
-| 8 | Entertainment | Hiburan | streaming subscriptions, cinema, games, hobbies |
-| 9 | Education | Pendidikan | courses, books, school fees |
-| 10 | Giving & family | Sosial & keluarga | kondangan, zakat / sedekah, money sent to family, gifts |
-| 11 | Other | Lainnya | classification failures only |
+| # | Category | Slug | Indonesian | Covers |
+|---|---|---|---|---|
+| 1 | Groceries | `groceries` | Belanja dapur | Indomaret, Alfamart, Superindo, pasar |
+| 2 | Dining | `dining` | Makan & minum | warung, restaurants, coffee, GoFood / GrabFood orders |
+| 3 | Transport | `transport` | Transportasi | Gojek / Grab rides, KRL / MRT, bensin, parkir, tol |
+| 4 | Utilities | `utilities` | Tagihan | PLN token / listrik, PDAM, internet, pulsa & data, gas |
+| 5 | Housing | `housing` | Tempat tinggal | rent / kos, IPL (estate service fees), home repairs |
+| 6 | Shopping | `shopping` | Belanja | clothes, electronics, household goods, haircuts and personal care |
+| 7 | Health | `health` | Kesehatan | apotek, doctor, BPJS premium, insurance |
+| 8 | Entertainment | `entertainment` | Hiburan | streaming subscriptions, cinema, games, hobbies |
+| 9 | Education | `education` | Pendidikan | courses, books, school fees |
+| 10 | Giving & family | `giving` | Sosial & keluarga | kondangan, zakat / sedekah, money sent to family, gifts |
+| 11 | Other | `other` | Lainnya | classification failures only |
 
 Boundaries the agent is told explicitly, because they are where it will hesitate:
 
