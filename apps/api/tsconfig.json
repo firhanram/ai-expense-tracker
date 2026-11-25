@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["es2024"],
+    "types": ["@cloudflare/workers-types", "@cloudflare/vitest-plugin/types"],
+    "outDir": "../../node_modules/.cache/tsc/api"
+  },
+  "include": ["src", "test", "vitest.config.ts"],
+  "references": [{ "path": "../../packages/contract" }]
+}

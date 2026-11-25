@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 100,
+  "semi": false,
+  "ignorePatterns": [
+    "pnpm-lock.yaml",
+    "**/dist/**",
+    "**/.alchemy/**",
+    "**/.wrangler/**",
+    "**/*.md",
+    "docs/**",
+    ".commandcode/**"
+  ]
+}
