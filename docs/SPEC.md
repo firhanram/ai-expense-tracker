@@ -79,7 +79,7 @@ Asking a question gets an answer in kind: a Report question returns a chart of s
 39. As the user, I want a failed UI generation to fall back to readable text with a retry, so that a bad parse isn't a blank screen.
 40. As the user, I want double-pressing Confirm to record one Expense, so that a slow network doesn't duplicate my money.
 41. As the user, I want the app to tell me when the agent can't reach the model, so that I know the difference between "nothing to say" and "broken".
-42. As the user, I want my data in a file I can copy, so that a backup is possible.
+42. As the user, I want my data exportable as SQL, so that a backup is possible.
 
 **Operation**
 
