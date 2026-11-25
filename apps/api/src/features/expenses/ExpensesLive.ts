@@ -13,7 +13,12 @@ export const ExpensesLive = HttpApiBuilder.group(Api, "expenses", (handlers) =>
      * the user calls "my Expenses" is money actually spent). A filter added to
      * `ListExpensesQuery` adds its fragment here.
      */
-    const listFilters = (_query: ListExpensesQuery) => [sql`status = 'confirmed'`]
+    const listFilters = (query: ListExpensesQuery) => [
+      sql`status = 'confirmed'`,
+      ...(query.from === undefined ? [] : [sql`occurred_at >= ${query.from}`]),
+      ...(query.to === undefined ? [] : [sql`occurred_at <= ${query.to}`]),
+      ...(query.categoryId === undefined ? [] : [sql`category_id = ${query.categoryId}`]),
+    ]
 
     return handlers
       .handle("list", ({ query }) =>

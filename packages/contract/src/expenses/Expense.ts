@@ -38,12 +38,17 @@ export const Expense = Schema.Struct({
 export type Expense = typeof Expense.Type
 
 /**
- * `GET /expenses` query. Empty for now: the list is confirmed Expenses, newest
- * date first. Filters (`from`, `to`, `categoryId`, `status`) are added here as
- * optional fields; query values arrive as strings, so numeric ones need a
- * string codec (e.g. `Schema.NumberFromString.pipe(Schema.decodeTo(Schema.Int))`).
+ * `GET /expenses` query: confirmed Expenses, newest date first, narrowed by
+ * optional filters that combine with AND. Query values arrive as strings, so
+ * numeric ones need a string codec.
  */
-export const ListExpensesQuery = Schema.Struct({})
+export const ListExpensesQuery = Schema.Struct({
+  /** Inclusive lower bound. A month is sent as its first and last day, computed by the client (ADR-0009). */
+  from: Schema.optional(IsoDate),
+  /** Inclusive upper bound. */
+  to: Schema.optional(IsoDate),
+  categoryId: Schema.optional(Schema.NumberFromString.pipe(Schema.decodeTo(CategoryId))),
+})
 export type ListExpensesQuery = typeof ListExpensesQuery.Type
 
 /** `POST /expenses`: a manual Expense, confirmed on creation. */
