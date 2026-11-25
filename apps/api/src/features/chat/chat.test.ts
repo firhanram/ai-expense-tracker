@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers"
 import { ChatHistoryPage } from "@expense/contract"
+import { systemPrompt } from "@expense/ui/server"
 import { type Layer, Schema } from "effect"
 import type { LanguageModel, Prompt } from "effect/ai"
 import { beforeEach, describe, expect, it } from "vitest"
@@ -64,6 +65,49 @@ describe("POST /api/chat", () => {
       "system: The user's local date today is 2026-11-26.",
       "user: I spent 70rb",
     ])
+  })
+
+  it("tells the model, first, what the component library lets it render", async () => {
+    const model = scriptedLanguageModel(textReply("Hi!"))
+
+    await sendChat(model.layer, { message: "hello", clientDate })
+
+    expect(model.calls[0]!.prompt.content[0]).toMatchObject({
+      role: "system",
+      content: systemPrompt,
+    })
+  })
+
+  it("streams a reply with a program as written, and stores its prose and program apart", async () => {
+    const reply = [
+      "Here it is:\n```openui-lang\nroot = Stack([c])\n",
+      'c = ExpenseCard("exp_1")\n```\nAnything else?',
+    ]
+    const model = scriptedLanguageModel(textReply(...reply))
+
+    const response = await sendChat(model.layer, { message: "show exp_1", clientDate })
+
+    expect(response.body).toBe(reply.join(""))
+    const [stored] = (await history(model.layer)).messages
+    expect(stored).toMatchObject({
+      role: "assistant",
+      content: "Here it is:\n\nAnything else?",
+      uiText: 'root = Stack([c])\nc = ExpenseCard("exp_1")',
+    })
+  })
+
+  it("shows the model its earlier programs, so it can see what it rendered", async () => {
+    const model = scriptedLanguageModel(
+      textReply('Done.\n```openui-lang\nroot = Stack([ExpenseCard("exp_1")])\n```'),
+      textReply("Sure."),
+    )
+    await sendChat(model.layer, { message: "show it", clientDate })
+
+    await sendChat(model.layer, { message: "thanks", clientDate })
+
+    expect(transcript(model.calls[1]!.prompt)[2]).toBe(
+      'assistant: Done.\n\n```openui-lang\nroot = Stack([ExpenseCard("exp_1")])\n```',
+    )
   })
 
   it("answers 503 ModelUnreachable when the model cannot be reached, keeping the message", async () => {

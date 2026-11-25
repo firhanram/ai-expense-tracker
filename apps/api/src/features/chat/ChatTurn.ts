@@ -1,4 +1,5 @@
 import { type ChatMessage, ModelUnreachable, type SendChatMessage } from "@expense/contract"
+import { joinReply, splitReply } from "@expense/ui/server"
 import { Effect, Exit, Option, Scope, Sink, Stream } from "effect"
 import { type AiError, LanguageModel, type Prompt, type Response } from "effect/ai"
 import { runAgentLoop } from "./AgentLoop.ts"
@@ -11,18 +12,19 @@ export const contextMessages = 20
 /**
  * The prompt for one turn: the system prompt, the recent Chat, then the
  * client's date and the new message. The date sits after the history so
- * the prefix stays cacheable across days (ADR-0008, ADR-0009).
+ * the prefix stays cacheable across days (ADR-0008, ADR-0009). Earlier
+ * replies carry their programs, so the model sees the ids it rendered.
  */
 export const buildPrompt = (
   systemPrompt: string,
   history: ReadonlyArray<ChatMessage>,
   request: SendChatMessage,
-): Prompt.RawInput => [
+): Array<Prompt.MessageEncoded> => [
   { role: "system", content: systemPrompt },
   ...history.map((message): Prompt.MessageEncoded =>
     message.role === "user"
       ? { role: "user", content: [{ type: "text", text: message.content }] }
-      : { role: "assistant", content: [{ type: "text", text: message.content }] },
+      : { role: "assistant", content: [{ type: "text", text: joinReply(message) }] },
   ),
   { role: "system", content: `The user's local date today is ${request.clientDate}.` },
   { role: "user", content: [{ type: "text", text: request.message }] },
@@ -57,7 +59,11 @@ export interface ChatTurnDeps {
 
 /**
  * One Chat turn (PLAN, "The chat turn"): store the user message, run the
- * agent loop, stream its prose, and store the reply once it is complete.
+ * agent loop, stream its text as written (prose and any OpenUI Lang program
+ * together), and store the reply once it is complete, split into prose
+ * (`content`) and program (`ui_text`). The program is stored unvalidated:
+ * parsing it here would load OpenUI into the Worker, and the client parses
+ * it anyway, falling back to the prose when it fails.
  * An empty reply is a 200 with an empty body, and is stored as such. A model
  * failure after the first word ends the stream and stores no reply.
  */
@@ -78,7 +84,7 @@ export const runChatTurn = (deps: ChatTurnDeps, request: SendChatMessage) =>
 
     let reply = ""
     const storeReply = Effect.suspend(() =>
-      deps.history.append({ role: "assistant", content: reply }),
+      deps.history.append({ role: "assistant", ...splitReply(reply) }),
     )
     if (Option.isNone(head)) {
       yield* storeReply

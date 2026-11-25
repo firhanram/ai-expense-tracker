@@ -4,9 +4,11 @@ import { Layer, Scheduler } from "effect"
 import type { LanguageModel } from "effect/ai"
 import { HttpRouter, HttpServer } from "effect/http"
 import { HttpApiBuilder, HttpApiMiddleware } from "effect/http-api"
+import { systemPrompt } from "@expense/ui/server"
 import { BearerAuth } from "./features/auth/BearerAuth.ts"
 import { ChatLive } from "./features/chat/ChatLive.ts"
 import { ModelProviderLive } from "./features/chat/ModelProvider.ts"
+import { SystemPrompt } from "./features/chat/SystemPrompt.ts"
 import { ExpensesLive } from "./features/expenses/ExpensesLive.ts"
 import { HealthLive } from "./features/health/HealthLive.ts"
 
@@ -24,6 +26,8 @@ export interface AppOverrides {
 export const makeApp = (env: Cloudflare.Env, overrides: AppOverrides = {}) =>
   Layer.mergeAll(HttpApiBuilder.layer(Api), BearerAuth(env.API_TOKEN)).pipe(
     Layer.provide([HealthLive, ExpensesLive, ChatLive]),
+    // The model is told what the component library lets it render (ADR-0006).
+    Layer.provide(Layer.succeed(SystemPrompt, systemPrompt)),
     Layer.provide(
       overrides.languageModel ??
         ModelProviderLive({
