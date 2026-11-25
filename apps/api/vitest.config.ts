@@ -9,6 +9,7 @@ export default defineConfig({
         compatibilityDate: "2026-11-20",
         compatibilityFlags: ["nodejs_compat"],
         d1Databases: ["DB"],
+        bindings: { API_TOKEN: "test-api-token" },
       },
     }),
   ],
