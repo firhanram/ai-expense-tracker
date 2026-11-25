@@ -15,7 +15,7 @@ const unreachableDb: D1Database = {
 
 describe("GET /api/health with D1 down", () => {
   it("fails with a 500 problem instead of reporting ok", async () => {
-    const app = makeHandler({ DB: unreachableDb })
+    const app = makeHandler({ DB: unreachableDb, API_TOKEN: "unused-health-is-public" })
     try {
       const response = await app.handler(new Request("http://localhost/api/health"), undefined)
 
