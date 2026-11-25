@@ -17,7 +17,7 @@ An image the user supplies as evidence of a payment, from which a Draft Expense 
 _Avoid_: Bill, invoice, photo, screenshot
 
 **Category**:
-One of a fixed, seeded set of spending classifications that an Expense belongs to, used to group Report figures. The agent assigns one; the user may change it. The set is closed: `Other` is a failure of classification, not a place for miscellaneous spending.
+One of a fixed, seeded set of spending classifications that an Expense belongs to, used to group Report figures. The agent assigns one; the user may change it. The set is closed: `Other` is a failure of classification, not a place for miscellaneous spending. The eleven Categories are Groceries, Dining, Transport, Utilities, Housing, Shopping, Health, Entertainment, Education, Giving & family and Other; their boundaries are in ADR-0004.
 _Avoid_: Tag, label, type, bucket
 
 **Report**:
