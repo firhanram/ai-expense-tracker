@@ -6,4 +6,4 @@ import { applyD1Migrations } from "cloudflare:test"
 if (env.TEST_MIGRATIONS === undefined) {
   throw new Error("TEST_MIGRATIONS is not bound; see vitest.config.ts")
 }
-await applyD1Migrations(env.DB, env.TEST_MIGRATIONS)
+await applyD1Migrations(env.DB, [...env.TEST_MIGRATIONS])
