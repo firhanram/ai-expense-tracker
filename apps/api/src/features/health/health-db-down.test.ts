@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { makeHandler } from "../src/App.ts"
+import { makeHandler } from "../../App.ts"
 
 // Regression: health must reflect D1, not answer "ok" unconditionally.
 const unreachable = (): never => {

@@ -3,7 +3,7 @@ import { Api } from "@expense/contract"
 import { Layer, Scheduler } from "effect"
 import { HttpRouter, HttpServer } from "effect/http"
 import { HttpApiBuilder, HttpApiMiddleware } from "effect/http-api"
-import { HealthLive } from "./Health.ts"
+import { HealthLive } from "./features/health/HealthLive.ts"
 
 /**
  * Workers run each request's fibers in that request's async context, so the
