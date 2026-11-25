@@ -38,12 +38,14 @@ export const Expense = Schema.Struct({
 export type Expense = typeof Expense.Type
 
 /**
- * `GET /expenses` query. Empty for now: the list is confirmed Expenses, newest
- * date first. Filters (`from`, `to`, `categoryId`, `status`) are added here as
- * optional fields; query values arrive as strings, so numeric ones need a
- * string codec (e.g. `Schema.NumberFromString.pipe(Schema.decodeTo(Schema.Int))`).
+ * `GET /expenses` query, newest date first. Filters are optional fields, ANDed;
+ * query values arrive as strings, so numeric ones need a string codec (e.g.
+ * `Schema.NumberFromString.pipe(Schema.decodeTo(Schema.Int))`).
  */
-export const ListExpensesQuery = Schema.Struct({})
+export const ListExpensesQuery = Schema.Struct({
+  /** Which status to list. Confirmed when omitted (ADR-0002), so Drafts and discarded rows show only on request. */
+  status: Schema.optional(ExpenseStatus),
+})
 export type ListExpensesQuery = typeof ListExpensesQuery.Type
 
 /** `POST /expenses`: a manual Expense, confirmed on creation. */
