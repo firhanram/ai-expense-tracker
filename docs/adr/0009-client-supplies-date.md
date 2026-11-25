@@ -2,7 +2,7 @@
 
 Every request that creates a Draft Expense or asks for a Report carries the client's local date. The server never derives "today" and holds no timezone configuration.
 
-Expense dates are stored as dates with no time component (ADR-0003's sibling decision), so the only question a timezone could answer is what date a *new* Draft defaults to. Answering it server-side means picking a timezone that is wrong either for the user's location or for the server's. Railway containers run UTC; from 00:00 to 07:00 Jakarta time a UTC-derived default assigns yesterday's date, which is roughly a third of waking hours, and on the first of a month puts the expense in the previous month's Report. The browser already knows the user's local date everywhere they go, so passing it costs one field and is correct without configuration.
+Expense dates are stored as dates with no time component (ADR-0003's sibling decision), so the only question a timezone could answer is what date a *new* Draft defaults to. Answering it server-side means picking a timezone that is wrong either for the user's location or for the server's. Cloudflare Workers run in UTC; from 00:00 to 07:00 Jakarta time a UTC-derived default assigns yesterday's date, which is roughly a third of waking hours, and on the first of a month puts the expense in the previous month's Report. The browser already knows the user's local date everywhere they go, so passing it costs one field and is correct without configuration.
 
 ## Consequences
 

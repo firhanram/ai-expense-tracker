@@ -111,9 +111,9 @@ Asking a question gets an answer in kind: a Report question returns a chart of s
 
 **Chat persistence.** Each assistant message stores prose and the raw OpenUI Lang text. Reload re-parses locally; a parse failure falls back to the stored prose. This is the same path as a live parse failure, so it is one implementation.
 
-**Storage.** Receipts in R2 behind the API, not presigned. Client downscales before upload because the model caps images at 1,024 tokens regardless of resolution.
+**Storage.** Receipts in R2 through a Worker binding, served by the API, not presigned. Client downscales before upload because the model caps images at 1,024 tokens regardless of resolution.
 
-**Deployment.** Effect v4 service on Railway with SQLite on a volume; Vite SPA on Railway; both declared in Alchemy (ADR-0005). One instance only — volumes don't attach across services.
+**Deployment.** One Cloudflare Worker, declared in Alchemy, serves the Vite SPA as static assets and runs the Effect v4 `HttpApp` for `/api/*`. Data is in D1 (`@effect/sql-d1`) and receipts are in R2, both as bindings (ADR-0010). D1 has no transactions, so every atomic write is one statement or one batch.
 
 ## Testing Decisions
 
@@ -121,7 +121,7 @@ A good test asserts externally observable behaviour: a route's response, a row's
 
 Three seams, all chosen high:
 
-**S1 — the HTTP boundary.** The Effect `HttpApp` is invoked in-process; no socket, no server boot. This is where nearly all server behaviour is tested: request validation, bearer auth, status codes, the draft→confirmed transition, idempotency of confirm, hard delete removing the row, and Report aggregation sums. Because it is one seam, a change to any repository or handler is covered by tests that never mention them.
+**S1 — the HTTP boundary.** The Effect `HttpApp` is called in workerd through `@cloudflare/vitest-pool-workers`, against a local D1 with migrations applied. There is no socket and no deploy. This is where nearly all server behaviour is tested: request validation, bearer auth, status codes, the draft→confirmed transition, idempotency of confirm, hard delete removing the row, and Report aggregation sums. Because it is one seam, a change to any repository or handler is covered by tests that never mention them.
 
 **S2 — the `LanguageModel` service.** Effect exposes the model as a `Context.Tag`, so a hand-written fake drives the entire chat turn with no network and no API key. This is where agent behaviour is tested: does "buy cloth 70rb" produce a `propose_expense` call with a Category from the seeded set; does the loop terminate after a draft rather than looping; does a five-step cap hold; is the confirm tool absent from the toolkit. Deterministic, because the model is a value the test supplies.
 
@@ -140,10 +140,10 @@ Three seams, all chosen high:
 - Income tracking as a first-class concept; a refund is a negative Expense.
 - Splitting a receipt into several Expenses. One receipt, one Draft.
 - Editing Categories through the UI; the seed is code.
-- Push notifications, email digests, exports beyond copying the SQLite file.
+- Push notifications, email digests, exports beyond `wrangler d1 export`.
 - Search across chat history.
 - Mobile or desktop apps. One responsive web app.
-- Migrating off SQLite while the app runs on one instance.
+- Migrating off D1 while single statements and batches are enough.
 - A generative-UI library swap. OpenUI is recorded as the choice in ADR-0006.
 
 ## Further Notes
@@ -152,6 +152,6 @@ Three seams, all chosen high:
 
 **Deliberate imbalance.** The AI is the interesting half and the least certain. Slices 1–4 are the expense tracker with no model at all; they should land first, so a model failure leaves a working app rather than a broken demo.
 
-**One instance, permanently.** Railway volumes do not attach across services, so there is no horizontal scaling and no zero-downtime deploy. This is accepted for personal data, and it is the thing to revisit first if requirements change.
+**No interactive transactions.** D1 cannot hold a transaction open, so a write that must read and then write atomically does not fit. Today nothing needs one, because confirmation is one `UPDATE`. A future feature that does need one is the first thing to revisit (ADR-0010).
 
-**Backups are a file copy.** No point-in-time recovery. State it in the README so a stranger cloning the repo knows the trade.
+**Backups are D1 Time Travel.** Point-in-time restore covers 7 days on the free plan and 30 on paid, and `wrangler d1 export` gives a SQL dump. State it in the README so a stranger cloning the repo knows the trade.
