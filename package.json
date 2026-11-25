@@ -1,0 +1,31 @@
+{
+  "name": "ai-expense-tracker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "alchemy dev",
+    "deploy": "alchemy deploy",
+    "lint": "oxlint --type-aware",
+    "lint:fix": "oxlint --type-aware --fix",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "typecheck": "tsc -b",
+    "test": "pnpm -r test",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test"
+  },
+  "devDependencies": {
+    "@alchemy.run/cloudflare": "2.0.0-beta.87",
+    "@effect/platform-node": "4.1.5",
+    "@types/node": "24.19.2",
+    "alchemy": "2.0.0-beta.87",
+    "effect": "4.1.5",
+    "oxfmt": "0.80.0",
+    "oxlint": "1.95.0",
+    "oxlint-tsgolint": "7.0.2008",
+    "typescript": "7.0.2"
+  },
+  "engines": {
+    "node": ">=24.11.1"
+  },
+  "packageManager": "pnpm@10.17.0"
+}

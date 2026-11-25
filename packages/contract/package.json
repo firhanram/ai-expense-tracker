@@ -1,0 +1,14 @@
+{
+  "name": "@expense/contract",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "effect": "4.1.5"
+  },
+  "peerDependencies": {
+    "effect": "4.1.5"
+  }
+}
