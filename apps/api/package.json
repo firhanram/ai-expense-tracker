@@ -7,6 +7,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@effect/ai-openai-compat": "4.1.5",
     "@effect/sql-d1": "4.1.5",
     "@expense/contract": "workspace:*",
     "effect": "4.1.5"

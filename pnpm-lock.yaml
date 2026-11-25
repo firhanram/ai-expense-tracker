@@ -38,6 +38,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@effect/ai-openai-compat':
+        specifier: 4.1.5
+        version: 4.1.5(effect@4.1.5)
       '@effect/sql-d1':
         specifier: 4.1.5
         version: 4.1.5(effect@4.1.5)
@@ -287,6 +290,11 @@ packages:
     resolution: {integrity: sha512-MqJlG+CVCgkIX7iPDo8hb4YlcEELYTlJFLg2Whp8TjBPieViNiiRAJR/5TtDApa38dzrTsMc69ul965Myagrdg==}
     peerDependencies:
       effect: ^4.1.2
+
+  '@effect/ai-openai-compat@4.1.5':
+    resolution: {integrity: sha512-FxPZzJTF5e6OxozN7s2BLrUJVpp8hZFmPEjtxV9W/VNMkcqC+9ortfZlAU8PLeuaPQwC1+tAN0fH5eB8kl1oZw==}
+    peerDependencies:
+      effect: ^4.1.5
 
   '@effect/platform-node-shared@4.1.5':
     resolution: {integrity: sha512-JzlrYe4uKaBFTWihBRXo2pDjkUVB39kQpKdGfXdbp7Co5sKT8hbcjOmdB5pg/WOYESdGTddd3fxD4lwlZELbZQ==}
@@ -2194,6 +2202,10 @@ snapshots:
     dependencies:
       '@distilled.cloud/aws4signer': 1.0.0-rc.20(effect@4.1.5)
       '@distilled.cloud/core': 1.0.0-rc.20(effect@4.1.5)
+      effect: 4.1.5
+
+  '@effect/ai-openai-compat@4.1.5(effect@4.1.5)':
+    dependencies:
       effect: 4.1.5
 
   '@effect/platform-node-shared@4.1.5(effect@4.1.5)':

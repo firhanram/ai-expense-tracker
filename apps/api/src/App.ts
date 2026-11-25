@@ -1,9 +1,12 @@
 import { D1Client } from "@effect/sql-d1"
 import { Api } from "@expense/contract"
 import { Layer, Scheduler } from "effect"
+import type { LanguageModel } from "effect/ai"
 import { HttpRouter, HttpServer } from "effect/http"
 import { HttpApiBuilder, HttpApiMiddleware } from "effect/http-api"
 import { BearerAuth } from "./features/auth/BearerAuth.ts"
+import { ChatLive } from "./features/chat/ChatLive.ts"
+import { ModelProviderLive } from "./features/chat/ModelProvider.ts"
 import { HealthLive } from "./features/health/HealthLive.ts"
 
 /**
@@ -12,13 +15,27 @@ import { HealthLive } from "./features/health/HealthLive.ts"
  */
 const SyncScheduler = Layer.succeed(Scheduler.Scheduler, new Scheduler.MixedScheduler("sync"))
 
-export const makeApp = (env: Cloudflare.Env) =>
+/** What tests may swap. The model is the S2 seam: tests never reach a real one. */
+export interface AppOverrides {
+  readonly languageModel?: Layer.Layer<LanguageModel.LanguageModel> | undefined
+}
+
+export const makeApp = (env: Cloudflare.Env, overrides: AppOverrides = {}) =>
   Layer.mergeAll(HttpApiBuilder.layer(Api), BearerAuth(env.API_TOKEN)).pipe(
-    Layer.provide(HealthLive),
+    Layer.provide([HealthLive, ChatLive]),
+    Layer.provide(
+      overrides.languageModel ??
+        ModelProviderLive({
+          provider: env.MODEL_PROVIDER,
+          model: env.MODEL_NAME,
+          apiKey: env.API_PROVIDER_KEY,
+        }),
+    ),
     Layer.provide(HttpApiMiddleware.layerProblemDetails()),
     Layer.provide(D1Client.layer({ db: env.DB })),
     Layer.provide(HttpServer.layerServices),
     Layer.provideMerge(SyncScheduler),
   )
 
-export const makeHandler = (env: Cloudflare.Env) => HttpRouter.toWebHandler(makeApp(env))
+export const makeHandler = (env: Cloudflare.Env, overrides?: AppOverrides) =>
+  HttpRouter.toWebHandler(makeApp(env, overrides))
