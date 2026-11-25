@@ -1,24 +1,28 @@
-import { Api, type ListExpensesQuery, UnknownCategory } from "@expense/contract"
+import { Api, type ListExpensesQuery } from "@expense/contract"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/http-api"
 import { SqlClient } from "effect/sql"
 import { decodeRows, toExpense } from "./ExpenseRow.ts"
+import { confirmExpense, discardExpense, insertExpense } from "./ExpenseStore.ts"
 
 export const ExpensesLive = HttpApiBuilder.group(Api, "expenses", (handlers) =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
 
     /**
-     * One predicate per filter, ANDed. Confirmed only for now (ADR-0002: what
-     * the user calls "my Expenses" is money actually spent). A filter added to
-     * `ListExpensesQuery` adds its fragment here.
+     * One predicate per filter, ANDed. A filter added to `ListExpensesQuery`
+     * adds its fragment here. Status defaults to confirmed (ADR-0002: what the
+     * user calls "my Expenses" is money actually spent).
      */
     const listFilters = (query: ListExpensesQuery) => [
-      sql`status = 'confirmed'`,
+      sql`status = ${query.status ?? "confirmed"}`,
       ...(query.from === undefined ? [] : [sql`occurred_at >= ${query.from}`]),
       ...(query.to === undefined ? [] : [sql`occurred_at <= ${query.to}`]),
       ...(query.categoryId === undefined ? [] : [sql`category_id = ${query.categoryId}`]),
     ]
+
+    // The store asks for `SqlClient` per call; handlers may not leave it to the request.
+    const withSql = Effect.provideService(SqlClient.SqlClient, sql)
 
     return handlers
       .handle("list", ({ query }) =>
@@ -31,22 +35,8 @@ export const ExpensesLive = HttpApiBuilder.group(Api, "expenses", (handlers) =>
           Effect.orDie,
         ),
       )
-      .handle("create", ({ payload }) =>
-        Effect.gen(function* () {
-          // One statement (ADR-0010): selecting from `category` inserts nothing
-          // when the Category is unknown, so no row means UnknownCategory.
-          const rows = yield* sql`
-            INSERT INTO expense (id, amount, category_id, merchant, note, occurred_at, created_at, status)
-            SELECT ${crypto.randomUUID()}, ${payload.amount}, id, ${payload.merchant ?? null},
-                   ${payload.note ?? null}, ${payload.occurredAt}, ${new Date().toISOString()}, 'confirmed'
-            FROM category WHERE id = ${payload.categoryId}
-            RETURNING *`.pipe(Effect.flatMap(decodeRows), Effect.orDie)
-          const [row] = rows
-          if (row === undefined) {
-            return yield* new UnknownCategory({ categoryId: payload.categoryId })
-          }
-          return toExpense(row)
-        }),
-      )
+      .handle("create", ({ payload }) => withSql(insertExpense(payload, { status: "confirmed" })))
+      .handle("confirm", ({ params }) => withSql(confirmExpense(params.id)))
+      .handle("discard", ({ params }) => withSql(discardExpense(params.id)))
   }),
 )

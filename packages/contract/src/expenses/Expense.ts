@@ -38,11 +38,12 @@ export const Expense = Schema.Struct({
 export type Expense = typeof Expense.Type
 
 /**
- * `GET /expenses` query: confirmed Expenses, newest date first, narrowed by
- * optional filters that combine with AND. Query values arrive as strings, so
- * numeric ones need a string codec.
+ * `GET /expenses` query, newest date first. Filters are optional fields, ANDed;
+ * query values arrive as strings, so numeric ones need a string codec.
  */
 export const ListExpensesQuery = Schema.Struct({
+  /** Which status to list. Confirmed when omitted (ADR-0002), so Drafts and discarded rows show only on request. */
+  status: Schema.optional(ExpenseStatus),
   /** Inclusive lower bound. A month is sent as its first and last day, computed by the client (ADR-0009). */
   from: Schema.optional(IsoDate),
   /** Inclusive upper bound. */

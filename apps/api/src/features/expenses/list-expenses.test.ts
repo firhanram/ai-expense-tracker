@@ -71,4 +71,36 @@ describe("GET /api/expenses", () => {
 
     expect(listed).toEqual([created])
   })
+
+  describe("?status=", () => {
+    it("shows only Drafts when asked for drafts", async () => {
+      await record("Superindo", "2026-11-05")
+      await seedWithStatus("Draft warung", "draft")
+      await seedWithStatus("Discarded kopi", "discarded")
+
+      expect(await listMerchants("/api/expenses?status=draft")).toEqual(["Draft warung"])
+    })
+
+    it("shows confirmed Expenses when asked for confirmed", async () => {
+      await record("Superindo", "2026-11-05")
+      await seedWithStatus("Draft warung", "draft")
+
+      expect(await listMerchants("/api/expenses?status=confirmed")).toEqual(["Superindo"])
+    })
+
+    it("shows discarded Expenses only when asked for them explicitly", async () => {
+      await record("Superindo", "2026-11-05")
+      await seedWithStatus("Discarded kopi", "discarded")
+
+      expect(await listMerchants("/api/expenses?status=discarded")).toEqual(["Discarded kopi"])
+    })
+
+    it("rejects an unknown status with a 400 naming the field", async () => {
+      const response = await callApi("/api/expenses?status=pending")
+
+      expect(response.status).toBe(400)
+      const problem: { errors: ReadonlyArray<unknown> } = await response.json()
+      expect(problem.errors).toContainEqual(expect.objectContaining({ path: ["query", "status"] }))
+    })
+  })
 })
