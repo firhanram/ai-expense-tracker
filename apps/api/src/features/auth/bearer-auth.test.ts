@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { callApi, callWorker } from "../../testing/callWorker.ts"
 
-// Any path other than health stands in for a protected route; none exist yet.
+// Any path other than health is protected; the Expenses list stands in for them.
 const protectedPath = "/api/expenses"
 
 describe("bearer token", () => {
