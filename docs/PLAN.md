@@ -138,13 +138,13 @@ Four components in `packages/ui`, each a `defineComponent` with Zod 4 props:
 
 Each fetches its own data with TanStack Query. `SpendingChart` renders Recharts; it computes nothing.
 
-Wrap the default `openuiLibrary` with `.extend()` at module scope, or the Renderer re-parses on every render.
+There is no `openuiLibrary` outside `@openuidev/react-ui`, so `packages/ui` builds its own with `createLibrary`, including a `Stack` root container. The components are defined React-free (`@openuidev/lang-core`, `component: null`); the web app pairs the same definitions with React components and creates its library at module scope, or the Renderer re-parses on every render. The Worker imports only `@expense/ui/server`: the system prompt as a checked-in generated string (`pnpm --filter @expense/ui generate`; a test fails on drift) and the prose/program split, so it never loads OpenUI or Zod.
 
 Streaming: accumulate text chunks into `response`, pass to `<Renderer response={response} isStreaming={isStreaming} library={lib} onAction={...} onError={...} />`.
 
 **Failure path, part of the feature:** if `onError` reports a failed program or `root` is null, render the prose as plain text and offer one retry. `inlineMode: true` in the prompt options so questions with no UI answer ("how much did I spend last month?") come back as text rather than a forced chart.
 
-**Actions:** `defineAction` for `ConfirmExpense` and `DiscardExpense`, handled in `onAction` by calling the API directly. `@ToAssistant` is not used for these — it would put the model in the confirmation path.
+**Actions:** `defineAction` for `ConfirmExpense` and `DiscardExpense`, handled in `onAction` by calling the API directly. They are added only to the web app's library: a library action is listed in the generated prompt, and the model must never be told it can confirm (ADR-0007). `@ToAssistant` is not used for these — it would put the model in the confirmation path.
 
 ## Reports
 
