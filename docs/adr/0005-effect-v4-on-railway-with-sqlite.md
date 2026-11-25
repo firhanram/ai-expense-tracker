@@ -1,6 +1,6 @@
 # Effect v4 on Railway, one SQLite file on a volume
 
-**Superseded by ADR-0010.** Railway was replaced by Cloudflare. The rejection of D1 still holds.
+**Superseded by ADR-0010.** Railway was replaced by Cloudflare with D1. The rejection of D1 below assumed confirmation was a multi-statement write. ADR-0002 makes it a single-row `UPDATE`, so that assumption was wrong.
 
 The backend is an Effect v4 HTTP service deployed to Railway by Alchemy, with its data in a single SQLite file on a Railway volume. The frontend is a separate Vite SPA, also deployed by Alchemy. There is no Docker Compose.
 
