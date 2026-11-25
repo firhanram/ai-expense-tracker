@@ -2,6 +2,7 @@ export { Api } from "./Api.ts"
 export {
   CategoryId,
   CreateExpense,
+  EditExpense,
   Expense,
   ExpenseStatus,
   IsoDate,

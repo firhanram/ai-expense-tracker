@@ -1,6 +1,6 @@
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/http-api"
-import { CategoryId, CreateExpense, Expense, ListExpensesQuery } from "./Expense.ts"
+import { CategoryId, CreateExpense, EditExpense, Expense, ListExpensesQuery } from "./Expense.ts"
 
 /** The Category id is not one of the seeded set (ADR-0004). */
 export class UnknownCategory extends Schema.TaggedError<UnknownCategory>()(
@@ -9,7 +9,7 @@ export class UnknownCategory extends Schema.TaggedError<UnknownCategory>()(
   { httpApiStatus: 400 },
 ) {}
 
-/** No Expense has this id. */
+/** No Expense the route can act on has this id. */
 export class ExpenseNotFound extends Schema.TaggedError<ExpenseNotFound>()(
   "ExpenseNotFound",
   { id: Schema.String },
@@ -51,5 +51,15 @@ export class ExpensesGroup extends HttpApiGroup.make("expenses").add(
     params: { id: Schema.String },
     success: Expense,
     error: [ExpenseNotFound, ExpenseConfirmed],
+  }),
+  HttpApiEndpoint.patch("edit", "/expenses/:id", {
+    params: { id: Schema.String },
+    payload: EditExpense,
+    success: Expense,
+    error: [ExpenseNotFound, UnknownCategory],
+  }),
+  HttpApiEndpoint.delete("remove", "/expenses/:id", {
+    params: { id: Schema.String },
+    error: ExpenseNotFound,
   }),
 ) {}
