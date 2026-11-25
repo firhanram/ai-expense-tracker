@@ -1,5 +1,7 @@
 # Effect v4 on Railway, one SQLite file on a volume
 
+**Superseded by ADR-0010.** Railway was replaced by Cloudflare. The rejection of D1 still holds.
+
 The backend is an Effect v4 HTTP service deployed to Railway by Alchemy, with its data in a single SQLite file on a Railway volume. The frontend is a separate Vite SPA, also deployed by Alchemy. There is no Docker Compose.
 
 Cloudflare D1 was rejected: `@effect/sql-d1` dies on `withTransaction` (`transactions are not supported in D1`) and `@effect/sql/Migrator` dies with it, because the platform cannot hold a write transaction open across awaits. Draft-to-confirmed promotion is a multi-statement write, so this was disqualifying rather than inconvenient. Railway runs ordinary containers, so `@effect/sql-sqlite-node` gives real transactions and a working migrator.

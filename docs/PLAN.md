@@ -1,17 +1,17 @@
 # Implementation plan
 
-A chat-first expense tracker. The agent proposes Draft Expenses and renders its answers as UI; the user confirms with a button. Deployed to Railway by Alchemy.
+A chat-first expense tracker. The agent proposes Draft Expenses and renders its answers as UI; the user confirms with a button. Deployed to Cloudflare by Alchemy.
 
 Read alongside `GLOSSARY.md` and `docs/adr/`. Where this plan and an ADR disagree, the ADR wins.
 
 ## Runtime shape
 
-Two Railway services, one project, declared in `alchemy.run.ts`:
+One Cloudflare Worker, declared in `alchemy.run.ts` (ADR-0010):
 
-- **`apps/api`** — Effect v4 HTTP service on Node, SQLite file on a Railway volume, talks to the model and to R2.
-- **`apps/web`** — Vite SPA, built and served as static files.
-- **R2** — bucket for receipt images. Not on Railway; S3 client over the public internet.
-- **Alchemy** — `alchemy deploy` for both services and the bucket. `alchemy dev` for local work; no Docker.
+- **`apps/api`** — the Worker entry and one Durable Object class. The Worker forwards `/api/*` to the object (`idFromName("owner")`). The object runs the Effect v4 `HttpApp` on its own SQLite storage and talks to the model and to R2.
+- **`apps/web`** — Vite SPA, built and served as the same Worker's static assets. Same origin as the API, so no CORS.
+- **R2** — bucket for receipt images, reached through a Worker binding.
+- **Alchemy** — `alchemy deploy` for the Worker, the Durable Object namespace (SQLite-backed) and the bucket. `alchemy dev` runs it all locally in Miniflare, with no Docker and no Cloudflare account.
 
 ## Repository layout
 
@@ -34,8 +34,8 @@ alchemy.run.ts
 | Runtime | Effect v4 (`effect@^4.1`) |
 | HTTP | `effect/http` (`HttpServer`, `HttpRouter`) |
 | Model | `effect/ai` (in core) + `@effect/ai-openai-compat@4.1.5` |
-| SQL | `@effect/sql-sqlite-node` + `@effect/sql/Migrator` |
-| Storage | `@effect-aws/client-s3` |
+| SQL | `@effect/sql-sqlite-do` (constructed with `ctx.storage`) + its `SqliteMigrator` |
+| Storage | R2 binding, wrapped in an Effect service |
 | UI generation | `@openuidev/react-lang`, `@openuidev/lang-core` |
 | Frontend | React + Vite + TanStack Router + TanStack Query + `@ui-sdk/react` + Tailwind |
 | Charts | Recharts, wrapped in our own component |
@@ -50,7 +50,7 @@ There is no `@effect/ai-deepseek` provider, and there does not need to be: DeepS
 
 ## Data
 
-One SQLite file. Migrations via `@effect/sql/Migrator`, numbered SQL files.
+One Durable Object's SQLite storage. Migrations run through `SqliteMigrator` from `@effect/sql-sqlite-do` when the object starts, using numbered SQL files. Never call `BEGIN`/`COMMIT` directly; the driver uses `storage.transaction()`.
 
 ```sql
 CREATE TABLE category (
@@ -163,7 +163,7 @@ Client downscales before upload — DeepSeek caps images at 1,024 tokens regardl
 Each is shippable and testable on its own.
 
 1. **Skeleton** — pnpm workspace, both apps booting, `alchemy dev`, `/health`, oxlint + oxfmt + `tsc -b` green in CI.
-2. **Schema and seed** — migrations, category seed, `@effect/sql` repositories, integration tests against a temp file.
+2. **Schema and seed** — migrations, category seed, `@effect/sql` repositories, integration tests in `@cloudflare/vitest-pool-workers` against a real Durable Object.
 3. **Expense CRUD** — routes, Effect Schema validation, list screen at `/expenses`. No AI yet. Proves the boring half works.
 4. **Confirm flow** — `POST /expenses/:id/confirm`, idempotency test, optimistic update in the list.
 5. **Model plumbing** — `LanguageModel` provided via `@effect/ai-openai-compat` pointed at DeepSeek's base URL. Prompt caching on the generated system prompt. A `POST /chat` that echoes text with no UI, and the tool-call loop with a step cap.
@@ -171,7 +171,7 @@ Each is shippable and testable on its own.
 7. **Drafts from chat** — tools, `DraftExpenseCard`, confirmation through the card.
 8. **Reports** — `/reports` aggregation, `SpendingChart`, `query_spending`.
 9. **Receipts** — R2 upload, image to model, `needs_review`, photo on the card.
-10. **Deploy** — `alchemy.run.ts` with the volume mounted, secrets, first production migrate.
+10. **Deploy** — `alchemy.run.ts` with the Durable Object namespace, R2 bucket, static assets and secrets, plus the first production migrate.
 
 Slices 1–4 have no AI dependency and should land first; if the eval in slice 6 fails, slices 1–5 are still a working expense tracker.
 
@@ -180,6 +180,6 @@ Slices 1–4 have no AI dependency and should land first; if the eval in slice 6
 ## Open items
 
 - **DeepSeek DSL adherence is unmeasured.** No published benchmark covers this price tier. Slice 6's eval is the gate; the fallback is Gemini 3.1 Flash-Lite behind the same `LanguageModel` service, since swapping provider is a `Layer` change.
-- **Railway Buckets' S3 compatibility is unverified.** R2 sidesteps the question, so it does not block anything.
-- **Backups** are copying the SQLite file. No PITR. Acceptable for personal data; note it in the README so a stranger cloning the repo knows.
+- **Free-plan CPU budget for `POST /chat` is unmeasured.** Waiting on the model doesn't count against it, but parsing the streamed response does. Measure it during slice 6. If it goes over, the fix is Workers Paid ($5/month), not a code change.
+- **Backups** are the 30-day point-in-time recovery Durable Objects provide. There is no file to copy, so an export means a table dump. Note it in the README.
 - **Chat history rendering** degrades if a component is later removed: `ui_text` is stored, so re-render can fail. The fallback in the chat turn is what covers it.
