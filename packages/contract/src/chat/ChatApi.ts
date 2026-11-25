@@ -1,8 +1,6 @@
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/http-api"
-
-/** A calendar date with no time, `YYYY-MM-DD` (ADR-0009). */
-export const IsoDate = Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/))
+import { IsoDate } from "../expenses/Expense.ts"
 
 export const ChatRole = Schema.Literals(["user", "assistant"])
 export type ChatRole = typeof ChatRole.Type

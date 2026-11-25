@@ -7,6 +7,7 @@ import { HttpApiBuilder, HttpApiMiddleware } from "effect/http-api"
 import { BearerAuth } from "./features/auth/BearerAuth.ts"
 import { ChatLive } from "./features/chat/ChatLive.ts"
 import { ModelProviderLive } from "./features/chat/ModelProvider.ts"
+import { ExpensesLive } from "./features/expenses/ExpensesLive.ts"
 import { HealthLive } from "./features/health/HealthLive.ts"
 
 /**
@@ -22,7 +23,7 @@ export interface AppOverrides {
 
 export const makeApp = (env: Cloudflare.Env, overrides: AppOverrides = {}) =>
   Layer.mergeAll(HttpApiBuilder.layer(Api), BearerAuth(env.API_TOKEN)).pipe(
-    Layer.provide([HealthLive, ChatLive]),
+    Layer.provide([HealthLive, ExpensesLive, ChatLive]),
     Layer.provide(
       overrides.languageModel ??
         ModelProviderLive({
@@ -31,7 +32,8 @@ export const makeApp = (env: Cloudflare.Env, overrides: AppOverrides = {}) =>
           apiKey: env.API_PROVIDER_KEY,
         }),
     ),
-    Layer.provide(HttpApiMiddleware.layerProblemDetails()),
+    // Request validation 400s name the offending field; 500s still carry no detail.
+    Layer.provide(HttpApiMiddleware.layerProblemDetails({ includeDetails: true })),
     Layer.provide(D1Client.layer({ db: env.DB })),
     Layer.provide(HttpServer.layerServices),
     Layer.provideMerge(SyncScheduler),
