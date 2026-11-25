@@ -4,6 +4,7 @@ import { Layer, Scheduler } from "effect"
 import { HttpRouter, HttpServer } from "effect/http"
 import { HttpApiBuilder, HttpApiMiddleware } from "effect/http-api"
 import { BearerAuth } from "./features/auth/BearerAuth.ts"
+import { ExpensesLive } from "./features/expenses/ExpensesLive.ts"
 import { HealthLive } from "./features/health/HealthLive.ts"
 
 /**
@@ -14,8 +15,9 @@ const SyncScheduler = Layer.succeed(Scheduler.Scheduler, new Scheduler.MixedSche
 
 export const makeApp = (env: Cloudflare.Env) =>
   Layer.mergeAll(HttpApiBuilder.layer(Api), BearerAuth(env.API_TOKEN)).pipe(
-    Layer.provide(HealthLive),
-    Layer.provide(HttpApiMiddleware.layerProblemDetails()),
+    Layer.provide([HealthLive, ExpensesLive]),
+    // Request validation 400s name the offending field; 500s still carry no detail.
+    Layer.provide(HttpApiMiddleware.layerProblemDetails({ includeDetails: true })),
     Layer.provide(D1Client.layer({ db: env.DB })),
     Layer.provide(HttpServer.layerServices),
     Layer.provideMerge(SyncScheduler),
