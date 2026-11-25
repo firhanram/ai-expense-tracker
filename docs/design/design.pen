@@ -524,7 +524,8 @@
                           "width": "fill_container",
                           "content": "Log a purchase or ask about your spending…",
                           "fontFamily": "$font-sans",
-                          "fontSize": 15
+                          "fontSize": 15,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -1846,7 +1847,8 @@
                   "content": "You've spent Rp2.480.000 so far in November. Groceries is the largest share, at about 40%.",
                   "lineHeight": 1.53,
                   "fontFamily": "$font-sans",
-                  "fontSize": 15
+                  "fontSize": 15,
+                  "fontWeight": "normal"
                 },
                 {
                   "id": "xnHck",
@@ -2541,7 +2543,8 @@
               "content": "Updated. Check it and confirm when it looks right.",
               "lineHeight": 1.53,
               "fontFamily": "$font-sans",
-              "fontSize": 15
+              "fontSize": 15,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -3958,7 +3961,8 @@
                   "content": "You've spent Rp2.480.000 so far in November. Groceries is the largest share, at about 40%.",
                   "lineHeight": 1.53,
                   "fontFamily": "$font-sans",
-                  "fontSize": 15
+                  "fontSize": 15,
+                  "fontWeight": "normal"
                 },
                 {
                   "id": "OxNVl",
@@ -6830,6 +6834,929 @@
                   "content": "—",
                   "fontFamily": "$font-num",
                   "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "CSm8N",
+      "x": 0,
+      "y": 5202,
+      "name": "Sign In",
+      "clip": true,
+      "width": 1280,
+      "height": 800,
+      "fill": [
+        "$bg",
+        {
+          "type": "gradient",
+          "gradientType": "radial",
+          "enabled": true,
+          "rotation": 0,
+          "size": {
+            "width": 1.4,
+            "height": 1
+          },
+          "colors": [
+            {
+              "color": "#E7E5E466",
+              "position": 0
+            },
+            {
+              "color": "#E7E5E400",
+              "position": 1
+            }
+          ],
+          "center": {
+            "y": 0
+          }
+        }
+      ],
+      "layout": "vertical",
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "yv7nN",
+          "name": "Column",
+          "width": 320,
+          "layout": "vertical",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "HK33Z",
+              "name": "Brand",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "L7HWDb",
+                  "name": "Logo Tile",
+                  "width": 28,
+                  "height": 28,
+                  "fill": "$accent",
+                  "cornerRadius": 8,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "ryxM1",
+                      "name": "Logo Icon",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "wallet",
+                      "library": "lucide",
+                      "fill": "$accent-fg"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "LvglK",
+                  "name": "Product Name",
+                  "fill": "$text",
+                  "content": "expense",
+                  "fontFamily": "$font-sans",
+                  "fontSize": 15,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "FXYRI",
+              "name": "Gap",
+              "width": "fill_container",
+              "height": 12
+            },
+            {
+              "type": "text",
+              "id": "dSAfN",
+              "name": "Sentence",
+              "fill": "$text-muted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Sign in with your passkey.",
+              "lineHeight": 1.53,
+              "textAlign": "center",
+              "fontFamily": "$font-sans",
+              "fontSize": 15
+            },
+            {
+              "type": "frame",
+              "id": "F4LV2",
+              "name": "Spacer",
+              "width": "fill_container",
+              "height": 24
+            },
+            {
+              "type": "frame",
+              "id": "LoeWb",
+              "name": "Primary Button",
+              "width": "fill_container",
+              "height": 40,
+              "fill": "$accent",
+              "cornerRadius": 6,
+              "gap": 8,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "oWGM6",
+                  "name": "Icon",
+                  "width": 16,
+                  "height": 16,
+                  "icon": "scan-face",
+                  "library": "lucide",
+                  "fill": "$accent-fg"
+                },
+                {
+                  "type": "text",
+                  "id": "IxOUC",
+                  "name": "Label",
+                  "fill": "$accent-fg",
+                  "content": "Sign in with passkey",
+                  "fontFamily": "$font-sans",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "N8HzU",
+              "name": "Cancel Hint",
+              "width": "fill_container",
+              "padding": [
+                12,
+                0,
+                0,
+                0
+              ],
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "r2q3D4",
+                  "name": "Text",
+                  "fill": "$text-muted",
+                  "content": "Sign-in was cancelled. Try again.",
+                  "fontFamily": "$font-sans",
+                  "fontSize": 13,
+                  "fontWeight": "450"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "waBRD",
+      "x": 1400,
+      "y": 5202,
+      "name": "Setup — First Passkey",
+      "clip": true,
+      "width": 1280,
+      "height": 800,
+      "fill": [
+        "$bg",
+        {
+          "type": "gradient",
+          "gradientType": "radial",
+          "enabled": true,
+          "rotation": 0,
+          "size": {
+            "width": 1.4,
+            "height": 1
+          },
+          "colors": [
+            {
+              "color": "#E7E5E466",
+              "position": 0
+            },
+            {
+              "color": "#E7E5E400",
+              "position": 1
+            }
+          ],
+          "center": {
+            "y": 0
+          }
+        }
+      ],
+      "layout": "vertical",
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "c3HM36",
+          "name": "Column",
+          "width": 320,
+          "layout": "vertical",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "HfJRo",
+              "name": "Brand",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "c6XBOb",
+                  "name": "Logo Tile",
+                  "width": 28,
+                  "height": 28,
+                  "fill": "$accent",
+                  "cornerRadius": 8,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "HWGIO",
+                      "name": "Logo Icon",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "wallet",
+                      "library": "lucide",
+                      "fill": "$accent-fg"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "iIXvD",
+                  "name": "Product Name",
+                  "fill": "$text",
+                  "content": "expense",
+                  "fontFamily": "$font-sans",
+                  "fontSize": 15,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "s9MXY",
+              "name": "Gap",
+              "width": "fill_container",
+              "height": 24
+            },
+            {
+              "type": "text",
+              "id": "Fmx7w",
+              "name": "Title",
+              "fill": "$text",
+              "content": "Set up your passkey",
+              "fontFamily": "$font-sans",
+              "fontSize": 18,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "H1RhYA",
+              "name": "Gap",
+              "width": "fill_container",
+              "height": 6
+            },
+            {
+              "type": "text",
+              "id": "XssUh",
+              "name": "Explanation",
+              "fill": "$text-muted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Enter the setup token from your deployment's environment. You'll only do this once.",
+              "lineHeight": 1.54,
+              "textAlign": "center",
+              "fontFamily": "$font-sans",
+              "fontSize": 13,
+              "fontWeight": "450"
+            },
+            {
+              "type": "frame",
+              "id": "w5cG5",
+              "name": "Gap",
+              "width": "fill_container",
+              "height": 24
+            },
+            {
+              "type": "frame",
+              "id": "wOcQD",
+              "name": "Field Group",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 6,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Wyj3z",
+                  "name": "Field Label",
+                  "fill": "$text",
+                  "content": "Setup token",
+                  "fontFamily": "$font-sans",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "FE3AO",
+                  "name": "Token Input",
+                  "width": "fill_container",
+                  "height": 40,
+                  "fill": "$surface",
+                  "cornerRadius": 6,
+                  "stroke": "$danger",
+                  "strokeWidth": 1,
+                  "padding": [
+                    0,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "gQm0S",
+                      "name": "Value",
+                      "fill": "$text",
+                      "content": "••••••••••••••••••••",
+                      "fontFamily": "$font-num",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "h0Nv6",
+                  "name": "Error",
+                  "fill": "$danger",
+                  "content": "That token doesn't match.",
+                  "fontFamily": "$font-sans",
+                  "fontSize": 13,
+                  "fontWeight": "450"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "cXJYf",
+              "name": "Gap",
+              "width": "fill_container",
+              "height": 16
+            },
+            {
+              "type": "frame",
+              "id": "gUvOS",
+              "name": "Primary Button",
+              "width": "fill_container",
+              "height": 40,
+              "fill": "$accent",
+              "cornerRadius": 6,
+              "gap": 8,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "Z68Mwq",
+                  "name": "Icon",
+                  "width": 16,
+                  "height": 16,
+                  "icon": "key-round",
+                  "library": "lucide",
+                  "fill": "$accent-fg"
+                },
+                {
+                  "type": "text",
+                  "id": "ew9vI",
+                  "name": "Label",
+                  "fill": "$accent-fg",
+                  "content": "Create passkey",
+                  "fontFamily": "$font-sans",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "jvVBZ",
+      "x": 2800,
+      "y": 5202,
+      "name": "Chat — Account Menu Open",
+      "clip": true,
+      "width": 1280,
+      "height": 800,
+      "fill": [
+        "$bg",
+        {
+          "type": "gradient",
+          "gradientType": "radial",
+          "enabled": true,
+          "rotation": 0,
+          "size": {
+            "width": 1.4,
+            "height": 1
+          },
+          "colors": [
+            {
+              "color": "#E7E5E466",
+              "position": 0
+            },
+            {
+              "color": "#E7E5E400",
+              "position": 1
+            }
+          ],
+          "center": {
+            "y": 0
+          }
+        }
+      ],
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "Ktz8T",
+          "type": "ref",
+          "ref": "v3SJWy",
+          "name": "Top Bar",
+          "width": "fill_container",
+          "fill": "#00000000",
+          "stroke": "#00000000",
+          "descendants": {
+            "KEmuk": {
+              "fill": "$surface-2",
+              "cornerRadius": 8,
+              "padding": [
+                4,
+                8,
+                4,
+                4
+              ]
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "X3gLz",
+          "name": "Main",
+          "width": "fill_container",
+          "height": "fill_container",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "YT68B",
+              "name": "Empty Column",
+              "width": 720,
+              "layout": "vertical",
+              "padding": [
+                0,
+                24
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "nnVE9",
+                  "name": "Headline Group",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    0,
+                    32,
+                    0
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "i64qDV",
+                      "name": "Headline",
+                      "gap": 10,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "X1luq",
+                          "name": "Headline A",
+                          "fill": "$text",
+                          "content": "Where did your money go?",
+                          "lineHeight": 1.3,
+                          "textAlign": "center",
+                          "fontFamily": "$font-num",
+                          "fontSize": 34,
+                          "fontWeight": "500",
+                          "letterSpacing": -0.5
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "q7GIB",
+                      "name": "Sub",
+                      "fill": "$text-muted",
+                      "textGrowth": "fixed-width",
+                      "width": 440,
+                      "content": "Type a purchase the way you'd say it, attach a receipt, or ask for a report.",
+                      "lineHeight": 1.53,
+                      "textAlign": "center",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "id": "n8lYKy",
+                  "type": "ref",
+                  "ref": "lP8jt",
+                  "name": "Composer",
+                  "width": "fill_container",
+                  "stroke": "$ring",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#1C191714",
+                    "offset": {
+                      "x": 0,
+                      "y": 4
+                    },
+                    "blur": 16
+                  },
+                  "descendants": {
+                    "wKEAB": {
+                      "padding": [
+                        6,
+                        4,
+                        40,
+                        4
+                      ]
+                    },
+                    "UIjnB": {
+                      "fill": "$text",
+                      "content": "lunch at padang place 45rb"
+                    },
+                    "eXm29": {
+                      "opacity": 1
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "f5yJ2W",
+                  "name": "Prompts",
+                  "width": "fill_container",
+                  "gap": 12,
+                  "padding": [
+                    16,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "V7Koj",
+                      "type": "ref",
+                      "ref": "F6Skmu",
+                      "name": "Prompt: Log a purchase",
+                      "width": "fill_container",
+                      "height": 108,
+                      "descendants": {
+                        "zFy3L": {
+                          "icon": "pencil-line"
+                        },
+                        "OjnJU": {
+                          "content": "Log a purchase"
+                        },
+                        "hUZQE": {
+                          "content": "buy cloth 70rb"
+                        }
+                      }
+                    },
+                    {
+                      "id": "qB0kn",
+                      "type": "ref",
+                      "ref": "F6Skmu",
+                      "name": "Prompt: Scan a receipt",
+                      "width": "fill_container",
+                      "height": 108,
+                      "descendants": {
+                        "zFy3L": {
+                          "icon": "receipt"
+                        },
+                        "OjnJU": {
+                          "content": "Scan a receipt"
+                        },
+                        "hUZQE": {
+                          "content": "attach a photo, I'll read it"
+                        }
+                      }
+                    },
+                    {
+                      "id": "HPR73",
+                      "type": "ref",
+                      "ref": "F6Skmu",
+                      "name": "Prompt: See this month",
+                      "width": "fill_container",
+                      "height": 108,
+                      "descendants": {
+                        "zFy3L": {
+                          "icon": "chart-bar"
+                        },
+                        "OjnJU": {
+                          "content": "See this month"
+                        },
+                        "hUZQE": {
+                          "content": "report of this month"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "yQY2E",
+          "layoutPosition": "absolute",
+          "x": 304,
+          "y": 50,
+          "name": "Account Menu",
+          "width": 280,
+          "fill": "$surface",
+          "cornerRadius": 12,
+          "stroke": "$line",
+          "strokeWidth": 1,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#1C19171F",
+            "offset": {
+              "x": 0,
+              "y": 8
+            },
+            "blur": 24
+          },
+          "layout": "vertical",
+          "gap": 2,
+          "padding": 6,
+          "children": [
+            {
+              "type": "frame",
+              "id": "tD8n9",
+              "name": "Section Label",
+              "width": "fill_container",
+              "padding": [
+                6,
+                10,
+                4,
+                10
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "dXdjn",
+                  "name": "Text",
+                  "fill": "$text-muted",
+                  "content": "Passkeys",
+                  "fontFamily": "$font-sans",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "QzSiP",
+              "name": "Passkey iPhone",
+              "width": "fill_container",
+              "fill": "$surface-2",
+              "cornerRadius": 6,
+              "gap": 10,
+              "padding": [
+                8,
+                10
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "Eago1",
+                  "name": "Key",
+                  "width": 14,
+                  "height": 14,
+                  "icon": "key-round",
+                  "library": "lucide",
+                  "fill": "$text-muted"
+                },
+                {
+                  "type": "frame",
+                  "id": "R8ciAD",
+                  "name": "Text",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 1,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "vZn5p",
+                      "name": "Name",
+                      "fill": "$text",
+                      "content": "iPhone",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "lWXMf",
+                      "name": "Meta",
+                      "fill": "$text-muted",
+                      "content": "This device",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 12,
+                      "fontWeight": "450"
+                    }
+                  ]
+                },
+                {
+                  "type": "icon",
+                  "id": "pGxgX",
+                  "name": "More",
+                  "width": 16,
+                  "height": 16,
+                  "icon": "ellipsis",
+                  "library": "lucide",
+                  "fill": "$text-muted"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "A51tQD",
+              "name": "Passkey MacBook",
+              "width": "fill_container",
+              "fill": "#00000000",
+              "cornerRadius": 6,
+              "gap": 10,
+              "padding": [
+                8,
+                10
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "dArtT",
+                  "name": "Key",
+                  "width": 14,
+                  "height": 14,
+                  "icon": "key-round",
+                  "library": "lucide",
+                  "fill": "$text-muted"
+                },
+                {
+                  "type": "frame",
+                  "id": "y5trdv",
+                  "name": "Text",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 1,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "dYM8I",
+                      "name": "Name",
+                      "fill": "$text",
+                      "content": "MacBook",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "tsh4S",
+                      "name": "Meta",
+                      "fill": "$text-muted",
+                      "content": "Used 3 days ago",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 12,
+                      "fontWeight": "450"
+                    }
+                  ]
+                },
+                {
+                  "type": "icon",
+                  "id": "Vc47X",
+                  "name": "More",
+                  "width": 16,
+                  "height": 16,
+                  "icon": "ellipsis",
+                  "library": "lucide",
+                  "fill": "$text-muted"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "aqkZy",
+              "name": "Add Passkey",
+              "width": "fill_container",
+              "cornerRadius": 6,
+              "gap": 10,
+              "padding": [
+                8,
+                10
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "qPfqf",
+                  "name": "Icon",
+                  "width": 14,
+                  "height": 14,
+                  "icon": "plus",
+                  "library": "lucide",
+                  "fill": "$text"
+                },
+                {
+                  "type": "text",
+                  "id": "fcnrd",
+                  "name": "Label",
+                  "fill": "$text",
+                  "content": "Add passkey",
+                  "fontFamily": "$font-sans",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "id": "jztyz",
+              "name": "Divider",
+              "fill": "$line",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "Q2AfSk",
+              "name": "Sign Out",
+              "width": "fill_container",
+              "cornerRadius": 6,
+              "gap": 10,
+              "padding": [
+                8,
+                10
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "Emi13",
+                  "name": "Icon",
+                  "width": 14,
+                  "height": 14,
+                  "icon": "log-out",
+                  "library": "lucide",
+                  "fill": "$text"
+                },
+                {
+                  "type": "text",
+                  "id": "fFitP",
+                  "name": "Label",
+                  "fill": "$text",
+                  "content": "Sign out",
+                  "fontFamily": "$font-sans",
+                  "fontSize": 13,
                   "fontWeight": "500"
                 }
               ]

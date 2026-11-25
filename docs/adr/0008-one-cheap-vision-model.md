@@ -8,7 +8,7 @@ A dedicated document parser costs 7× (Mistral OCR, $2.00/1k pages) to 330× (Go
 
 ## Consequences
 
-- Receipt images are capped at 1,024 input tokens each by DeepSeek regardless of resolution. This is the most predictable vision cost of any provider, but it means a photographed receipt is downscaled server-side. Small print may be lost; the draft card shows the photo so the user can check.
+- Receipt images are capped at 1,024 input tokens each by DeepSeek regardless of resolution. This is the most predictable vision cost of any provider, but it means a photographed receipt loses detail however it is sent. The client downscales before upload so the bytes are not wasted; the server only rejects non-images and files over 5 MB. Small print may be lost; the draft card shows the photo so the user can check.
 - DeepSeek's JSON mode has no schema parameter, and its documented failure mode is returning empty `content` with `finish_reason: stop`. Do not rely on it. OpenUI Lang is plain text, so the DSL path needs no structured-output mode.
 - Schema-constrained output would be a reason to choose a different provider. `LanguageModel` is a service from `effect/ai`, so that is a `Layer` swap, not a refactor.
 - The provider is `@effect/ai-openai-compat` pointed at DeepSeek's base URL, not a bespoke client. There is no `@effect/ai-deepseek` package and none is needed, since the API is OpenAI-compatible.

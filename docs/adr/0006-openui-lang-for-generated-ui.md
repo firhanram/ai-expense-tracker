@@ -10,4 +10,5 @@ Alternatives were rejected on concrete grounds. A2UI costs four to eight days, m
 - OpenUI requires Zod 4 for component props. Zod 4 appears there and nowhere else; Effect Schema is the contract everywhere else.
 - Zod key order in `z.object(...)` is the positional-argument contract. Reordering a prop field silently mis-maps arguments. Do not reorder; regenerate the prompt if you must.
 - Roughly 7% of first-pass generations fail validation, and a failed program renders blank. A plain-text fallback and a single retry on parse error are part of the feature, not polish.
+- The stream needs one piece of framing after all: a single terminal control line saying whether the turn completed or failed and why. Once a chunked response has started, an error mid-stream is otherwise indistinguishable from a short reply. The client strips the line before handing text to the `Renderer`; everything before it stays plain OpenUI text.
 - Install-time telemetry is on by default. `OPENUI_TELEMETRY_DISABLED=1` belongs in the repo's environment defaults.
