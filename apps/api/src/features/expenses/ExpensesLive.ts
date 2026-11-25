@@ -2,6 +2,8 @@ import { Api, type ListExpensesQuery, UnknownCategory } from "@expense/contract"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/http-api"
 import { SqlClient } from "effect/sql"
+import { deleteExpense } from "./deleteExpense.ts"
+import { editExpense } from "./editExpense.ts"
 import { decodeRows, toExpense } from "./ExpenseRow.ts"
 
 export const ExpensesLive = HttpApiBuilder.group(Api, "expenses", (handlers) =>
@@ -43,5 +45,7 @@ export const ExpensesLive = HttpApiBuilder.group(Api, "expenses", (handlers) =>
           return toExpense(row)
         }),
       )
+      .handle("edit", ({ params, payload }) => editExpense(sql, params.id, payload))
+      .handle("remove", ({ params }) => deleteExpense(sql, params.id))
   }),
 )

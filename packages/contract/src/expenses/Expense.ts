@@ -55,3 +55,17 @@ export const CreateExpense = Schema.Struct({
   occurredAt: IsoDate,
 })
 export type CreateExpense = typeof CreateExpense.Type
+
+/**
+ * `PATCH /expenses/:id`: the fields the user can change on a Draft or
+ * confirmed Expense. Every field is optional; an omitted field is left as it
+ * is, and `null` clears merchant or note.
+ */
+export const EditExpense = Schema.Struct({
+  amount: Schema.optional(Rupiah),
+  categoryId: Schema.optional(CategoryId),
+  merchant: Schema.optional(Schema.NullOr(Schema.String)),
+  note: Schema.optional(Schema.NullOr(Schema.String)),
+  occurredAt: Schema.optional(IsoDate),
+})
+export type EditExpense = typeof EditExpense.Type
