@@ -33,6 +33,7 @@ alchemy.run.ts
 |---|---|
 | Runtime | Effect v4 (`effect@^4.1`) |
 | HTTP | `effect/http` (`HttpServer`, `HttpRouter`) |
+| Model | `effect/ai` (in core) + `@effect/ai-openai-compat@4.1.5` |
 | SQL | `@effect/sql-sqlite-node` + `@effect/sql/Migrator` |
 | Storage | `@effect-aws/client-s3` |
 | UI generation | `@openuidev/react-lang`, `@openuidev/lang-core` |
@@ -42,6 +43,10 @@ alchemy.run.ts
 | Toolchain | `typescript@7`, `oxlint --type-aware`, `oxfmt` |
 
 No `@openuidev/react-ui` (it brings Radix, which duplicates ui-sdk), no `@effect/tsgo` (needs a patched native binary and drops musl).
+
+**Do not install `@effect/ai`.** In v4 the AI modules live in `effect` itself (`effect/ai` exports `LanguageModel`, `Toolkit`, `Tool`, `Prompt`, `Response`). The standalone `@effect/ai` package tops out at 0.37.0 and peers on `effect ^3.22`, so adding it pulls a second, incompatible Effect. The provider packages (`@effect/ai-*@4.1.5`) peer directly on `effect ^4.1.5` and do not depend on that package.
+
+There is no `@effect/ai-deepseek` provider, and there does not need to be: DeepSeek's API is OpenAI-compatible, so `@effect/ai-openai-compat` with a base-URL override is the client.
 
 ## Data
 
@@ -107,7 +112,7 @@ All routes require `Authorization: Bearer $API_TOKEN`, except under loopback in 
 
 1. Validate the request; append the user message.
 2. If `receiptKey` is present, fetch the object and attach it to the model's message. If the upload already produced a Draft, the agent resumes that draft rather than creating a second one.
-3. Run the agent loop with tools:
+3. Call `LanguageModel.streamText({ prompt, toolkit })` from `effect/ai`. Tool calls are **resolved automatically** — `Tool.make` handlers run, results are appended, and `LanguageModel` validates each call against the tool's schema. Tools:
    - `search_categories()` — the closed list, so the model maps into it rather than inventing.
    - `propose_expense(amount, merchant, occurredAt, categoryName, note, needsReview)` — creates a Draft, returns its id.
    - `update_draft(id, fields)`
@@ -115,8 +120,9 @@ All routes require `Authorization: Bearer $API_TOKEN`, except under loopback in 
    - `query_spending(from, to, groupBy)` — returns server-computed aggregates.
    - `get_expense(id)` — for rendering a card the user asked about.
    - **No confirm tool.** (ADR-0007.)
-4. Let the model write OpenUI Lang as its text output. Components take ids, never values (ADR-0001).
-5. Persist `content` (prose) and `ui_text` (the raw program). The assistant message is stored **as text**, not as a rendered snapshot: reload re-parses `ui_text` client-side with the current component library, at no model cost. If it no longer parses, the stored prose is shown instead. This is the same fallback path as a live parse failure, so it is one implementation rather than two.
+4. **Run the model again** if the response contains tool results rather than text. `streamText` resolves tools and returns; it does not re-call the model. The loop is ours, ~30 lines, with a step cap and a stop condition this app can state precisely: once a draft has been proposed and rendered, stop. Cap at 5 steps.
+5. Let the model write OpenUI Lang as its text output. Components take ids, never values (ADR-0001).
+6. Persist `content` (prose) and `ui_text` (the raw program). The assistant message is stored **as text**, not as a rendered snapshot: reload re-parses `ui_text` client-side with the current component library, at no model cost. If it no longer parses, the stored prose is shown instead. This is the same fallback path as a live parse failure, so it is one implementation rather than two.
 
 ## OpenUI component library
 
@@ -160,18 +166,20 @@ Each is shippable and testable on its own.
 2. **Schema and seed** — migrations, category seed, `@effect/sql` repositories, integration tests against a temp file.
 3. **Expense CRUD** — routes, Effect Schema validation, list screen at `/expenses`. No AI yet. Proves the boring half works.
 4. **Confirm flow** — `POST /expenses/:id/confirm`, idempotency test, optimistic update in the list.
-5. **Model plumbing** — `AiProvider` as a `Context.Tag`, DeepSeek `Layer`, prompt caching, a `POST /chat` that echoes text with no UI.
-6. **OpenUI integration** — component library, renderer, error path, plain-text fallback. **Run the 100-generation eval here**, before building more components: it is the only measurement of whether this model holds the DSL.
+5. **Model plumbing** — `LanguageModel` provided via `@effect/ai-openai-compat` pointed at DeepSeek's base URL. Prompt caching on the generated system prompt. A `POST /chat` that echoes text with no UI, and the tool-call loop with a step cap.
+6. **OpenUI integration + eval** — component library, renderer, error path, plain-text fallback, and the **eval harness**: a script that runs 100 generations against the real four-component library and asserts each parses and renders. Deliverables: the harness, a recorded pass rate, and a failure-mode breakdown (no root / reference graph / type mismatch / truncation). This is the gate — it is the only measurement of whether this price tier holds the DSL, and it must run before more components are written.
 7. **Drafts from chat** — tools, `DraftExpenseCard`, confirmation through the card.
 8. **Reports** — `/reports` aggregation, `SpendingChart`, `query_spending`.
 9. **Receipts** — R2 upload, image to model, `needs_review`, photo on the card.
 10. **Deploy** — `alchemy.run.ts` with the volume mounted, secrets, first production migrate.
 
-Slices 1–4 have no AI dependency and should land first; if the model proves unable to hold the DSL in slice 6, slices 1–5 are still a working expense tracker.
+Slices 1–4 have no AI dependency and should land first; if the eval in slice 6 fails, slices 1–5 are still a working expense tracker.
+
+**Three things not to build**, because Effect provides them: an HTTP client for the model (`@effect/ai-openai-compat`), a tool schema/validation layer (`Tool.make` + Effect Schema), and a streaming response type (`LanguageModel.streamText` returns a `Stream`). The tool-call loop and the eval harness are the only harness-shaped work that is ours.
 
 ## Open items
 
-- **DeepSeek DSL adherence is unmeasured.** No published benchmark covers this price tier. Slice 6's eval is the gate; the fallback is Gemini 3.1 Flash-Lite behind the same `AiProvider` port.
+- **DeepSeek DSL adherence is unmeasured.** No published benchmark covers this price tier. Slice 6's eval is the gate; the fallback is Gemini 3.1 Flash-Lite behind the same `LanguageModel` service, since swapping provider is a `Layer` change.
 - **Railway Buckets' S3 compatibility is unverified.** R2 sidesteps the question, so it does not block anything.
 - **Backups** are copying the SQLite file. No PITR. Acceptable for personal data; note it in the README so a stranger cloning the repo knows.
 - **Chat history rendering** degrades if a component is later removed: `ui_text` is stored, so re-render can fail. The fallback in the chat turn is what covers it.
