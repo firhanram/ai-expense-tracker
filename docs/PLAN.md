@@ -98,7 +98,7 @@ All routes require `Authorization: Bearer $API_TOKEN`, except under loopback in 
 | `POST /expenses/:id/confirm` | Draft → confirmed. Idempotent. |
 | `POST /expenses/:id/discard` | Draft → discarded. Keeps the row. |
 | `DELETE /expenses/:id` | Hard delete, and deletes the R2 object if present. |
-| `GET /reports` | `?today=&range=this_month|last_month|last_30_days` or `?from=&to=`, plus `groupBy=category|month`. Range resolved from the supplied date; computed in SQL. |
+| `GET /reports` | `?from=&to=&groupBy=category|month`. Both dates required; the client computes the range. Aggregated in SQL. |
 | `POST /receipts` | Multipart upload → R2, returns `receiptKey`. |
 
 `POST /reports` is absent deliberately — Reports are reads.
@@ -116,7 +116,7 @@ All routes require `Authorization: Bearer $API_TOKEN`, except under loopback in 
    - `get_expense(id)` — for rendering a card the user asked about.
    - **No confirm tool.** (ADR-0007.)
 4. Let the model write OpenUI Lang as its text output. Components take ids, never values (ADR-0001).
-5. Persist `content` (prose) and `ui_text` (the raw program).
+5. Persist `content` (prose) and `ui_text` (the raw program). The assistant message is stored **as text**, not as a rendered snapshot: reload re-parses `ui_text` client-side with the current component library, at no model cost. If it no longer parses, the stored prose is shown instead. This is the same fallback path as a live parse failure, so it is one implementation rather than two.
 
 ## OpenUI component library
 
