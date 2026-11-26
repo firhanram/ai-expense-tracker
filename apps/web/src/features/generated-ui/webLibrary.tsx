@@ -12,6 +12,7 @@ import { type ComponentRenderer, createLibrary } from "@openuidev/react-lang"
 import { CardSkeleton } from "./CardSkeleton.tsx"
 import { DraftExpenseCard as DraftExpenseCardView } from "./DraftExpenseCard.tsx"
 import { ExpenseCard as ExpenseCardView } from "./ExpenseCard.tsx"
+import { SpendingChartView } from "../reports/SpendingChart.tsx"
 import { ExpenseList as ExpenseListView } from "./ExpenseList.tsx"
 
 /** The props a shared definition's schema parses to. */
@@ -51,7 +52,7 @@ export const webLibrary = createLibrary({
     withView(DraftExpenseCard, ({ props }) => <DraftExpenseCardView id={props.id} />),
     withView(ExpenseCard, ({ props }) => <ExpenseCardView id={props.id} />),
     withView(ExpenseList, ({ props }) => <ExpenseListView query={listQuery(props)} />),
-    withView(SpendingChart, () => <CardSkeleton label="Spending chart" />),
+    withView(SpendingChart, ({ props }) => <SpendingChartView {...props} />),
   ],
   actions: [ConfirmExpense, DiscardExpense],
 })

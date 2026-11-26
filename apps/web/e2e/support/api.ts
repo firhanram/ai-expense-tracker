@@ -1,9 +1,6 @@
 import { type ApiFailure, type ApiSuccess, type ErrorCode, errorCatalog } from "@expense/contract"
 import type { Page } from "@playwright/test"
 
-/** The bearer token the e2e build is made with (playwright.config.ts). */
-export const e2eToken = "e2e-token"
-
 /** What a mocked endpoint answers. Build it with `ok`, `fail` or `stream`. */
 export interface MockResponse {
   readonly status: number
@@ -21,7 +18,6 @@ export interface ApiCall {
   readonly query: URLSearchParams
   /** The parsed JSON body, the raw text if it is not JSON, or null. */
   readonly body: unknown
-  readonly authorization: string | null
 }
 
 export type MockHandler = MockResponse | ((call: ApiCall) => MockResponse)
@@ -109,7 +105,6 @@ export const mockApi = async (
       params: found?.params ?? {},
       query: url.searchParams,
       body: parseBody(request.postData()),
-      authorization: await request.headerValue("authorization"),
     }
     calls.push(call)
     const handler = found?.entry.handler

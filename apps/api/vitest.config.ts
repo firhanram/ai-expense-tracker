@@ -17,14 +17,19 @@ export default defineConfig({
               compatibilityFlags: ["nodejs_compat"],
               d1Databases: ["DB"],
               r2Buckets: ["RECEIPTS"],
-              bindings: { API_TOKEN: "test-api-token", TEST_MIGRATIONS: migrations },
+              bindings: {
+                // A stand-in Access team; its keys are served by `src/testing/serveTeamKeys.ts`.
+                ACCESS_TEAM_DOMAIN: "test-team.cloudflareaccess.com",
+                ACCESS_AUD: "test-access-aud",
+                TEST_MIGRATIONS: migrations,
+              },
             },
           }),
         ],
         test: {
           name: "worker",
           include: ["src/**/*.test.ts"],
-          setupFiles: ["./src/testing/applyMigrations.ts"],
+          setupFiles: ["./src/testing/applyMigrations.ts", "./src/testing/serveTeamKeys.ts"],
         },
       },
       {

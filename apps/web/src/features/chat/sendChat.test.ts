@@ -23,11 +23,10 @@ const collect = async (chunks: AsyncIterable<string>) => {
 }
 
 describe("sending a chat message", () => {
-  it("posts the message with the bearer token and yields the reply as it streams", async () => {
+  it("posts the message and yields the reply as it streams", async () => {
     const sent: Array<Request> = []
     const send = createSendChat({
       baseUrl: "http://app.test",
-      token: "secret",
       fetch: async (input, init) => {
         sent.push(new Request(input, init))
         return new Response(textStream("You spent ", "Rp70.000."), { status: 200 })
@@ -40,7 +39,7 @@ describe("sending a chat message", () => {
     const request = sent[0]
     expect(request?.url).toBe("http://app.test/api/chat")
     expect(request?.method).toBe("POST")
-    expect(request?.headers.get("authorization")).toBe("Bearer secret")
+    expect(request?.headers.get("authorization")).toBeNull()
     expect(await request?.json()).toEqual({ message: "how much?", clientDate: "2026-11-25" })
   })
 

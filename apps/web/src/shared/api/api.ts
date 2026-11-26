@@ -1,15 +1,19 @@
+import { reloadWhenSignedOut } from "./accessSession.ts"
 import { createApi } from "./client.ts"
 
 /**
- * Where `/api/*` lives: same origin as the Worker, optional token for
- * non-loopback test builds only — never set it for a public deploy. The chat
- * stream, which the typed client cannot read, sends with the same values.
+ * Where `/api/*` lives: same origin as the Worker. No credential: Cloudflare
+ * Access's cookie travels with every same-origin request (ADR-0011). The chat
+ * stream, which the typed client cannot read, sends with the same values, so
+ * both treat an expired Access session the same way.
  */
 export const apiConnection = {
   baseUrl: window.location.origin,
-  token: import.meta.env.VITE_API_TOKEN,
   // Looked up per request, so a test can stub the global `fetch`.
-  fetch: (input: RequestInfo | URL, init?: RequestInit) => globalThis.fetch(input, init),
+  fetch: reloadWhenSignedOut(
+    (input, init) => globalThis.fetch(input, init),
+    () => window.location.reload(),
+  ),
 } as const
 
 /** The app's one API caller. */

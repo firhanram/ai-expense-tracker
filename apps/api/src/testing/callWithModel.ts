@@ -3,6 +3,7 @@ import { Context, type Layer } from "effect"
 import type { LanguageModel } from "effect/ai"
 import { makeHandler } from "../App.ts"
 import { WaitUntil } from "../WaitUntil.ts"
+import { deployedOrigin, withAccessToken } from "./callWorker.ts"
 
 /**
  * S1 with the S2 model swapped in: the real app against the local D1, but
@@ -16,10 +17,8 @@ export const callApiWithModel = async (
 ) => {
   const app = makeHandler(env, { languageModel })
   try {
-    const headers = new Headers(init?.headers)
-    headers.set("authorization", `Bearer ${env.API_TOKEN}`)
     const response = await app.handler(
-      new Request(`http://localhost${path}`, { ...init, headers }),
+      new Request(`${deployedOrigin}${path}`, await withAccessToken(init)),
       Context.empty(),
     )
     const body = await response.text()
@@ -56,12 +55,15 @@ export const sendChatAndLeave = async (
   const abort = new AbortController()
   try {
     const response = await app.handler(
-      new Request("http://localhost/api/chat", {
-        method: "POST",
-        headers: { authorization: `Bearer ${env.API_TOKEN}`, "content-type": "application/json" },
-        body: JSON.stringify(body),
-        signal: abort.signal,
-      }),
+      new Request(
+        `${deployedOrigin}/api/chat`,
+        await withAccessToken({
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body),
+          signal: abort.signal,
+        }),
+      ),
       Context.make(WaitUntil, (promise) => background.push(promise)),
     )
     const reader = response.body!.getReader()

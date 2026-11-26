@@ -1,4 +1,4 @@
-import type { Expense } from "@expense/contract"
+import type { Expense, Report } from "@expense/contract"
 import { createParser, Renderer } from "@openuidev/react-lang"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { render, screen } from "@testing-library/react"
@@ -19,6 +19,14 @@ const expense = (overrides: Partial<Expense> = {}): Expense => ({
   receiptKey: null,
   ...overrides,
 })
+
+const report: Report = {
+  from: "2026-11-01",
+  to: "2026-11-30",
+  groupBy: "category",
+  total: 70000,
+  totals: [{ label: "Shopping", categoryId: 6, amount: 70000 }],
+}
 
 /** One program per component, as the model writes it, and what shows once it mounts. */
 const samples = [
@@ -41,7 +49,7 @@ const samples = [
     name: "SpendingChart",
     program:
       'root = Stack([chart])\nchart = SpendingChart("2026-11-01", "2026-11-30", "category", "bar")',
-    shows: () => screen.findByRole("status", { name: "Spending chart" }),
+    shows: () => screen.findByRole("figure", { name: "November 2026 by category" }),
   },
 ] as const
 
@@ -50,7 +58,11 @@ const parser = createParser(webLibrary.toJSONSchema(), webLibrary.root)
 describe("the web library (S3)", () => {
   for (const sample of samples) {
     it(`round-trips ${sample.name} through parse and mounts it`, async () => {
-      fakeApi({ "GET /api/expenses": ok([expense()]), "GET /api/expenses/exp_1": ok(expense()) })
+      fakeApi({
+        "GET /api/expenses": ok([expense()]),
+        "GET /api/expenses/exp_1": ok(expense()),
+        "GET /api/reports": ok(report),
+      })
 
       const result = parser.parse(sample.program)
       expect(result.meta.errors).toEqual([])

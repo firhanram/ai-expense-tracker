@@ -14,6 +14,7 @@ import { HttpApiSchema } from "effect/http-api"
 /** The closed set of `errorCode`s. A code is part of the contract: rename one and the client breaks. */
 export const errorCodes = [
   "UNAUTHORIZED",
+  "CROSS_SITE_REQUEST",
   "VALIDATION_FAILED",
   "NOT_FOUND",
   "EXPENSE_NOT_FOUND",
@@ -33,8 +34,10 @@ export const ErrorCode = Schema.Literals(errorCodes)
 
 /** The HTTP status each code is sent with: the one place it is decided. */
 export const errorCatalog: { readonly [Code in ErrorCode]: number } = {
-  /** The bearer token is missing or wrong. Sent for every path but health, known or not. */
+  /** The Cloudflare Access token is missing or invalid. Sent for every path but health, known or not. */
   UNAUTHORIZED: 401,
+  /** An unsafe method (POST, PATCH, PUT, DELETE) not sent by the app's own pages: a CSRF guard (ADR-0011). */
+  CROSS_SITE_REQUEST: 403,
   /** The params, query or body did not match the endpoint's schema. `details.issues` names each field. */
   VALIDATION_FAILED: 400,
   /** No route has this method and path. */

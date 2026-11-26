@@ -127,6 +127,7 @@ Two successes are not JSON and have no envelope: `POST /chat` streams text, and 
 | `errorCode` | Status | When | `details` |
 |---|---|---|---|
 | `UNAUTHORIZED` | 401 | The Access token is missing or invalid, on any path but health, known or not. | — |
+| `CROSS_SITE_REQUEST` | 403 | A POST, PATCH, PUT or DELETE not sent from the app's own origin: `Sec-Fetch-Site` is not `same-origin`, or, when it is absent, `Origin` is missing or another origin. Checked before the token, on loopback too (ADR-0011). | — |
 | `VALIDATION_FAILED` | 400 | Params, query or body do not match the endpoint's schema, or the body is not JSON. | `{ issues: [{ path, message }] }`, `path` starting with the slot: `["payload", "amount"]`. |
 | `NOT_FOUND` | 404 | No route has this method and path. | — |
 | `EXPENSE_NOT_FOUND` | 404 | No Expense the route can act on has this id. | `{ id }` |
