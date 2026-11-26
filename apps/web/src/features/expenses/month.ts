@@ -20,6 +20,12 @@ export const monthRange = ({ year, month }: Month): { from: IsoDate; to: IsoDate
   return { from: `${year}-${pad(month)}-01`, to: `${year}-${pad(month)}-${pad(lastDay)}` }
 }
 
+/** The month `by` months after `m`, or before it when `by` is negative. */
+export const addMonths = ({ year, month }: Month, by: number): Month => {
+  const index = year * 12 + (month - 1) + by
+  return { year: Math.floor(index / 12), month: (index % 12) + 1 }
+}
+
 const long = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric", timeZone: "UTC" })
 const short = new Intl.DateTimeFormat("en-GB", { month: "short", year: "numeric", timeZone: "UTC" })
 

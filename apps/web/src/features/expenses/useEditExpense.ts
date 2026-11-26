@@ -1,0 +1,14 @@
+import type { EditExpense, ExpenseId } from "@expense/contract"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { api } from "../../shared/api/api.ts"
+import { expensesKey } from "./useExpenses.ts"
+
+/** `PATCH /expenses/:id`: changes a Draft or confirmed Expense, then refreshes every Expense list. */
+export const useEditExpense = (id: ExpenseId) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: EditExpense) =>
+      api((client) => client.expenses.edit({ params: { id }, payload })),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: expensesKey }),
+  })
+}

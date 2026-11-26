@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test"
 
-// Override when several checkouts run Playwright at once.
+// E2E_PORT lets parallel worktrees run their suites side by side.
 const port = Number(process.env["E2E_PORT"] ?? 4173)
 
 // Runs against the built bundle served by `vite preview`, never a dev server.
