@@ -1,3 +1,4 @@
+import { ExpenseStatus } from "@expense/contract"
 import { defineAction, defineComponent } from "@openuidev/lang-core"
 import { z } from "zod"
 
@@ -35,7 +36,7 @@ export const ExpenseList = defineComponent({
   description:
     "A list of Expenses fetched by the app, filtered by status and an optional date range and Category id.",
   props: z.object({
-    status: z.enum(["draft", "confirmed", "discarded"]),
+    status: z.enum(ExpenseStatus.literals),
     from: IsoDate.optional(),
     to: IsoDate.optional(),
     categoryId: z.number().int().describe("A Category id returned by a tool").optional(),

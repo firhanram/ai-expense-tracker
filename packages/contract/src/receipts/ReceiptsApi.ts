@@ -1,5 +1,6 @@
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/http-api"
+import { ReceiptKey } from "../expenses/Expense.ts"
 
 /** The image types a Receipt may be: what the model reads and a browser shows. */
 export const ReceiptContentTypes = ["image/jpeg", "image/png", "image/webp"] as const
@@ -12,7 +13,7 @@ export const ReceiptContentTypes = ["image/jpeg", "image/png", "image/webp"] as 
 export const maxReceiptBytes = 5 * 1024 * 1024
 
 /** `POST /receipts`: the key to send as `receiptKey` with the Chat message. */
-export const ReceiptUploaded = Schema.Struct({ receiptKey: Schema.String })
+export const ReceiptUploaded = Schema.Struct({ receiptKey: ReceiptKey })
 export type ReceiptUploaded = typeof ReceiptUploaded.Type
 
 /** The upload is not one image of an accepted type and size, sent as the `file` field. */
@@ -25,7 +26,7 @@ export class InvalidReceipt extends Schema.TaggedError<InvalidReceipt>()(
 /** No stored Receipt has this key: never uploaded, or already deleted. */
 export class ReceiptNotFound extends Schema.TaggedError<ReceiptNotFound>()(
   "ReceiptNotFound",
-  { receiptKey: Schema.String },
+  { receiptKey: ReceiptKey },
   { httpApiStatus: 404 },
 ) {}
 
@@ -41,7 +42,7 @@ export class ReceiptsGroup extends HttpApiGroup.make("receipts").add(
   }),
   /** The image itself, behind the bearer token like every route; never a presigned URL. */
   HttpApiEndpoint.get("get", "/receipts/:key", {
-    params: { key: Schema.String },
+    params: { key: ReceiptKey },
     success: HttpApiSchema.StreamUint8Array({ contentType: [...ReceiptContentTypes] }),
     error: ReceiptNotFound,
   }),

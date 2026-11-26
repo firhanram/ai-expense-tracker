@@ -1,6 +1,6 @@
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/http-api"
-import { IsoDate } from "../expenses/Expense.ts"
+import { IsoDate, ReceiptKey } from "../expenses/Expense.ts"
 import { ReceiptNotFound } from "../receipts/ReceiptsApi.ts"
 
 export const ChatRole = Schema.Literals(["user", "assistant"])
@@ -24,7 +24,7 @@ export const SendChatMessage = Schema.Struct({
   /** The user's local date; the server never reads its own clock for dates (ADR-0009). */
   clientDate: IsoDate,
   /** A key from `POST /receipts`: the Receipt image is sent to the model with the message. */
-  receiptKey: Schema.optional(Schema.String),
+  receiptKey: Schema.optional(ReceiptKey),
 })
 export type SendChatMessage = typeof SendChatMessage.Type
 

@@ -51,7 +51,7 @@ There is no `@effect/ai-deepseek` provider, and there does not need to be: DeepS
 
 ## Data
 
-One D1 database. Migrations are numbered SQL files in `apps/api/migrations/`, applied by Alchemy's `D1Database` on deploy and in `alchemy dev`. Never call `sql.withTransaction`, because on D1 it dies at runtime. An atomic write is one statement or one `D1Client.batch` (ADR-0010). Confirm is `UPDATE expense SET status = 'confirmed' WHERE id = ? AND status IN ('draft','confirmed')`, so it is idempotent and needs no transaction.
+One D1 database. Migrations are numbered SQL files in `apps/api/migrations/`, applied by Alchemy's `D1Database` on deploy and in `alchemy dev`. Never call `sql.withTransaction`, because on D1 it dies at runtime. An atomic write is one statement or one `D1Client.batch` (ADR-0010). Confirm is `UPDATE expense SET status = 'confirmed', needs_review = 0 WHERE id = ? AND status IN ('draft','confirmed')`, so it is idempotent and needs no transaction.
 
 ```sql
 CREATE TABLE category (
@@ -100,7 +100,7 @@ All routes require `Authorization: Bearer $API_TOKEN`, except under loopback in 
 | `GET /chat` | The conversation, newest page first. |
 | `GET /expenses` | `?status=&from=&to=&categoryId=`. Confirmed by default. |
 | `POST /expenses` | Manual create, bypassing the agent. |
-| `PATCH /expenses/:id` | Edit amount, category, merchant, note, date. Works on drafts and confirmed. |
+| `PATCH /expenses/:id` | Edit amount, category, merchant, note, date, `needsReview`. Works on drafts and confirmed. |
 | `POST /expenses/:id/confirm` | Draft → confirmed. Idempotent. |
 | `POST /expenses/:id/discard` | Draft → discarded. Keeps the row. |
 | `DELETE /expenses/:id` | Hard delete, and deletes the R2 object if present. |
@@ -124,7 +124,7 @@ All routes require `Authorization: Bearer $API_TOKEN`, except under loopback in 
    - **No confirm tool.** (ADR-0007.)
 4. **Run the model again** if the response contains tool results rather than text. `streamText` resolves tools and returns; it does not re-call the model. The loop is ours, ~30 lines, with a step cap and a stop condition this app can state precisely: once a draft has been proposed and rendered, stop. Cap at 5 steps.
 5. Let the model write OpenUI Lang as its text output. Components take ids, never values (ADR-0001).
-6. Persist `content` (prose) and `ui_text` (the raw program). The assistant message is stored **as text**, not as a rendered snapshot: reload re-parses `ui_text` client-side with the current component library, at no model cost. If it no longer parses, the stored prose is shown instead. This is the same fallback path as a live parse failure, so it is one implementation rather than two.
+6. Persist `content` (prose) and `ui_text` (the raw program). The assistant message is stored **as text**, not as a rendered snapshot: reload re-parses `ui_text` client-side with the current component library, at no model cost. If it no longer parses, the stored prose is shown instead. This is the same fallback path as a live parse failure, so it is one implementation rather than two. `ui_text` is one program with one `root`: where a reply defines it twice, the last wins, as the parser reads it. Once the model has written, the turn runs to its end apart from the response, under the Worker's `waitUntil`, so a client that leaves mid-reply still gets the whole reply stored and a proposed Draft keeps its card; a model failure mid-reply stores what was written before it.
 
 ## OpenUI component library
 
@@ -162,8 +162,8 @@ Client downscales before upload — DeepSeek caps images at 1,024 tokens regardl
 
 - **Upload.** One `file` field, JPEG, PNG or WebP, at most 5 MiB (the client downscales well below that). The form is read from the web `Request`: Effect's buffered multipart needs a temp directory a Worker does not have. The key is a random UUID.
 - **One Receipt, one Draft.** A Draft proposed in a turn that carries a Receipt holds its key. A unique index on `receipt_key` and an upsert in `propose_expense` mean proposing again from the same Receipt, in the same turn or a later one, overwrites that Draft rather than adding a second. The model is also told, per turn, which Draft the Receipt already became. A Receipt whose Expense is confirmed is refused back to the model.
-- **Needs review.** `propose_expense` takes `needsReview`; the model sets it when it guessed or could not read a field. Expenses expose `needsReview` and `receiptKey` (null when there is none), so the list can mark both.
-- **Unreadable Receipts still yield a Draft.** The model is asked to propose one anyway (amount 0, `Other`, `needsReview`). If a Receipt turn ends with nothing holding the Receipt, the server makes that placeholder Draft itself and appends its `DraftExpenseCard` to the reply, streamed and stored like the model's text.
+- **Needs review.** `propose_expense` takes `needsReview`; the model sets it when it guessed or could not read a field. Expenses expose `needsReview` and `receiptKey` (null when there is none), so the list can mark both. It clears when the user sets it false (`PATCH`, or `update_draft` once they have answered the model) or confirms: confirming is the user saying they checked it.
+- **Unreadable Receipts still yield a Draft.** The model is asked to propose one anyway (amount 0, `Other`, `needsReview`). If a Receipt turn ends with nothing holding the Receipt, the server makes that placeholder Draft itself and adds its `DraftExpenseCard` to the root of the program the model wrote (or makes it the program), streamed and stored like the model's text.
 - **Lifecycle.** Deleting an Expense deletes its object, after the row. Discarding a Draft deletes its object and clears `receipt_key`, keeping the row (ADR-0002). Everything else (an upload whose Chat message never came, a turn that failed before the model wrote, an R2 delete that failed) is caught by a daily cron sweep (03:00 UTC) that deletes objects over a day old that no Expense holds. The sweep, not the chat turn, does this because upload and message are separate requests: a turn that produced no Draft is not proof the upload is abandoned.
 
 ## Slices

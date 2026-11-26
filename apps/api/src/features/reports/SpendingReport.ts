@@ -1,6 +1,7 @@
 import type { Report, ReportQuery } from "@expense/contract"
 import { Effect, Schema } from "effect"
 import { SqlClient } from "effect/sql"
+import { isSpent } from "../expenses/ExpenseStore.ts"
 
 /** A grouped figure as D1 returns it. */
 const TotalRow = Schema.Struct({
@@ -14,14 +15,14 @@ const decodeSum = Schema.decodeUnknownEffect(Schema.Tuple([Schema.Struct({ amoun
 /**
  * A Report, aggregated in SQL (PLAN, "Reports"), shared by `GET /reports` and
  * the agent's `query_spending` tool so both give the same figures. Only
- * confirmed Expenses count (ADR-0002), and refunds are negative amounts, so
+ * money actually spent counts (`isSpent`, ADR-0002), and refunds are negative amounts, so
  * `SUM` nets them out. The range is the caller's, both ends included; nothing
  * here reads the clock (ADR-0009).
  */
 export const spendingReport = (query: ReportQuery) =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
-    const inRange = sql`e.status = 'confirmed' AND e.occurred_at BETWEEN ${query.from} AND ${query.to}`
+    const inRange = sql`${isSpent(sql)} AND e.occurred_at BETWEEN ${query.from} AND ${query.to}`
 
     const grouped =
       query.groupBy === "category"

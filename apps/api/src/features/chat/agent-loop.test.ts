@@ -8,7 +8,7 @@ import {
   textReply,
   toolCallReply,
 } from "../../testing/FakeLanguageModel.ts"
-import { type AgentLoopOptions, maxSteps, runAgentLoop } from "./AgentLoop.ts"
+import { type AgentLoopOptions, runAgentLoop } from "./AgentLoop.ts"
 
 // A stand-in tool: the real ones arrive with Drafts (#12).
 const Lookup = Tool.make("lookup", {
@@ -98,7 +98,6 @@ describe("the agent loop", () => {
 
     const text = await runTurn(model, { prompt: "loop forever" })
 
-    expect(maxSteps).toBe(5)
     expect(model.calls).toHaveLength(5)
     expect(text).toBe("")
   })

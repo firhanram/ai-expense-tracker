@@ -1,9 +1,10 @@
 import { type ChatMessage, ModelUnreachable, type SendChatMessage } from "@expense/contract"
 import { joinReply, splitReply } from "@expense/ui/server"
-import { Effect, Exit, Option, Scope, Sink, Stream } from "effect"
+import { type Cause, Effect, Exit, Option, Queue, Scope, Sink, Stream } from "effect"
 import { type AiError, LanguageModel, type Prompt, type Response, type Toolkit } from "effect/ai"
 import { receiptNote, type TurnReceipt } from "../receipts/TurnReceipt.ts"
-import { runAgentLoop } from "./AgentLoop.ts"
+import { WaitUntil } from "../../WaitUntil.ts"
+import { type AgentLoopError, runAgentLoop } from "./AgentLoop.ts"
 import type { NewChatMessage } from "./ChatHistory.ts"
 import type { ChatTools } from "./ChatToolkit.ts"
 import { draftsShown } from "./DraftShown.ts"
@@ -79,23 +80,28 @@ export interface ChatTurnDeps {
   /** The agent's tools, their handlers bound to this turn's client date. */
   readonly toolkit: Toolkit.WithHandler<ChatTools>
   /**
-   * Run once the model has finished; what it returns is appended to the
-   * reply, streamed and stored like the model's own text. A Receipt turn
-   * uses it to guarantee the Receipt a Draft (`draftForUnreadReceipt`).
+   * Run once the model has stopped, whether it finished or failed after its
+   * first word, with the reply so far; text it returns is appended to the
+   * reply, streamed and stored like the model's own. A Receipt turn uses it
+   * to guarantee the Receipt a Draft (`draftForUnreadReceipt`).
    */
-  readonly coda?: Effect.Effect<string> | undefined
+  readonly afterModel?: ((reply: string) => Effect.Effect<string>) | undefined
 }
 
 /**
  * One Chat turn (PLAN, "The chat turn"): store the user message, run the
  * agent loop, stream its text as written (prose and any OpenUI Lang program
- * together), and store the reply once it is complete, split into prose
+ * together), and store the reply once the model has stopped, split into prose
  * (`content`) and program (`ui_text`). The program is stored unvalidated:
  * parsing it here would load OpenUI into the Worker, and the client parses
  * it anyway, falling back to the prose when it fails.
- * An empty reply is a 200 with an empty body, and is stored as such. A model
- * failure after the first word ends the stream and stores no reply, and
- * skips the coda.
+ *
+ * Once the first word is in, the turn runs to its end apart from the
+ * response, kept alive by `WaitUntil` when there is one: a client that
+ * leaves mid-reply still gets the whole reply stored, so a Draft the model
+ * proposed keeps the card that shows it. A model failure after the first
+ * word ends the stream with an error and stores what was written before it.
+ * An empty reply is a 200 with an empty body, and is stored as such.
  */
 export const runChatTurn = (deps: ChatTurnDeps, request: SendChatMessage, receipt?: TurnReceipt) =>
   Effect.gen(function* () {
@@ -112,26 +118,37 @@ export const runChatTurn = (deps: ChatTurnDeps, request: SendChatMessage, receip
       Stream.map((part) => part.delta),
       Stream.filter((delta) => delta.length > 0),
       Stream.provideService(LanguageModel.LanguageModel, deps.model),
-      Stream.concat(
-        deps.coda === undefined
-          ? Stream.empty
-          : Stream.fromEffect(deps.coda).pipe(Stream.filter((text) => text.length > 0)),
-      ),
     )
 
     const { head, rest } = yield* firstChunk(prose).pipe(Effect.mapError(toUnreachable))
 
+    const chunks = yield* Queue.unbounded<string, AgentLoopError<ChatTools> | Cause.Done>()
     let reply = ""
-    const storeReply = Effect.suspend(() =>
-      deps.history.append({ role: "assistant", ...splitReply(reply) }),
+    const emit = (chunk: string) =>
+      Effect.suspend(() => {
+        reply += chunk
+        return Queue.offer(chunks, chunk)
+      })
+    const afterModel = deps.afterModel ?? (() => Effect.succeed(""))
+
+    const writeReply = Stream.concat(Stream.fromIterable(Option.toArray(head)), rest).pipe(
+      Stream.runForEach(emit),
+      Effect.tapError((error) => Effect.logError("Chat reply failed mid-stream", error)),
+      Effect.onExit((exit) =>
+        Effect.gen(function* () {
+          const tail = yield* afterModel(reply)
+          if (tail.length > 0) yield* emit(tail)
+          yield* deps.history.append({ role: "assistant", ...splitReply(reply) })
+          yield* Exit.isSuccess(exit) ? Queue.end(chunks) : Queue.failCause(chunks, exit.cause)
+        }),
+      ),
     )
-    if (Option.isNone(head)) {
-      yield* storeReply
-      return Stream.empty
+
+    // Detached, so a client that leaves interrupts only its own reading, not the turn.
+    const fiber = yield* Effect.forkDetach(writeReply)
+    const waitUntil = yield* Effect.serviceOption(WaitUntil)
+    if (Option.isSome(waitUntil)) {
+      waitUntil.value(new Promise((resolve) => fiber.addObserver(resolve)))
     }
-    return Stream.concat(Stream.make(head.value), rest).pipe(
-      Stream.tap((chunk) => Effect.sync(() => (reply += chunk))),
-      Stream.onEnd(storeReply),
-      Stream.tapError((error) => Effect.logError("Chat reply failed mid-stream", error)),
-    )
+    return Stream.fromQueue(chunks)
   })

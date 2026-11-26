@@ -7,10 +7,16 @@ against the real component library and record the pass rate and how the failures
 
 `apps/api/scripts/eval-openui.ts` runs each generation as one Chat turn exactly as the Worker
 sends it: the system prompt generated from `@expense/ui` (`inlineMode: true`), the same prompt
-shape (`buildPrompt`), the same agent loop and the same provider Layer (`ModelProviderLive`).
-Twelve scenarios (`evalCases` in `apps/api/scripts/openui/OpenUiEval.ts`) are cycled to make up the
-100. Until the draft and report tools land (#12, #13), a scenario's tool results are given to
-the model as a system message just before the user's message.
+shape (`buildPrompt`), the same agent loop and stop condition (`draftsShown`), the same tool
+definitions (`ChatToolkit`) and the same provider Layer (`ModelProviderLive`). The model calls
+the tools itself, so the eval measures the whole tool-calling turn, not a program written from
+results handed to it. Only the handlers differ: they answer from the scenario's in-memory
+ledger, so the eval runs in Node with no D1. They keep the rules a model can trip on (the closed
+Category set; only Drafts can be updated or discarded) and give `query_spending` the scenario's
+canned figures. Twelve scenarios (`evalCases` in `apps/api/scripts/openui/OpenUiEval.ts`) are
+cycled to make up the 100; one that refers back to an earlier card carries that exchange as Chat
+history. A card may show only an id that exists: one in the scenario's ledger, or one
+`propose_expense` returned in the turn.
 
 Each reply is graded by `checkProgram` from `@expense/ui`, the shared validator:
 

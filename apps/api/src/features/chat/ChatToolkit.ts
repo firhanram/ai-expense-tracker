@@ -1,8 +1,9 @@
 import { Effect } from "effect"
 import { Toolkit } from "effect/ai"
 import { SqlClient } from "effect/sql"
-import { QuerySpending, QuerySpendingHandler } from "../reports/QuerySpending.ts"
+import { captureServices } from "../../captureServices.ts"
 import { ReceiptStore } from "../receipts/ReceiptStore.ts"
+import { QuerySpending, QuerySpendingHandler } from "../reports/QuerySpending.ts"
 import { type DraftTurn, DraftTools, draftToolHandlers } from "./DraftTools.ts"
 
 /**
@@ -19,14 +20,13 @@ export type ChatTools = Toolkit.Tools<typeof ChatToolkit>
  * defaults to (ADR-0009), and the Receipt it carries, which a Draft holds.
  */
 export const makeChatToolkit = Effect.gen(function* () {
-  const sql = yield* SqlClient.SqlClient
-  const receipts = yield* ReceiptStore
+  const withStores = yield* captureServices(SqlClient.SqlClient, ReceiptStore)
   const querySpending = yield* QuerySpendingHandler
   return (turn: DraftTurn) =>
     ChatToolkit.pipe(
       Effect.provide(
         ChatToolkit.toLayer({
-          ...draftToolHandlers(sql, receipts, turn),
+          ...draftToolHandlers(withStores, turn),
           query_spending: querySpending,
         }),
       ),

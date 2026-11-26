@@ -133,12 +133,15 @@ describe("POST /api/chat", () => {
     ])
   })
 
-  it("stores no reply when the model fails after it started writing", async () => {
+  it("stores what the model wrote before it failed, as the user saw it", async () => {
     const model = scriptedLanguageModel(failsMidway("Half a"))
 
     await sendChat(model.layer, { message: "hi", clientDate }).catch(() => undefined)
 
-    expect(bubbles(await history(model.layer))).toEqual([["user", "hi"]])
+    expect(bubbles(await history(model.layer))).toEqual([
+      ["assistant", "Half a"],
+      ["user", "hi"],
+    ])
   })
 
   it("rejects a request without the client's date, without calling the model", async () => {

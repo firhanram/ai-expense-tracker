@@ -1,3 +1,4 @@
+import type { ChatMessage, Report } from "@expense/contract"
 import {
   checkProgram,
   type ElementNode,
@@ -8,25 +9,33 @@ import {
 import { Effect, Layer, Stream } from "effect"
 import { LanguageModel, type Prompt, type Response } from "effect/ai"
 import { runAgentLoop } from "../../src/features/chat/AgentLoop.ts"
+import { ChatToolkit } from "../../src/features/chat/ChatToolkit.ts"
 import { buildPrompt } from "../../src/features/chat/ChatTurn.ts"
+import { draftsShown } from "../../src/features/chat/DraftShown.ts"
+import type { ExpenseView } from "../../src/features/chat/DraftTools.ts"
 import type { ModelProviderConfig } from "../../src/features/chat/ModelProvider.ts"
 
 /**
  * The OpenUI Lang eval (ADR-0008: "build a small eval against the real
  * component library before wiring the UI"). Each generation is one Chat turn
- * as the app sends it, the same system prompt and prompt shape, graded by
- * `checkProgram` from `@expense/ui`.
+ * as the app runs it: the same system prompt, prompt shape, agent loop, stop
+ * condition and tool definitions (`ChatToolkit`), graded by `checkProgram`
+ * from `@expense/ui`. Only the tools' handlers differ: they answer from the
+ * case's in-memory ledger, so the eval runs in Node with no D1.
  */
 
-/** One scenario. `context` stands in for the tool results the model would have read this turn. */
+/** One scenario. */
 export interface EvalCase {
   readonly name: string
   /** `ui`: must answer with a valid program. `prose`: must not. `either`: valid program or prose. */
   readonly expect: "ui" | "prose" | "either"
   readonly message: string
-  readonly context?: string | undefined
-  /** The only Expense ids the reply may show; any other is invented. */
-  readonly ids?: ReadonlyArray<string> | undefined
+  /** The Chat before this turn, oldest first: how an earlier card's id reaches the model. */
+  readonly history?: ReadonlyArray<Pick<ChatMessage, "role" | "content" | "uiText">> | undefined
+  /** Expenses that exist when the turn starts. The tools read and change these. */
+  readonly ledger?: ReadonlyArray<ExpenseView> | undefined
+  /** What `query_spending` answers, whatever range it is asked for. No spending when omitted. */
+  readonly spending?: Pick<Report, "total" | "totals"> | undefined
 }
 
 export type EvalOutcome =
@@ -73,41 +82,63 @@ export interface EvalReport {
 /** The client date every case runs on, so the cases' ranges are reproducible. */
 export const evalClientDate = "2026-11-25"
 
-const draft = (id: string, fields: string) =>
-  `propose_expense returned {"id":"${id}"} for ${fields}`
+/** The seeded Categories, in order (ADR-0004, `migrations/0002_seed_categories.sql`). */
+const categories = [
+  "Groceries",
+  "Dining",
+  "Transport",
+  "Utilities",
+  "Housing",
+  "Shopping",
+  "Health",
+  "Entertainment",
+  "Education",
+  "Giving & family",
+  "Other",
+].map((name, index) => ({ id: index + 1, name }))
+
+const expense = (
+  fields: Pick<ExpenseView, "id" | "status" | "amount" | "categoryName" | "merchant"> &
+    Partial<ExpenseView>,
+): ExpenseView => ({ note: null, occurredAt: "2026-11-24", needsReview: false, ...fields })
+
+const coffee = expense({
+  id: "exp_01JD3Q9Z",
+  status: "confirmed",
+  amount: 28000,
+  categoryName: "Dining",
+  merchant: "Kopi Kenangan",
+})
+const shirt = expense({
+  id: "exp_01JD4X7Q",
+  status: "draft",
+  amount: 70000,
+  categoryName: "Shopping",
+  merchant: null,
+  occurredAt: evalClientDate,
+})
+
+/** An earlier exchange in which the assistant showed `card` for `id`. */
+const shown = (message: string, card: "DraftExpenseCard" | "ExpenseCard", id: string) => [
+  { role: "user" as const, content: message, uiText: null },
+  {
+    role: "assistant" as const,
+    content: "Here it is:",
+    uiText: `root = Stack([c])\nc = ${card}("${id}")`,
+  },
+]
 
 /** The scenarios, cycled to make up the requested number of generations. */
 export const evalCases: ReadonlyArray<EvalCase> = [
-  {
-    name: "draft-from-text",
-    expect: "ui",
-    message: "beli baju 70rb",
-    context: draft("exp_01JD4X7Q", "Rp70.000 Shopping today"),
-    ids: ["exp_01JD4X7Q"],
-  },
-  {
-    name: "draft-from-receipt",
-    expect: "ui",
-    message: "here's my receipt from Indomaret",
-    context: draft("exp_01JD4Y2M", "Rp48.500 Groceries at Indomaret today"),
-    ids: ["exp_01JD4Y2M"],
-  },
-  {
-    name: "two-drafts",
-    expect: "ui",
-    message: "lunch 35k and grab home 22k",
-    context: [
-      draft("exp_01JD5A11", "Rp35.000 Dining today"),
-      draft("exp_01JD5A12", "Rp22.000 Transport today"),
-    ].join("; "),
-    ids: ["exp_01JD5A11", "exp_01JD5A12"],
-  },
+  { name: "draft-from-text", expect: "ui", message: "beli baju 70rb" },
+  { name: "draft-with-merchant", expect: "ui", message: "Indomaret 48.500 for groceries" },
+  { name: "two-drafts", expect: "ui", message: "lunch 35k and grab home 22k" },
   {
     name: "show-expense",
     expect: "ui",
-    message: "show me the coffee I logged yesterday",
-    context: 'get_expense returned {"id":"exp_01JD3Q9Z","merchant":"Kopi Kenangan"}',
-    ids: ["exp_01JD3Q9Z"],
+    message: "show me that coffee again",
+    history: shown("kopi kenangan 28rb yesterday", "ExpenseCard", coffee.id),
+    ledger: [coffee],
   },
   { name: "list-drafts", expect: "ui", message: "what drafts haven't I confirmed?" },
   { name: "list-this-month", expect: "ui", message: "list everything I spent this month" },
@@ -125,7 +156,7 @@ export const evalCases: ReadonlyArray<EvalCase> = [
     name: "total-question",
     expect: "either",
     message: "how much did I spend last month?",
-    context: 'query_spending returned [{"month":"2026-10","total":3250000}]',
+    spending: { total: 3250000, totals: [{ label: "2026-10", categoryId: null, amount: 3250000 }] },
   },
   {
     name: "how-to",
@@ -137,10 +168,83 @@ export const evalCases: ReadonlyArray<EvalCase> = [
     name: "confirm-request",
     expect: "either",
     message: "yes, confirm it for me",
-    context: draft("exp_01JD4X7Q", "Rp70.000 Shopping today"),
-    ids: ["exp_01JD4X7Q"],
+    history: shown("beli baju 70rb", "DraftExpenseCard", shirt.id),
+    ledger: [shirt],
   },
 ]
+
+/** A tool call that did nothing, as the real handlers return it. */
+const fail = (message: string) => Effect.fail({ message })
+
+const category = (name: string) =>
+  categories.find((entry) => entry.name.toLowerCase() === name.toLowerCase())
+
+const notACategory = (name: string) =>
+  fail(`"${name}" is not a Category. Use one of: ${categories.map((c) => c.name).join(", ")}.`)
+
+/**
+ * The Chat's tools over an in-memory ledger: the real definitions, so the
+ * model is offered exactly what the Worker offers, with handlers that keep
+ * the rules a model can trip on (the closed Category set, Drafts only for
+ * update and discard) and nothing else. `knownIds` is every Expense that
+ * exists, the ledger's and those proposed this turn.
+ */
+const evalToolkit = (evalCase: EvalCase) => {
+  const ledger = new Map((evalCase.ledger ?? []).map((entry) => [entry.id, entry]))
+  let proposed = 0
+  const draft = (id: string) =>
+    Effect.gen(function* () {
+      const found = ledger.get(id)
+      if (found === undefined) return yield* fail(`No Draft Expense has id ${id}.`)
+      if (found.status !== "draft") return yield* fail(`Expense ${id} is already ${found.status}.`)
+      return found
+    })
+  const save = (entry: ExpenseView) => Effect.sync(() => (ledger.set(entry.id, entry), entry))
+
+  const toolkit = ChatToolkit.pipe(
+    Effect.provide(
+      ChatToolkit.toLayer({
+        search_categories: () => Effect.succeed(categories),
+        propose_expense: ({ categoryName, occurredAt, ...fields }) => {
+          const found = category(categoryName)
+          if (found === undefined) return notACategory(categoryName)
+          return save({
+            ...fields,
+            id: `exp_${evalCase.name}_${++proposed}`,
+            status: "draft",
+            categoryName: found.name,
+            occurredAt: occurredAt ?? evalClientDate,
+          })
+        },
+        update_draft: ({ id, categoryName, ...fields }) =>
+          Effect.gen(function* () {
+            const current = yield* draft(id)
+            const found = categoryName === undefined ? undefined : category(categoryName)
+            if (categoryName !== undefined && found === undefined) {
+              return yield* notACategory(categoryName)
+            }
+            const changed = Object.fromEntries(
+              Object.entries(fields).filter(([, value]) => value !== undefined),
+            )
+            return yield* save({
+              ...current,
+              ...changed,
+              ...(found !== undefined && { categoryName: found.name }),
+            })
+          }),
+        discard_draft: ({ id }) =>
+          draft(id).pipe(Effect.flatMap((current) => save({ ...current, status: "discarded" }))),
+        get_expense: ({ id }) => {
+          const found = ledger.get(id)
+          return found === undefined ? fail(`No Expense has id ${id}.`) : Effect.succeed(found)
+        },
+        query_spending: (query) =>
+          Effect.succeed({ ...query, ...(evalCase.spending ?? { total: 0, totals: [] }) }),
+      }),
+    ),
+  )
+  return { toolkit, knownIds: () => [...ledger.keys()] }
+}
 
 /** The ids the program's cards show. */
 const shownIds = (node: unknown): ReadonlyArray<string> => {
@@ -155,43 +259,52 @@ const shownIds = (node: unknown): ReadonlyArray<string> => {
   return [...own, ...Object.values(element.props).flatMap(shownIds)]
 }
 
-/** Grades one reply against its case. */
+/** Grades one reply against its case. `knownIds` are the Expenses that exist; any other is invented. */
 export const gradeReply = (
   evalCase: EvalCase,
-  reply: { readonly text: string; readonly finishReason: string | undefined },
+  reply: {
+    readonly text: string
+    readonly finishReason: string | undefined
+    readonly knownIds: ReadonlyArray<string>
+  },
 ): EvalResult => {
   const check = checkProgram(reply.text, { finishReason: reply.finishReason })
   const outcome = ((): EvalOutcome => {
     if (check.outcome === "prose") return evalCase.expect === "ui" ? "prose-instead-of-ui" : "prose"
     if (check.outcome !== "ok") return check.outcome
     if (evalCase.expect === "prose") return "forced-ui"
-    const allowed = new Set(evalCase.ids ?? [])
-    const invented = shownIds(parseProgram(reply.text).root).some((id) => !allowed.has(id))
+    const known = new Set(reply.knownIds)
+    const invented = shownIds(parseProgram(reply.text).root).some((id) => !known.has(id))
     return invented ? "invented-id" : "ok"
   })()
   const passed = outcome === "ok" || (outcome === "prose" && evalCase.expect !== "ui")
   return { case: evalCase.name, outcome, passed, problems: check.problems, text: reply.text }
 }
 
-/** The prompt for a case, shaped exactly as a Chat turn's, with its tool context before the message. */
-export const casePrompt = (evalCase: EvalCase): Prompt.RawInput => {
-  const messages = [
-    ...buildPrompt(systemPrompt, [], { message: evalCase.message, clientDate: evalClientDate }),
-  ]
-  if (evalCase.context === undefined) return messages
-  const last = messages.pop()!
-  return [
-    ...messages,
-    { role: "system", content: `Tool results this turn: ${evalCase.context}` },
-    last,
-  ]
-}
+/** The prompt for a case, shaped exactly as a Chat turn's. */
+export const casePrompt = (evalCase: EvalCase): Prompt.RawInput =>
+  buildPrompt(
+    systemPrompt,
+    (evalCase.history ?? []).map(({ role, content, uiText }, index): ChatMessage => ({
+      id: `msg_${index}`,
+      role,
+      content,
+      uiText,
+      createdAt: `${evalClientDate}T00:00:00.000Z`,
+    })),
+    { message: evalCase.message, clientDate: evalClientDate },
+  )
 
 const generate = (evalCase: EvalCase) =>
   Effect.gen(function* () {
+    const tools = evalToolkit(evalCase)
     let text = ""
     let finishReason: string | undefined
-    yield* runAgentLoop({ prompt: casePrompt(evalCase) }).pipe(
+    yield* runAgentLoop({
+      prompt: casePrompt(evalCase),
+      toolkit: yield* tools.toolkit,
+      stopAfter: draftsShown(),
+    }).pipe(
       Stream.runForEach((part: Response.AnyPart) =>
         Effect.sync(() => {
           if (part.type === "text-delta") text += part.delta
@@ -199,7 +312,7 @@ const generate = (evalCase: EvalCase) =>
         }),
       ),
     )
-    return gradeReply(evalCase, { text, finishReason })
+    return gradeReply(evalCase, { text, finishReason, knownIds: tools.knownIds() })
   }).pipe(
     Effect.catch((error) =>
       Effect.succeed<EvalResult>({

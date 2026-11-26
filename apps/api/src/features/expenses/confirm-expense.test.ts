@@ -48,6 +48,15 @@ describe("POST /api/expenses/:id/confirm", () => {
     expect(await list("draft")).toEqual([])
   })
 
+  it("clears needsReview: confirming is the user saying they checked it", async () => {
+    const id = await seed("draft")
+    await env.DB.prepare("UPDATE expense SET needs_review = 1 WHERE id = ?").bind(id).run()
+
+    const response = await post(`/api/expenses/${id}/confirm`)
+
+    expect(await response.json()).toMatchObject({ id, status: "confirmed", needsReview: false })
+  })
+
   it("succeeds and changes nothing when confirmed again, recording one Expense", async () => {
     const id = await seed("draft")
 

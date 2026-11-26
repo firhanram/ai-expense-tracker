@@ -1,4 +1,5 @@
 import type { ChatHistoryPage, Expense } from "@expense/contract"
+import { checkProgram, parseProgram } from "@expense/ui"
 import { env } from "cloudflare:workers"
 import { Schema } from "effect"
 import type { Prompt } from "effect/ai"
@@ -145,6 +146,34 @@ describe("a Chat turn with a Receipt", () => {
       role: "assistant",
       uiText: expect.stringContaining(`DraftExpenseCard("${draft!.id}")`),
     })
+  })
+
+  it("adds the placeholder's card to the program the model wrote, so the reply stores one program", async () => {
+    const receiptKey = await upload()
+    const model = scriptedLanguageModel(
+      textReply(
+        [
+          "I can't read it. Your other drafts:",
+          "```openui-lang",
+          "root = Stack([receipt])",
+          'receipt = ExpenseList("draft")',
+          "```",
+        ].join("\n"),
+      ),
+    )
+
+    await sendChat(model.layer, { message: "this one", clientDate, receiptKey })
+
+    const [draft] = await drafts()
+    const { messages }: ChatHistoryPage = await callApi("/api/chat").then((r) => r.json())
+    const uiText = messages[0]!.uiText!
+    expect(uiText.match(/^\s*root\s*=/gm)).toHaveLength(1)
+    expect(checkProgram(uiText).outcome).toBe("ok")
+    const children = parseProgram(uiText).root?.props["children"]
+    expect(children).toMatchObject([
+      { typeName: "ExpenseList", props: { status: "draft" } },
+      { typeName: "DraftExpenseCard", props: { id: draft!.id } },
+    ])
   })
 
   it("adds no placeholder when the model proposed from the Receipt itself", async () => {
