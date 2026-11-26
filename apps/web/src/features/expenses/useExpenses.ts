@@ -7,12 +7,12 @@ import { isExpense, isExpenseAction, placeExpense, statusAfter } from "./expense
 export const expensesKey = ["expenses"] as const
 
 /**
- * `GET /expenses`: confirmed unless `query.status` says otherwise, newest date first.
- * Confirms and discards still in flight are applied on top, so a refetch while
- * one is pending cannot bring the old row back, and a failed one simply drops out.
+ * Confirms and discards still in flight, each as the Expense will read once it
+ * succeeds. Layered over cached lists so a refetch while one is pending cannot
+ * bring the old state back, and a failed one simply drops out.
  */
-export const useExpenses = (query: ListExpensesQuery) => {
-  const moving = useMutationState({
+export const useMovingExpenses = (): ReadonlyArray<Expense> =>
+  useMutationState({
     filters: { mutationKey: expensesKey, status: "pending" },
     select: (mutation): Expense | null => {
       const action = mutation.options.mutationKey?.[1]
@@ -21,13 +21,20 @@ export const useExpenses = (query: ListExpensesQuery) => {
         ? { ...expense, status: statusAfter[action] }
         : null
     },
-  })
+  }).filter((expense) => expense !== null)
+
+/**
+ * `GET /expenses`: confirmed unless `query.status` says otherwise, newest date first,
+ * with in-flight confirms and discards applied on top (`useMovingExpenses`).
+ */
+export const useExpenses = (query: ListExpensesQuery) => {
+  const moving = useMovingExpenses()
   return useQuery({
     queryKey: [...expensesKey, query],
     queryFn: () => api((client) => client.expenses.list({ query })),
     select: (list) =>
       moving.reduce<ReadonlyArray<Expense>>(
-        (shown, expense) => (expense === null ? shown : placeExpense(shown, query, expense)),
+        (shown, expense) => placeExpense(shown, query, expense),
         list,
       ),
   })
