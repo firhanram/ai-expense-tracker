@@ -9,7 +9,6 @@ import {
   Stack,
 } from "@expense/ui"
 import { type ComponentRenderer, createLibrary } from "@openuidev/react-lang"
-import { CardSkeleton } from "./CardSkeleton.tsx"
 import { DraftExpenseCard as DraftExpenseCardView } from "./DraftExpenseCard.tsx"
 import { ExpenseCard as ExpenseCardView } from "./ExpenseCard.tsx"
 import { SpendingChartView } from "../reports/SpendingChart.tsx"
@@ -39,9 +38,6 @@ const listQuery = (props: PropsOf<typeof ExpenseList>): ListExpensesQuery => ({
  * The library the Renderer draws with: the definitions the model is told
  * about, plus the Draft card's actions, which only the web app knows
  * (ADR-0007). Module scope, since the Renderer's parser memoises by library.
- *
- * `DraftExpenseCard` and `SpendingChart` draw a loading card until their
- * tickets replace them (W12, W13): swap the view passed to `withView`.
  */
 export const webLibrary = createLibrary({
   root: "Stack",
