@@ -46,35 +46,19 @@ describe("the API client", () => {
     await expect(api((client) => client.health.check())).resolves.toEqual({ status: "ok" })
   })
 
-  it("sends the bearer token to the same-origin /api path", async () => {
+  it("calls the same-origin /api path with no credential of its own", async () => {
     const sent: Array<Sent> = []
     const api = createApi({
       baseUrl: "http://app.test",
-      token: "secret",
       fetch: answering(200, { success: true, data: expense }, sent),
     })
 
     await api((client) => client.expenses.confirm({ params: { id: "e1" } }))
 
+    // Cloudflare Access's cookie is the credential (ADR-0011); the bundle carries none.
     expect(sent).toEqual([
-      {
-        url: "http://app.test/api/expenses/e1/confirm",
-        method: "POST",
-        authorization: "Bearer secret",
-      },
+      { url: "http://app.test/api/expenses/e1/confirm", method: "POST", authorization: null },
     ])
-  })
-
-  it("sends no Authorization header when no token is configured", async () => {
-    const sent: Array<Sent> = []
-    const api = createApi({
-      baseUrl: "http://app.test",
-      fetch: answering(200, { success: true, data: { status: "ok" } }, sent),
-    })
-
-    await api((client) => client.health.check())
-
-    expect(sent[0]?.authorization).toBeNull()
   })
 
   it("rejects with the error named by a failure envelope's errorCode", async () => {
@@ -96,7 +80,7 @@ describe("the API client", () => {
     ).rejects.toMatchObject({ _tag: "ExpenseNotFound", id: "e9", errorId: "err-1" })
   })
 
-  it("rejects with Unauthorized when the token is refused", async () => {
+  it("rejects with Unauthorized when the Worker refuses the request", async () => {
     const api = createApi({
       baseUrl: "http://app.test",
       fetch: answering(401, {
@@ -104,7 +88,7 @@ describe("the API client", () => {
         error: {
           errorId: "err-2",
           errorCode: "UNAUTHORIZED",
-          message: "A valid bearer token is required.",
+          message: "A valid Cloudflare Access token is required.",
         },
       }),
     })

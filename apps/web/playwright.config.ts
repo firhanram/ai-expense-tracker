@@ -19,7 +19,6 @@ export default defineConfig({
     command: `pnpm build && pnpm preview --port ${port}`,
     url: `http://localhost:${port}`,
     reuseExistingServer: false,
-    env: { VITE_API_TOKEN: "e2e-token" },
     timeout: 120_000,
   },
 })

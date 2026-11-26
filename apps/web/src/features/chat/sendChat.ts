@@ -54,7 +54,7 @@ async function* decode(body: ReadableStream<Uint8Array> | null): AsyncGenerator<
 
 export interface SendChatOptions {
   readonly baseUrl: string
-  readonly token?: string | undefined
+  /** `apiConnection.fetch` in the app, which handles an expired Access session. */
   readonly fetch: typeof globalThis.fetch
 }
 
@@ -70,9 +70,6 @@ export const createSendChat =
   (options: SendChatOptions): SendChat =>
   async (request) => {
     const headers = new Headers({ "content-type": "application/json" })
-    if (options.token !== undefined && options.token !== "") {
-      headers.set("authorization", `Bearer ${options.token}`)
-    }
     const response = await options
       .fetch(new URL("/api/chat", options.baseUrl), {
         method: "POST",

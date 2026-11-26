@@ -6,7 +6,7 @@ import { HttpRouter, HttpServer } from "effect/http"
 import { HttpApiBuilder } from "effect/http-api"
 import { systemPrompt } from "@expense/ui/server"
 import { ApiErrorsLive, ErrorEnvelope } from "./ErrorEnvelope.ts"
-import { BearerAuth } from "./features/auth/BearerAuth.ts"
+import { AccessAuth } from "./features/auth/AccessAuth.ts"
 import { ChatLive } from "./features/chat/ChatLive.ts"
 import { ModelProviderLive } from "./features/chat/ModelProvider.ts"
 import { SystemPrompt } from "./features/chat/SystemPrompt.ts"
@@ -29,7 +29,11 @@ export interface AppOverrides {
 }
 
 export const makeApp = (env: Cloudflare.Env, overrides: AppOverrides = {}) =>
-  Layer.mergeAll(HttpApiBuilder.layer(Api), BearerAuth(env.API_TOKEN), ErrorEnvelope).pipe(
+  Layer.mergeAll(
+    HttpApiBuilder.layer(Api),
+    AccessAuth({ teamDomain: env.ACCESS_TEAM_DOMAIN, aud: env.ACCESS_AUD }),
+    ErrorEnvelope,
+  ).pipe(
     Layer.provide([HealthLive, ExpensesLive, ChatLive, ReportsLive, ReceiptsLive]),
     // The model is told what the component library lets it render (ADR-0006).
     Layer.provide(Layer.succeed(SystemPrompt, systemPrompt)),

@@ -4,6 +4,7 @@ import { systemPrompt } from "@expense/ui/server"
 import { type Layer, Schema } from "effect"
 import type { LanguageModel, Prompt } from "effect/ai"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { testIssuer } from "../../testing/access.ts"
 import { callApiWithModel, sendChat } from "../../testing/callWithModel.ts"
 import { anError, readData, readError } from "../../testing/envelope.ts"
 import {
@@ -130,11 +131,15 @@ describe("POST /api/chat", () => {
     })
 
     it("answers 429 TOO_MANY_REQUESTS when the provider rate limits, keeping the message", async () => {
-      vi.stubGlobal("fetch", async () =>
-        Response.json(
-          { error: { message: "Rate limit reached", type: "rate_limit_error" } },
-          { status: 429 },
-        ),
+      // Only the provider rate limits; the Access team's keys stay reachable.
+      const unstubbed = globalThis.fetch
+      vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) =>
+        new Request(input).url.startsWith(testIssuer)
+          ? unstubbed(input, init)
+          : Response.json(
+              { error: { message: "Rate limit reached", type: "rate_limit_error" } },
+              { status: 429 },
+            ),
       )
       const provider = ModelProviderLive({ apiKey: "sk-test" })
 
