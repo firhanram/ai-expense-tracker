@@ -103,4 +103,27 @@ describe("GET /api/expenses", () => {
       expect(problem.errors).toContainEqual(expect.objectContaining({ path: ["query", "status"] }))
     })
   })
+
+  it("marks which Expenses have a Receipt, and which need review", async () => {
+    await record("Typed in", "2026-11-02")
+    await env.DB.prepare(
+      `INSERT INTO expense (id, amount, category_id, merchant, occurred_at, created_at, status, needs_review, receipt_key)
+       VALUES (?, 10000, 1, 'From a photo', '2026-11-01', '2026-11-01T00:00:00.000Z', 'confirmed', 1, 'receipt-1')`,
+    )
+      .bind(crypto.randomUUID())
+      .run()
+
+    const expenses: Array<Record<string, unknown>> = await callApi("/api/expenses").then((r) =>
+      r.json(),
+    )
+
+    expect(expenses).toEqual([
+      expect.objectContaining({ merchant: "Typed in", receiptKey: null, needsReview: false }),
+      expect.objectContaining({
+        merchant: "From a photo",
+        receiptKey: "receipt-1",
+        needsReview: true,
+      }),
+    ])
+  })
 })

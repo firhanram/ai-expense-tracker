@@ -2,6 +2,8 @@
 declare namespace Cloudflare {
   interface Env {
     readonly DB: D1Database
+    /** Receipt images (PLAN, "Receipts"). Served only through the API, never presigned. */
+    readonly RECEIPTS: R2Bucket
     /** Bearer token every API route but health requires. A secret, never in source. */
     readonly API_TOKEN: string
     /** The model provider's API key (DeepSeek by default), bound from the account's Secrets Store. */

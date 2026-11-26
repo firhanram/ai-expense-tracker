@@ -3,8 +3,9 @@ import { Effect, Schema } from "effect"
 import { Tool, Toolkit } from "effect/ai"
 import { SqlClient } from "effect/sql"
 import { editExpense } from "../expenses/editExpense.ts"
-import { discardExpense, insertExpense } from "../expenses/ExpenseStore.ts"
 import { decodeRows, toExpense } from "../expenses/ExpenseRow.ts"
+import { discardExpense, insertExpense, proposeFromReceipt } from "../expenses/ExpenseStore.ts"
+import { ReceiptStore } from "../receipts/ReceiptStore.ts"
 
 /**
  * The agent's tools for Drafts (PLAN, "The chat turn"): find a Category,
@@ -41,7 +42,7 @@ export const SearchCategories = Tool.make("search_categories", {
 
 export const ProposeExpense = Tool.make("propose_expense", {
   description:
-    "Create a Draft Expense the user can confirm on its card, and return it. Call once per Expense the user mentions; show each with DraftExpenseCard and the returned id.",
+    "Create a Draft Expense the user can confirm on its card, and return it. Call once per Expense the user mentions; show each with DraftExpenseCard and the returned id. With a Receipt attached, the Draft holds it; proposing again from the same Receipt changes that Draft instead of adding one.",
   parameters: Schema.Struct({
     amount: Rupiah.annotate({
       description: "Whole Rupiah, e.g. 70rb is 70000. Negative for a refund.",
@@ -53,7 +54,8 @@ export const ProposeExpense = Tool.make("propose_expense", {
     categoryName,
     note: Schema.NullOr(Schema.String),
     needsReview: Schema.Boolean.annotate({
-      description: "True when you guessed the amount, date or Category",
+      description:
+        "True when you guessed the amount, date or Category, or could not read part of a Receipt",
     }),
   }),
   success: ExpenseView,
@@ -105,11 +107,20 @@ const decodeCategories = Schema.decodeUnknownEffect(Schema.Array(Category))
 
 const notFound = (id: string): ToolFailure => ({ message: `No Draft Expense has id ${id}.` })
 
-/**
- * The handlers, per Chat turn: `clientDate` is the user's local date, the
- * default for a new Draft (ADR-0009). The server never reads its own clock.
- */
-export const draftToolHandlers = (sql: SqlClient.SqlClient, clientDate: IsoDate) => {
+/** What the tools know about the Chat turn they run in. */
+export interface DraftTurn {
+  /** The user's local date, the default for a new Draft (ADR-0009). The server never reads its own clock. */
+  readonly clientDate: IsoDate
+  /** The Receipt the user attached this turn; a Draft proposed in it holds that Receipt. */
+  readonly receiptKey?: string | undefined
+}
+
+/** The handlers, per Chat turn. */
+export const draftToolHandlers = (
+  sql: SqlClient.SqlClient,
+  receipts: ReceiptStore["Service"],
+  { clientDate, receiptKey }: DraftTurn,
+) => {
   const categories = sql`SELECT id, name FROM category ORDER BY sort_order`.pipe(
     Effect.flatMap(decodeCategories),
     Effect.orDie,
@@ -141,26 +152,38 @@ export const draftToolHandlers = (sql: SqlClient.SqlClient, clientDate: IsoDate)
       })),
     )
 
-  const withSql = Effect.provideService(SqlClient.SqlClient, sql)
+  const withSql = <A, E>(effect: Effect.Effect<A, E, SqlClient.SqlClient | ReceiptStore>) =>
+    effect.pipe(
+      Effect.provideService(SqlClient.SqlClient, sql),
+      Effect.provideService(ReceiptStore, receipts),
+    )
 
   return DraftTools.of({
     search_categories: () => categories,
 
     propose_expense: (params) =>
       Effect.gen(function* () {
-        const id = yield* categoryId(params.categoryName)
+        const input = {
+          amount: params.amount,
+          categoryId: yield* categoryId(params.categoryName),
+          merchant: params.merchant,
+          note: params.note,
+          occurredAt: params.occurredAt ?? clientDate,
+        }
         const draft = yield* withSql(
-          insertExpense(
-            {
-              amount: params.amount,
-              categoryId: id,
-              merchant: params.merchant,
-              note: params.note,
-              occurredAt: params.occurredAt ?? clientDate,
-            },
-            { status: "draft", needsReview: params.needsReview },
-          ),
-        ).pipe(Effect.orDie)
+          receiptKey === undefined
+            ? insertExpense(input, { status: "draft", needsReview: params.needsReview })
+            : proposeFromReceipt(input, { receiptKey, needsReview: params.needsReview }),
+        ).pipe(
+          Effect.catchTags({
+            ExpenseConfirmed: ({ id }) =>
+              Effect.fail<ToolFailure>({
+                message: `This Receipt is already recorded as Expense ${id}; show that one instead.`,
+              }),
+            // `categoryId` resolved the name against the same closed set.
+            UnknownCategory: Effect.die,
+          }),
+        )
         return yield* view(draft)
       }),
 

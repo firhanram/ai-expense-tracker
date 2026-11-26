@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers"
 import { describe, expect, it } from "vitest"
 import { makeHandler } from "../../App.ts"
 
@@ -17,6 +18,8 @@ describe("GET /api/health with D1 down", () => {
   it("fails with a 500 problem instead of reporting ok", async () => {
     const app = makeHandler({
       DB: unreachableDb,
+      // Health reads only D1.
+      RECEIPTS: env.RECEIPTS,
       API_TOKEN: "unused-health-is-public",
       API_PROVIDER_KEY: { get: () => Promise.resolve("unused-no-model-call") },
     })

@@ -33,7 +33,13 @@ export const Expense = Schema.Struct({
   /** ISO 8601 UTC. When the row was written, not when the money was spent. */
   createdAt: Schema.String,
   status: ExpenseStatus,
+  /** The agent was not confident in what it read, e.g. from a faded Receipt: the user should check it. */
   needsReview: Schema.Boolean,
+  /**
+   * The Receipt this Expense was read from, served at `GET /receipts/:key`;
+   * null when it has none. Non-null is how the list marks an Expense with a Receipt.
+   */
+  receiptKey: Schema.NullOr(Schema.String),
 })
 export type Expense = typeof Expense.Type
 

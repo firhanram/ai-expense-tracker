@@ -12,6 +12,7 @@ export const ExpenseRow = Schema.Struct({
   created_at: Schema.String,
   status: Schema.Literals(["draft", "confirmed", "discarded"]),
   needs_review: Schema.Literals([0, 1]),
+  receipt_key: Schema.NullOr(Schema.String),
 })
 export type ExpenseRow = typeof ExpenseRow.Type
 
@@ -27,4 +28,5 @@ export const toExpense = (row: ExpenseRow): Expense => ({
   createdAt: row.created_at,
   status: row.status,
   needsReview: row.needs_review === 1,
+  receiptKey: row.receipt_key,
 })
