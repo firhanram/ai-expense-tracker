@@ -1,12 +1,15 @@
 import * as Cloudflare from "@alchemy.run/cloudflare"
 import * as Alchemy from "alchemy"
+import * as Command from "alchemy/Command"
 import * as Config from "effect/Config"
 import * as Effect from "effect/Effect"
 
 /**
  * One Worker: the Effect HTTP app under `/api/*`, with D1 bound as `DB`
  * and the Receipts bucket bound as `RECEIPTS` (ADR-0010), and the bearer token
- * as `API_TOKEN`, and the model key as `API_PROVIDER_KEY`. The SPA's static assets join it in a later slice.
+ * as `API_TOKEN`, and the model key as `API_PROVIDER_KEY`. The SPA (`apps/web`) is the
+ * same Worker's static assets: one origin, `/api/*` to the Worker, every other
+ * unmatched path to `index.html` for client-side routing.
  */
 export default Alchemy.Stack(
   "ExpenseTracker",
@@ -21,11 +24,25 @@ export default Alchemy.Stack(
     // Receipt images. Private: served only through the API behind the token.
     const receipts = yield* Cloudflare.R2.Bucket("Receipts")
 
+    // The SPA bundle. The bearer token is baked in at build time (the user never types
+    // it), so the build gets the same API_TOKEN the Worker is bound with.
+    const web = yield* Command.Build("Web", {
+      command: "pnpm build",
+      cwd: "./apps/web",
+      outdir: "dist",
+      env: { VITE_API_TOKEN: yield* Config.Redacted("API_TOKEN") },
+    })
+
     const worker = yield* Cloudflare.Worker("Api", {
       main: "./apps/api/src/index.ts",
       compatibility: { date: "2026-11-02", flags: ["nodejs_compat"] },
       // Daily at 03:00 UTC: the orphan Receipt sweep (apps/api/src/features/receipts/OrphanSweep.ts).
       crons: ["0 3 * * *"],
+      assets: {
+        directory: web.outdir,
+        runWorkerFirst: ["/api/*"],
+        notFoundHandling: "single-page-application",
+      },
       env: {
         DB: db,
         RECEIPTS: receipts,

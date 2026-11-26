@@ -16,6 +16,10 @@
     "typescript/no-misused-promises": "error",
     "typescript/consistent-type-imports": "error",
     "import/no-cycle": "error",
+    "import/no-unassigned-import": [
+      "warn",
+      { "allow": ["**/*.css", "@testing-library/jest-dom/vitest"] }
+    ],
     "typescript/no-unsafe-class-instance-assignment": "off"
   },
   "env": {
