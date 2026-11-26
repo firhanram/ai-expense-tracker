@@ -1,5 +1,6 @@
 export {
   ApiErrors,
+  CrossSiteRequest,
   InternalError,
   internalErrorMessage,
   Unauthorized,

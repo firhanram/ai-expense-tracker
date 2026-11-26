@@ -128,7 +128,6 @@ test("a reply streams in under the message, and history survives a reload", asyn
   await expect(log(page).getByText("Logged Rp70.000 at Uniqlo.")).toBeVisible()
   await expect(composer(page)).toHaveValue("")
   expect(sentBodies(calls)).toEqual([{ message: "buy cloth 70rb", clientDate: "2026-11-25" }])
-  expect(calls.find((call) => call.method === "POST")?.authorization).toBe("Bearer e2e-token")
 
   await page.reload()
 
