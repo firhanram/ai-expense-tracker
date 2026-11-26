@@ -1,18 +1,25 @@
-import type { Expense } from "@expense/contract"
+import {
+  CategoryId,
+  type Expense,
+  ExpenseId,
+  ExpenseStatus,
+  ReceiptKey,
+  Rupiah,
+} from "@expense/contract"
 import { Schema } from "effect"
 
 /** An `expense` row as D1 returns it. */
 export const ExpenseRow = Schema.Struct({
-  id: Schema.String,
-  amount: Schema.Int,
-  category_id: Schema.Int,
+  id: ExpenseId,
+  amount: Rupiah,
+  category_id: CategoryId,
   merchant: Schema.NullOr(Schema.String),
   note: Schema.NullOr(Schema.String),
   occurred_at: Schema.String,
   created_at: Schema.String,
-  status: Schema.Literals(["draft", "confirmed", "discarded"]),
+  status: ExpenseStatus,
   needs_review: Schema.Literals([0, 1]),
-  receipt_key: Schema.NullOr(Schema.String),
+  receipt_key: Schema.NullOr(ReceiptKey),
 })
 export type ExpenseRow = typeof ExpenseRow.Type
 

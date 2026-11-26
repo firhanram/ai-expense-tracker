@@ -75,6 +75,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@expense/contract':
+        specifier: workspace:*
+        version: link:../contract
       '@openuidev/lang-core':
         specifier: 1.2.0
         version: 1.2.0(zod@4.6.7)
@@ -82,6 +85,9 @@ importers:
         specifier: 4.6.7
         version: 4.6.7
     devDependencies:
+      effect:
+        specifier: 4.1.5
+        version: 4.1.5
       vitest:
         specifier: 5.1.1
         version: 5.1.1(@types/node@24.19.2)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(yaml@2.9.1))

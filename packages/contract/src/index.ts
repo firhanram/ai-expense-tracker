@@ -13,9 +13,11 @@ export {
   CreateExpense,
   EditExpense,
   Expense,
+  ExpenseId,
   ExpenseStatus,
   IsoDate,
   ListExpensesQuery,
+  ReceiptKey,
   Rupiah,
 } from "./expenses/Expense.ts"
 export {

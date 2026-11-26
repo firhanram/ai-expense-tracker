@@ -1,5 +1,5 @@
-import { Effect, Schema } from "effect"
-import { SqlClient } from "effect/sql"
+import { Effect } from "effect"
+import { heldReceiptKeys } from "../expenses/ExpenseStore.ts"
 import { ReceiptStore } from "./ReceiptStore.ts"
 
 /**
@@ -11,10 +11,6 @@ export const orphanAge = 24 * 60 * 60 * 1000
 
 /** D1 binds at most 100 parameters per statement. */
 const keysPerQuery = 100
-
-const decodeKeys = Schema.decodeUnknownEffect(
-  Schema.Array(Schema.Struct({ receipt_key: Schema.String })),
-)
 
 /**
  * Deletes every Receipt uploaded more than `orphanAge` before `now` that no
@@ -28,18 +24,12 @@ const decodeKeys = Schema.decodeUnknownEffect(
 export const sweepOrphanReceipts = (now: Date) =>
   Effect.gen(function* () {
     const receipts = yield* ReceiptStore
-    const sql = yield* SqlClient.SqlClient
     const candidates = yield* receipts.uploadedBefore(new Date(now.getTime() - orphanAge))
 
     const held = new Set<string>()
     for (let start = 0; start < candidates.length; start += keysPerQuery) {
-      const chunk = candidates.slice(start, start + keysPerQuery)
-      const rows = yield* sql`
-        SELECT receipt_key FROM expense WHERE receipt_key IN ${sql.in(chunk)}`.pipe(
-        Effect.flatMap(decodeKeys),
-        Effect.orDie,
-      )
-      for (const row of rows) held.add(row.receipt_key)
+      const keys = yield* heldReceiptKeys(candidates.slice(start, start + keysPerQuery))
+      for (const key of keys) held.add(key)
     }
 
     const orphans = candidates.filter((key) => !held.has(key))

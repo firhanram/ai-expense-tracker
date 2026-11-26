@@ -2,6 +2,7 @@ import { Report, ReportQuery } from "@expense/contract"
 import { Effect } from "effect"
 import { Tool } from "effect/ai"
 import { SqlClient } from "effect/sql"
+import { captureServices } from "../../captureServices.ts"
 import { spendingReport } from "./SpendingReport.ts"
 
 /**
@@ -25,7 +26,6 @@ export const QuerySpending = Tool.make("query_spending", {
  * layer needs nothing per call: `Toolkit.toLayer(... { query_spending: yield* QuerySpendingHandler })`.
  */
 export const QuerySpendingHandler = Effect.gen(function* () {
-  const sql = yield* SqlClient.SqlClient
-  return (params: ReportQuery) =>
-    spendingReport(params).pipe(Effect.provideService(SqlClient.SqlClient, sql))
+  const withSql = yield* captureServices(SqlClient.SqlClient)
+  return (params: ReportQuery) => withSql(spendingReport(params))
 })

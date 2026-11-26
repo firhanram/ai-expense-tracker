@@ -51,7 +51,7 @@ There is no `@effect/ai-deepseek` provider, and there does not need to be: DeepS
 
 ## Data
 
-One D1 database. Migrations are numbered SQL files in `apps/api/migrations/`, applied by Alchemy's `D1Database` on deploy and in `alchemy dev`. Never call `sql.withTransaction`, because on D1 it dies at runtime. An atomic write is one statement or one `D1Client.batch` (ADR-0010). Confirm is `UPDATE expense SET status = 'confirmed' WHERE id = ? AND status IN ('draft','confirmed')`, so it is idempotent and needs no transaction.
+One D1 database. Migrations are numbered SQL files in `apps/api/migrations/`, applied by Alchemy's `D1Database` on deploy and in `alchemy dev`. Never call `sql.withTransaction`, because on D1 it dies at runtime. An atomic write is one statement or one `D1Client.batch` (ADR-0010). Confirm is `UPDATE expense SET status = 'confirmed', needs_review = 0 WHERE id = ? AND status IN ('draft','confirmed')`, so it is idempotent and needs no transaction.
 
 ```sql
 CREATE TABLE category (

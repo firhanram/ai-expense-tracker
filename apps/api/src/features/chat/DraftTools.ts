@@ -1,11 +1,25 @@
-import { type EditExpense, type Expense, IsoDate, Rupiah } from "@expense/contract"
-import { Effect, Schema } from "effect"
+import {
+  type EditExpense,
+  type Expense,
+  ExpenseId,
+  ExpenseStatus,
+  IsoDate,
+  type ReceiptKey,
+  Rupiah,
+} from "@expense/contract"
+import { Effect, Option, Schema } from "effect"
 import { Tool, Toolkit } from "effect/ai"
-import { SqlClient } from "effect/sql"
-import { editExpense } from "../expenses/editExpense.ts"
-import { decodeRows, toExpense } from "../expenses/ExpenseRow.ts"
-import { discardExpense, insertExpense, proposeFromReceipt } from "../expenses/ExpenseStore.ts"
-import { ReceiptStore } from "../receipts/ReceiptStore.ts"
+import type { SqlClient } from "effect/sql"
+import type { Provide } from "../../captureServices.ts"
+import type { ReceiptStore } from "../receipts/ReceiptStore.ts"
+import { Category, listCategories } from "../expenses/Categories.ts"
+import {
+  discardExpense,
+  editExpense,
+  findExpense,
+  insertExpense,
+  proposeFromReceipt,
+} from "../expenses/ExpenseStore.ts"
 
 /**
  * The agent's tools for Drafts (PLAN, "The chat turn"): find a Category,
@@ -17,17 +31,15 @@ import { ReceiptStore } from "../receipts/ReceiptStore.ts"
 const ToolFailure = Schema.Struct({ message: Schema.String })
 type ToolFailure = typeof ToolFailure.Type
 
-const Category = Schema.Struct({ id: Schema.Int, name: Schema.String })
-
 /** An Expense as the model reads it: with its Category's name, so it never maps ids itself. */
 export const ExpenseView = Schema.Struct({
-  id: Schema.String,
-  status: Schema.String,
-  amount: Schema.Int,
+  id: ExpenseId,
+  status: ExpenseStatus,
+  amount: Rupiah,
   categoryName: Schema.String,
   merchant: Schema.NullOr(Schema.String),
   note: Schema.NullOr(Schema.String),
-  occurredAt: Schema.String,
+  occurredAt: IsoDate,
   needsReview: Schema.Boolean,
 })
 export type ExpenseView = typeof ExpenseView.Type
@@ -68,7 +80,7 @@ export const UpdateDraft = Tool.make("update_draft", {
   description:
     "Change fields of a Draft Expense the user has not confirmed. Omitted fields stay as they are.",
   parameters: Schema.Struct({
-    id: Schema.String,
+    id: ExpenseId,
     amount: Schema.optional(Rupiah),
     merchant: Schema.optional(Schema.NullOr(Schema.String)),
     occurredAt: Schema.optional(IsoDate),
@@ -86,7 +98,7 @@ export const UpdateDraft = Tool.make("update_draft", {
 
 export const DiscardDraft = Tool.make("discard_draft", {
   description: "Discard a Draft Expense the user no longer wants. A confirmed Expense stays.",
-  parameters: Schema.Struct({ id: Schema.String }),
+  parameters: Schema.Struct({ id: ExpenseId }),
   success: ExpenseView,
   failure: ToolFailure,
   failureMode: "return",
@@ -94,7 +106,7 @@ export const DiscardDraft = Tool.make("discard_draft", {
 
 export const GetExpense = Tool.make("get_expense", {
   description: "Read one Expense or Draft by id, to answer about it or show it.",
-  parameters: Schema.Struct({ id: Schema.String }),
+  parameters: Schema.Struct({ id: ExpenseId }),
   success: ExpenseView,
   failure: ToolFailure,
   failureMode: "return",
@@ -108,8 +120,6 @@ export const DraftTools = Toolkit.make(
   GetExpense,
 )
 
-const decodeCategories = Schema.decodeUnknownEffect(Schema.Array(Category))
-
 const notFound = (id: string): ToolFailure => ({ message: `No Draft Expense has id ${id}.` })
 
 /** What the tools know about the Chat turn they run in. */
@@ -117,19 +127,15 @@ export interface DraftTurn {
   /** The user's local date, the default for a new Draft (ADR-0009). The server never reads its own clock. */
   readonly clientDate: IsoDate
   /** The Receipt the user attached this turn; a Draft proposed in it holds that Receipt. */
-  readonly receiptKey?: string | undefined
+  readonly receiptKey?: ReceiptKey | undefined
 }
 
-/** The handlers, per Chat turn. */
+/** The handlers, per Chat turn, their store calls provided by `withStores`. */
 export const draftToolHandlers = (
-  sql: SqlClient.SqlClient,
-  receipts: ReceiptStore["Service"],
+  withStores: Provide<SqlClient.SqlClient | ReceiptStore>,
   { clientDate, receiptKey }: DraftTurn,
 ) => {
-  const categories = sql`SELECT id, name FROM category ORDER BY sort_order`.pipe(
-    Effect.flatMap(decodeCategories),
-    Effect.orDie,
-  )
+  const categories = withStores(listCategories)
 
   /** The Category with this name, ignoring case, or a failure that lists the real ones. */
   const categoryId = (name: string) =>
@@ -144,24 +150,28 @@ export const draftToolHandlers = (
     })
 
   const view = (expense: Expense) =>
-    categories.pipe(
-      Effect.map((all) => ({
+    Effect.gen(function* () {
+      const all = yield* categories
+      const category = all.find((candidate) => candidate.id === expense.categoryId)
+      // `category_id` references the seeded set, so a miss is a broken database, not a guess to label.
+      if (category === undefined) {
+        return yield* Effect.die(
+          new Error(
+            `Expense ${expense.id} has Category ${expense.categoryId}, which is not seeded`,
+          ),
+        )
+      }
+      return {
         id: expense.id,
         status: expense.status,
         amount: expense.amount,
-        categoryName: all.find((category) => category.id === expense.categoryId)?.name ?? "Other",
+        categoryName: category.name,
         merchant: expense.merchant,
         note: expense.note,
         occurredAt: expense.occurredAt,
         needsReview: expense.needsReview,
-      })),
-    )
-
-  const withSql = <A, E>(effect: Effect.Effect<A, E, SqlClient.SqlClient | ReceiptStore>) =>
-    effect.pipe(
-      Effect.provideService(SqlClient.SqlClient, sql),
-      Effect.provideService(ReceiptStore, receipts),
-    )
+      } satisfies ExpenseView
+    })
 
   return DraftTools.of({
     search_categories: () => categories,
@@ -175,7 +185,7 @@ export const draftToolHandlers = (
           note: params.note,
           occurredAt: params.occurredAt ?? clientDate,
         }
-        const draft = yield* withSql(
+        const draft = yield* withStores(
           receiptKey === undefined
             ? insertExpense(input, { status: "draft", needsReview: params.needsReview })
             : proposeFromReceipt(input, { receiptKey, needsReview: params.needsReview }),
@@ -198,7 +208,7 @@ export const draftToolHandlers = (
           ...fields,
           ...(name !== undefined && { categoryId: yield* categoryId(name) }),
         }
-        const draft = yield* editExpense(sql, id, edit, ["draft"]).pipe(
+        const draft = yield* withStores(editExpense(id, edit, ["draft"])).pipe(
           Effect.catchTags({
             ExpenseNotFound: () => Effect.fail(notFound(id)),
             // `categoryId` resolved the name against the same closed set.
@@ -209,7 +219,7 @@ export const draftToolHandlers = (
       }),
 
     discard_draft: ({ id }) =>
-      withSql(discardExpense(id)).pipe(
+      withStores(discardExpense(id)).pipe(
         Effect.catchTags({
           ExpenseNotFound: () => Effect.fail(notFound(id)),
           ExpenseConfirmed: () =>
@@ -222,14 +232,11 @@ export const draftToolHandlers = (
 
     get_expense: ({ id }) =>
       Effect.gen(function* () {
-        const [row] = yield* sql`SELECT * FROM expense WHERE id = ${id}`.pipe(
-          Effect.flatMap(decodeRows),
-          Effect.orDie,
-        )
-        if (row === undefined) {
+        const found = yield* withStores(findExpense(id))
+        if (Option.isNone(found)) {
           return yield* Effect.fail<ToolFailure>({ message: `No Expense has id ${id}.` })
         }
-        return yield* view(toExpense(row))
+        return yield* view(found.value)
       }),
   })
 }

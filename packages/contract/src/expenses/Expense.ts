@@ -20,11 +20,20 @@ export type Rupiah = typeof Rupiah.Type
 export const CategoryId = Schema.Int
 export type CategoryId = typeof CategoryId.Type
 
+/** An Expense's id: opaque, made by the server. */
+export const ExpenseId = Schema.String
+export type ExpenseId = typeof ExpenseId.Type
+
+/** A stored Receipt's key (PLAN, "Receipts"): opaque, made by the server on upload. */
+export const ReceiptKey = Schema.String
+export type ReceiptKey = typeof ReceiptKey.Type
+
+/** Where an Expense is in its life (ADR-0002): proposed, recorded, or set aside. */
 export const ExpenseStatus = Schema.Literals(["draft", "confirmed", "discarded"])
 export type ExpenseStatus = typeof ExpenseStatus.Type
 
 export const Expense = Schema.Struct({
-  id: Schema.String,
+  id: ExpenseId,
   amount: Rupiah,
   categoryId: CategoryId,
   merchant: Schema.NullOr(Schema.String),
@@ -39,7 +48,7 @@ export const Expense = Schema.Struct({
    * The Receipt this Expense was read from, served at `GET /receipts/:key`;
    * null when it has none. Non-null is how the list marks an Expense with a Receipt.
    */
-  receiptKey: Schema.NullOr(Schema.String),
+  receiptKey: Schema.NullOr(ReceiptKey),
 })
 export type Expense = typeof Expense.Type
 
