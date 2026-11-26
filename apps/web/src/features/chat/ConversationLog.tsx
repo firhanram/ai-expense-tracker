@@ -21,7 +21,7 @@ const TurnView = ({ turn, onRetry }: { readonly turn: Turn; readonly onRetry: ()
   }
   return (
     <>
-      <UserMessage content={turn.request.message} />
+      <UserMessage content={turn.request.message} attachment={turn.request.receipt?.name ?? null} />
       {reply.state === "streaming" || reply.state === "done" ? (
         <AssistantMessage
           reply={splitReply(reply.text)}

@@ -69,6 +69,22 @@ describe("the Expense list", () => {
     ])
   })
 
+  it("marks the Expenses that have a Receipt", async () => {
+    fakeApi({
+      "GET /api/expenses": ok([
+        expense({ id: "a", merchant: "Uniqlo" }),
+        expense({ id: "b", merchant: "Indomaret", receiptKey: "rk-1" }),
+      ]),
+    })
+
+    await renderApp("/expenses")
+    await screen.findByText("Indomaret")
+
+    const [typed, fromReceipt] = rows()
+    expect(within(fromReceipt!).getByRole("img", { name: "Has receipt" })).toBeInTheDocument()
+    expect(within(typed!).queryByRole("img", { name: "Has receipt" })).toBeNull()
+  })
+
   it("heads the list with the month and its total, refunds subtracted", async () => {
     fakeApi({
       "GET /api/expenses": ok([

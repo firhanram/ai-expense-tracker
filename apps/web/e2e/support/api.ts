@@ -5,7 +5,7 @@ import type { Page } from "@playwright/test"
 export interface MockResponse {
   readonly status: number
   readonly contentType: string
-  readonly body: string
+  readonly body: string | Buffer
 }
 
 /** One request the page sent to `/api/*`. */
@@ -18,6 +18,9 @@ export interface ApiCall {
   readonly query: URLSearchParams
   /** The parsed JSON body, the raw text if it is not JSON, or null. */
   readonly body: unknown
+  /** The body as sent, for a multipart upload; null when there is none. */
+  readonly raw: Buffer | null
+  readonly contentType: string | null
 }
 
 export type MockHandler = MockResponse | ((call: ApiCall) => MockResponse)
@@ -45,6 +48,13 @@ export const fail = (
       ...(options.details === undefined ? {} : { details: options.details }),
     },
   } satisfies ApiFailure),
+})
+
+/** Raw bytes, as `GET /receipts/:key` serves an image. */
+export const bytes = (body: Buffer, contentType: string): MockResponse => ({
+  status: 200,
+  contentType,
+  body,
 })
 
 /** A `POST /chat` reply: the streamed text, delivered in one body. */
@@ -105,6 +115,8 @@ export const mockApi = async (
       params: found?.params ?? {},
       query: url.searchParams,
       body: parseBody(request.postData()),
+      raw: request.postDataBuffer(),
+      contentType: (await request.headerValue("content-type")) ?? null,
     }
     calls.push(call)
     const handler = found?.entry.handler

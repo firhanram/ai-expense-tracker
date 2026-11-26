@@ -1,4 +1,5 @@
 import { Unauthorized } from "@expense/contract"
+import { createFileInputController } from "@ui-sdk/react/file-input"
 import { createInputController } from "@ui-sdk/react/textarea"
 import { WifiOff } from "lucide-react"
 import { useState } from "react"
@@ -7,15 +8,14 @@ import { useOnline } from "../../shared/shell/useOnline.ts"
 import { Composer } from "./Composer.tsx"
 import { ConversationLog } from "./ConversationLog.tsx"
 import { EmptyIntro, Suggestions } from "./EmptyState.tsx"
+import { createUploadReceipt } from "../receipts/uploadReceipt.ts"
 import { createSendChat } from "./sendChat.ts"
+import { createSendTurn } from "./sendTurn.ts"
 import type { ReplyFailure } from "./useChatSession.ts"
 import { useChatHistory } from "./useChatHistory.ts"
 import { useChatSession } from "./useChatSession.ts"
 
-const sendChat = createSendChat(apiConnection)
-
-// Receipts arrive in W14; the chip and the suggestion are already here.
-const attachReceipt = () => {}
+const sendTurn = createSendTurn(createSendChat(apiConnection), createUploadReceipt(apiConnection))
 
 const historyFailure = (error: Error | null): ReplyFailure | null => {
   if (error === null) return null
@@ -35,9 +35,10 @@ const OfflineBar = () => (
 /** The Chat at `/`: the conversation, or the empty state, over the composer. */
 export const ChatPage = () => {
   const history = useChatHistory()
-  const session = useChatSession(sendChat)
+  const session = useChatSession(sendTurn)
   const online = useOnline()
   const [input] = useState(createInputController)
+  const [receipts] = useState(createFileInputController)
 
   const empty = history.loaded && history.messages.length === 0 && session.turns.length === 0
 
@@ -80,13 +81,13 @@ export const ChatPage = () => {
         <Composer
           controller={input}
           tall={empty}
-          onSend={(message, clientDate) => session.send({ message, clientDate })}
-          onAttachReceipt={attachReceipt}
+          receipts={receipts}
+          onSend={(message, clientDate, receipt) => session.send({ message, clientDate, receipt })}
         />
       </div>
       {empty ? (
         <div className="flex-1">
-          <Suggestions onFill={fill} onAttachReceipt={attachReceipt} />
+          <Suggestions onFill={fill} onAttachReceipt={() => receipts.open()} />
         </div>
       ) : null}
     </div>

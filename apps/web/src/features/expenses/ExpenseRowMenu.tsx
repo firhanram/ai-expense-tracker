@@ -14,6 +14,7 @@ import { categoryName } from "../../shared/categories/categories.ts"
 import { formatRupiah } from "../../shared/format/rupiah.ts"
 import { formatDayMonthYear } from "../../shared/format/shortDate.ts"
 import { useMediaQuery } from "../../shared/media/useMediaQuery.ts"
+import { ReceiptMarker } from "../receipts/ReceiptMarker.tsx"
 
 export type RowAction = "edit" | "delete"
 
@@ -84,8 +85,9 @@ export const ExpenseRowMenu = ({
             />
             <MenuGroupLabel className="mx-4 flex items-start justify-between gap-3 border-b border-line pb-3">
               <span className="min-w-0">
-                <span className="block truncate text-md">
-                  {expense.merchant ?? expense.note ?? "Expense"}
+                <span className="flex items-center gap-1.5 text-md">
+                  <span className="truncate">{expense.merchant ?? expense.note ?? "Expense"}</span>
+                  {expense.receiptKey === null ? null : <ReceiptMarker />}
                 </span>
                 <span className="block text-sm text-text-muted">
                   {formatDayMonthYear(expense.occurredAt)} · {categoryName(expense.categoryId)}

@@ -1,9 +1,9 @@
-import type { SendChatMessage } from "@expense/contract"
+import type { IsoDate } from "@expense/contract"
 import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useReducer } from "react"
 import { useOnline } from "../../shared/shell/useOnline.ts"
 import { expensesKey } from "../expenses/useExpenses.ts"
-import { type SendChat, SendChatFailure, type SendChatFailureReason } from "./sendChat.ts"
+import { SendChatFailure, type SendChatFailureReason } from "./sendChat.ts"
 
 /** What became of a message sent this visit. */
 export type Reply =
@@ -16,10 +16,23 @@ export type Reply =
 /** Why a reply failed: the send was refused, or the stream broke after it began (`cut-off`). */
 export type ReplyFailure = SendChatFailureReason | "cut-off"
 
+/**
+ * A message as the user sent it. `message` may be empty when a Receipt goes
+ * alone; the Receipt is still the photo, uploaded when its turn sends.
+ */
+export interface ChatRequest {
+  readonly message: string
+  readonly clientDate: IsoDate
+  readonly receipt: File | null
+}
+
+/** Sends one turn; resolves once the reply starts, like `SendChat`. */
+export type SendTurn = (request: ChatRequest) => Promise<AsyncIterable<string>>
+
 /** One message the user sent this visit, and its reply. */
 export interface Turn {
   readonly id: string
-  readonly request: SendChatMessage
+  readonly request: ChatRequest
   readonly reply: Reply
 }
 
@@ -32,7 +45,7 @@ interface State {
 }
 
 type Action =
-  | { readonly type: "send"; readonly id: string; readonly request: SendChatMessage }
+  | { readonly type: "send"; readonly id: string; readonly request: ChatRequest }
   | { readonly type: "start"; readonly id: string }
   | { readonly type: "chunk"; readonly id: string; readonly text: string }
   | { readonly type: "done"; readonly id: string }
@@ -101,7 +114,7 @@ let nextId = 0
  * the one before it has finished and the browser is online. Every finished
  * reply refreshes the cached Expenses, which the agent may have changed.
  */
-export const useChatSession = (sendChat: SendChat) => {
+export const useChatSession = (sendChat: SendTurn) => {
   const [state, dispatch] = useReducer(reduce, { turns: [], queue: [], active: null })
   const online = useOnline()
   const queryClient = useQueryClient()
@@ -131,7 +144,7 @@ export const useChatSession = (sendChat: SendChat) => {
     void run()
   }, [state, online, sendChat, queryClient])
 
-  const send = useCallback((request: SendChatMessage) => {
+  const send = useCallback((request: ChatRequest) => {
     nextId += 1
     dispatch({ type: "send", id: `local-${nextId}`, request })
   }, [])

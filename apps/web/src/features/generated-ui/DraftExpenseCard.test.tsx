@@ -118,6 +118,32 @@ describe("the Draft Expense card", () => {
     expect(within(await findCard()).getByText("Check amount")).toBeInTheDocument()
   })
 
+  it("shows the Receipt's photo, and opens it full-screen when tapped", async () => {
+    server([draft({ needsReview: true, receiptKey: "rk 1" })])
+    show()
+
+    const card = await findCard()
+    const thumbnail = within(card).getByRole("img", { name: "Receipt" })
+    expect(thumbnail).toHaveAttribute("src", "/api/receipts/rk%201")
+
+    await userEvent.click(within(card).getByRole("button", { name: "Open receipt photo" }))
+
+    const dialog = await screen.findByRole("dialog", { name: "Receipt" })
+    expect(within(dialog).getByRole("img", { name: "Receipt" })).toHaveAttribute(
+      "src",
+      "/api/receipts/rk%201",
+    )
+    await userEvent.click(within(dialog).getByRole("button", { name: "Close" }))
+    expect(screen.queryByRole("dialog")).toBeNull()
+  })
+
+  it("has no photo when the Draft has no Receipt", async () => {
+    server([draft()])
+    show()
+
+    expect(within(await findCard()).queryByRole("img", { name: "Receipt" })).toBeNull()
+  })
+
   it("collapses a discarded Draft to one line", async () => {
     const { calls } = server([draft()])
     show()

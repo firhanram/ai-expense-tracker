@@ -5,6 +5,7 @@ import { Check, TriangleAlert } from "lucide-react"
 import { formatRupiah } from "../../shared/format/rupiah.ts"
 import { formatDayMonthYear } from "../../shared/format/shortDate.ts"
 import { useExpenseActivity } from "../expenses/useExpenseActions.ts"
+import { ReceiptPhoto } from "../receipts/ReceiptPhoto.tsx"
 import { CardLine, CardSkeleton } from "./CardSkeleton.tsx"
 import { CategoryEdit, InlineEdit } from "./CardFields.tsx"
 import { edits } from "./expenseEdits.ts"
@@ -14,16 +15,6 @@ type CardState = "draft" | "confirming" | "confirmed"
 
 const button =
   "h-8 rounded-sm px-4 text-sm font-semibold transition-[background-color,opacity] duration-(--motion-color) data-disabled:opacity-70"
-
-/** Where the Receipt's thumbnail goes (56×56). The image itself, and opening it full-screen, is W14's. */
-export const ReceiptThumbnail = ({ receiptKey }: { readonly receiptKey: string }) => (
-  <div
-    data-receipt-key={receiptKey}
-    aria-label="Receipt"
-    role="img"
-    className="size-14 shrink-0 rounded-md border border-line bg-surface-2"
-  />
-)
 
 const CheckAmount = () => (
   <span className="inline-flex items-center gap-1 self-start rounded-sm bg-warn-bg px-1.5 py-px text-xs font-medium text-warn-fg">
@@ -181,7 +172,7 @@ const DraftCardBody = ({ expense }: { readonly expense: Expense }) => {
       data-state={state}
       className="group flex gap-3 rounded-lg border border-line bg-surface p-4 transition-[background-color,opacity] duration-(--motion-layout) data-[state=confirmed]:bg-surface-2 data-[state=confirming]:opacity-70"
     >
-      {expense.receiptKey === null ? null : <ReceiptThumbnail receiptKey={expense.receiptKey} />}
+      {expense.receiptKey === null ? null : <ReceiptPhoto receiptKey={expense.receiptKey} />}
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         {expense.needsReview && state !== "confirmed" ? <CheckAmount /> : null}
         <Fields expense={expense} disabled={state === "confirming"} />

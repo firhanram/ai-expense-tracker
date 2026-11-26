@@ -3,6 +3,7 @@ import { type Ref, useEffect, useRef, useState } from "react"
 import { categoryName } from "../../shared/categories/categories.ts"
 import { formatRupiah } from "../../shared/format/rupiah.ts"
 import { formatDayMonth } from "../../shared/format/shortDate.ts"
+import { ReceiptMarker } from "../receipts/ReceiptMarker.tsx"
 import { EditExpenseForm } from "./EditExpenseForm.tsx"
 import { ExpenseRowMenu } from "./ExpenseRowMenu.tsx"
 import { useDeleteExpense } from "./useDeleteExpense.ts"
@@ -96,8 +97,11 @@ export const ExpenseRow = ({ expense }: { expense: Expense }) => {
       <span className="w-[72px] shrink-0 text-sm text-text-muted">
         {formatDayMonth(expense.occurredAt)}
       </span>
-      <span className="min-w-0 flex-1 truncate text-md">
-        {expense.merchant ?? expense.note ?? <span className="text-text-muted">—</span>}
+      <span className="flex min-w-0 flex-1 items-center gap-1.5 text-md">
+        <span className="truncate">
+          {expense.merchant ?? expense.note ?? <span className="text-text-muted">—</span>}
+        </span>
+        {expense.receiptKey === null ? null : <ReceiptMarker />}
       </span>
       <span className="hidden shrink-0 rounded-sm bg-surface-2 px-2 py-[3px] text-sm md:inline-block">
         {categoryName(expense.categoryId)}

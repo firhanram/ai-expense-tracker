@@ -10,6 +10,7 @@ export type SendChatFailureReason =
   | "rate-limited"
   | "unauthorized"
   | "receipt-not-found"
+  | "receipt-invalid"
   | "network"
   | "failed"
 

@@ -65,6 +65,25 @@ describe("the Drafts view", () => {
       status: "draft",
     })
   })
+
+  it("marks a Draft that came from a Receipt", async () => {
+    fakeApi({
+      "GET /api/expenses": (call) =>
+        call.query.get("status") === "draft"
+          ? ok([
+              draft({ id: "d1", merchant: "Indomaret", receiptKey: "rk-1" }),
+              draft({ id: "d2", merchant: "Kopi Kenangan" }),
+            ])
+          : ok([]),
+    })
+    await renderApp("/expenses")
+    await showDrafts()
+
+    await within(list()).findByText("Indomaret")
+    const [fromReceipt, typed] = within(list()).getAllByRole("listitem")
+    expect(within(fromReceipt!).getByRole("img", { name: "Has receipt" })).toBeInTheDocument()
+    expect(within(typed!).queryByRole("img", { name: "Has receipt" })).toBeNull()
+  })
 })
 
 /** A server whose confirm/discard answers wait until `release()`. */

@@ -10,6 +10,10 @@ const sayings: Readonly<Record<ReplyFailure, { readonly text: string; readonly r
     failed: { text: "Something went wrong.", retry: true },
     unauthorized: { text: "Not authorised. Check the API token.", retry: false },
     "receipt-not-found": { text: "That receipt is gone. Attach it again.", retry: false },
+    "receipt-invalid": {
+      text: "Couldn't read that photo. Attach a JPEG, PNG or WebP.",
+      retry: false,
+    },
   }
 
 /** A system line, not a card: what failed, in one line, with Retry when sending again can help. */

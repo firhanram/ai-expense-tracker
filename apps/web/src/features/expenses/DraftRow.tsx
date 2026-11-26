@@ -4,6 +4,7 @@ import { CircleDashed } from "lucide-react"
 import { categoryName } from "../../shared/categories/categories.ts"
 import { formatRupiah } from "../../shared/format/rupiah.ts"
 import { formatDayMonth } from "../../shared/format/shortDate.ts"
+import { ReceiptMarker } from "../receipts/ReceiptMarker.tsx"
 import { expenseLabel } from "./useExpenseActions.ts"
 
 /** The outlined status chip, as on the Expense card ("✓ Confirmed"), reading "Draft". */
@@ -39,8 +40,11 @@ export const DraftRow = ({
       <span className="text-sm text-text-muted md:w-[72px] md:shrink-0">
         {formatDayMonth(expense.occurredAt)}
       </span>
-      <span className="min-w-0 truncate text-md md:flex-1">
-        {expense.merchant ?? expense.note ?? <span className="text-text-muted">—</span>}
+      <span className="flex min-w-0 items-center gap-1.5 text-md md:flex-1">
+        <span className="truncate">
+          {expense.merchant ?? expense.note ?? <span className="text-text-muted">—</span>}
+        </span>
+        {expense.receiptKey === null ? null : <ReceiptMarker />}
       </span>
       <span className="hidden shrink-0 rounded-sm bg-surface-2 px-2 py-[3px] text-sm md:inline-block">
         {categoryName(expense.categoryId)}
