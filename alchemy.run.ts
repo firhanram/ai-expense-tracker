@@ -24,13 +24,13 @@ export default Alchemy.Stack(
     // Receipt images. Private: served only through the API behind the token.
     const receipts = yield* Cloudflare.R2.Bucket("Receipts")
 
-    // The SPA bundle. The bearer token is baked in at build time (the user never types
-    // it), so the build gets the same API_TOKEN the Worker is bound with.
+    // The SPA bundle. It carries no token: anything baked into a public bundle is
+    // public, so the bearer token stays server-side. Local `alchemy dev` needs none
+    // (loopback is exempt); production auth for the SPA is an open item on #5.
     const web = yield* Command.Build("Web", {
       command: "pnpm build",
       cwd: "./apps/web",
       outdir: "dist",
-      env: { VITE_API_TOKEN: yield* Config.Redacted("API_TOKEN") },
     })
 
     const worker = yield* Cloudflare.Worker("Api", {
