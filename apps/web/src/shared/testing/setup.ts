@@ -22,6 +22,8 @@ document.head.append(
     textContent: "[popover] { display: block !important }",
   }),
 )
+// jsdom has no layout, so scrolling is a no-op rather than a "not implemented" error.
+window.scrollTo = () => {}
 
 afterEach(() => {
   cleanup()

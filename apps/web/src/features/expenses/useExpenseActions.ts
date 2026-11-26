@@ -47,7 +47,9 @@ const useAction = (action: ExpenseAction) => {
     // mutation is layered over lists by useExpenses until it settles.
     onMutate: () => queryClient.cancelQueries({ queryKey: expensesKey }),
     onSuccess: (saved) => writeIntoLists(queryClient, saved),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: expensesKey }),
+    // Not awaited: the action is settled once the server answers; a slow or
+    // failing refetch (the month's totals, say) must not keep it pending.
+    onSettled: () => void queryClient.invalidateQueries({ queryKey: expensesKey }),
   })
   const run = (expense: Expense) => {
     const inFlight = queryClient.isMutating({

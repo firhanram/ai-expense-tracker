@@ -59,6 +59,21 @@ const openWithServer = async (
   const api = await mockApi(page, {
     "GET /api/expenses": (call) =>
       ok(call.query.get("status") === "draft" ? store.drafts : store.confirmed),
+    // The Category filter's month totals (W8), from what is confirmed.
+    "GET /api/reports": (call) =>
+      ok({
+        from: call.query.get("from"),
+        to: call.query.get("to"),
+        groupBy: "category",
+        total: store.confirmed.reduce((sum, row) => sum + row.amount, 0),
+        totals: [...new Set(store.confirmed.map((row) => row.categoryId))].map((categoryId) => ({
+          label: `Category ${categoryId}`,
+          categoryId,
+          amount: store.confirmed
+            .filter((row) => row.categoryId === categoryId)
+            .reduce((sum, row) => sum + row.amount, 0),
+        })),
+      }),
     "POST /api/expenses/:id/confirm": move("confirmed"),
     "POST /api/expenses/:id/discard": move("discarded"),
   })
