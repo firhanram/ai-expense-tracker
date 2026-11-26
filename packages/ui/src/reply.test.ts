@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { checkProgram, splitReply } from "./index.ts"
+import { checkProgram, extendProgram, parseProgram, splitReply } from "./index.ts"
 
 const fence = (...lines: ReadonlyArray<string>) => ["```openui-lang", ...lines, "```"].join("\n")
 
@@ -65,6 +65,48 @@ describe("splitting a reply into prose and program", () => {
       content: "",
       uiText: 'root = Stack([ExpenseCard("x")])',
     })
+  })
+
+  it("keeps one root when several blocks define one: the last, as the parser reads them", () => {
+    const reply = [
+      fence("root = Stack([a])", 'a = ExpenseList("draft")'),
+      fence("root = Stack([a, b])", 'b = ExpenseCard("x")'),
+    ].join("\n")
+
+    const { uiText } = splitReply(reply)
+
+    expect(uiText).toBe('a = ExpenseList("draft")\nroot = Stack([a, b])\nb = ExpenseCard("x")')
+    expect(checkProgram(uiText!).outcome).toBe("ok")
+  })
+})
+
+/** The component names the program's root shows, in order. */
+const rootChildren = (uiText: string) => {
+  const children = parseProgram(uiText).root?.props["children"]
+  return Array.isArray(children) ? children.map((child) => child.typeName) : []
+}
+
+describe("adding a component to a reply's program", () => {
+  it("adds it to the root the reply already shows, so the stored program is one tree", () => {
+    const reply = `Your drafts:\n${fence("root = Stack([a])", 'a = ExpenseList("draft")')}`
+
+    const full = `${reply}\n\n${extendProgram(reply, "unread", 'DraftExpenseCard("e1")')}`
+
+    const { uiText } = splitReply(full)
+    expect(uiText!.match(/^\s*root\s*=/gm)).toHaveLength(1)
+    expect(checkProgram(uiText!).outcome).toBe("ok")
+    expect(rootChildren(uiText!)).toEqual(["ExpenseList", "DraftExpenseCard"])
+  })
+
+  it("makes it the whole program when the reply has none", () => {
+    const reply = "I could not read it."
+
+    const full = `${reply}\n\n${extendProgram(reply, "unread", 'DraftExpenseCard("e1")')}`
+
+    const { content, uiText } = splitReply(full)
+    expect(content).toBe(reply)
+    expect(checkProgram(uiText!).outcome).toBe("ok")
+    expect(rootChildren(uiText!)).toEqual(["DraftExpenseCard"])
   })
 })
 
