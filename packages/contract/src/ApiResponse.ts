@@ -23,7 +23,9 @@ export const errorCodes = [
   "EXPENSE_CONFIRMED",
   "RECEIPT_NOT_FOUND",
   "INVALID_RECEIPT",
+  "MESSAGE_NOT_FOUND",
   "MODEL_UNREACHABLE",
+  "RERENDER_FAILED",
   "TOO_MANY_REQUESTS",
   "INTERNAL_ERROR",
 ] as const
@@ -54,8 +56,12 @@ export const errorCatalog: { readonly [Code in ErrorCode]: number } = {
   RECEIPT_NOT_FOUND: 404,
   /** The upload is not one image of an accepted type and size; `message` says which. */
   INVALID_RECEIPT: 400,
+  /** No assistant message in the Chat has this id. `details.id`. */
+  MESSAGE_NOT_FOUND: 404,
   /** The model could not be reached before it wrote anything. `details.reason`. */
   MODEL_UNREACHABLE: 503,
+  /** A re-render's rewrite still does not draw, or names an id the reply did not; the message is unchanged. `details.problems`. */
+  RERENDER_FAILED: 502,
   /** The model provider is rate limiting us (it answered 429). Sending again later retries. */
   TOO_MANY_REQUESTS: 429,
   /** Anything unexpected. The body says nothing more; the log has the cause under the errorId. */

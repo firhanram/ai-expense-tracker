@@ -62,7 +62,7 @@ export const buildPrompt = (
  * `TOO_MANY_REQUESTS`; any other failure before the first word is
  * `ModelUnreachable`.
  */
-const toUnreachable = (error: AiError.AiError) => {
+export const toUnreachable = (error: AiError.AiError) => {
   // oxlint-disable-next-line no-underscore-dangle -- `_tag` is how Effect names an error's kind.
   const reason = error.reason._tag
   return reason === "RateLimitError" ? new ModelRateLimited() : new ModelUnreachable({ reason })
@@ -115,6 +115,8 @@ export interface ChatTurnDeps {
  * proposed keeps the card that shows it. A model failure after the first
  * word ends the stream with an error and stores what was written before it.
  * An empty reply is a 200 with an empty body, and is stored as such.
+ * Returns the reply's stream and the id it is stored under, made up front
+ * so the client can be told it before the reply ends.
  */
 export const runChatTurn = (deps: ChatTurnDeps, request: SendChatMessage, receipt?: TurnReceipt) =>
   Effect.gen(function* () {
@@ -135,6 +137,7 @@ export const runChatTurn = (deps: ChatTurnDeps, request: SendChatMessage, receip
 
     const { head, rest } = yield* firstChunk(prose).pipe(Effect.mapError(toUnreachable))
 
+    const messageId = crypto.randomUUID()
     const chunks = yield* Queue.unbounded<string, AgentLoopError<ChatTools> | Cause.Done>()
     let reply = ""
     const emit = (chunk: string) =>
@@ -151,7 +154,7 @@ export const runChatTurn = (deps: ChatTurnDeps, request: SendChatMessage, receip
         Effect.gen(function* () {
           const tail = yield* afterModel(reply)
           if (tail.length > 0) yield* emit(tail)
-          yield* deps.history.append({ role: "assistant", ...splitReply(reply) })
+          yield* deps.history.append({ id: messageId, role: "assistant", ...splitReply(reply) })
           yield* Exit.isSuccess(exit) ? Queue.end(chunks) : Queue.failCause(chunks, exit.cause)
         }),
       ),
@@ -163,5 +166,5 @@ export const runChatTurn = (deps: ChatTurnDeps, request: SendChatMessage, receip
     if (Option.isSome(waitUntil)) {
       waitUntil.value(new Promise((resolve) => fiber.addObserver(resolve)))
     }
-    return Stream.fromQueue(chunks)
+    return { messageId, reply: Stream.fromQueue(chunks) }
   })

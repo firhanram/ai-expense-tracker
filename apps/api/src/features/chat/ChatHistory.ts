@@ -1,5 +1,5 @@
 import { type ChatHistoryPage, type ChatMessage, ChatRole } from "@expense/contract"
-import { Effect, Schema } from "effect"
+import { Effect, Option, Schema } from "effect"
 import { SqlClient, SqlSchema } from "effect/sql"
 
 const Row = Schema.Struct({
@@ -19,6 +19,8 @@ const toMessage = (row: typeof Row.Type): ChatMessage => ({
 })
 
 export interface NewChatMessage {
+  /** Made here when absent; a turn picks its reply's id up front so the client can be told it. */
+  readonly id?: string | undefined
   readonly role: ChatRole
   readonly content: string
   readonly uiText?: string | null | undefined
@@ -44,7 +46,7 @@ export const makeChatHistory = Effect.gen(function* () {
 
   const append = (message: NewChatMessage) =>
     sql`INSERT INTO chat_message ${sql.insert({
-      id: crypto.randomUUID(),
+      id: message.id ?? crypto.randomUUID(),
       role: message.role,
       content: message.content,
       ui_text: message.uiText ?? null,
@@ -69,5 +71,26 @@ export const makeChatHistory = Effect.gen(function* () {
       Effect.orDie,
     )
 
-  return { append, page, recent } as const
+  const byId = SqlSchema.findOneOption({
+    Request: Schema.String,
+    Result: Row,
+    execute: (id) => sql`
+      SELECT id, role, content, ui_text, created_at FROM chat_message WHERE id = ${id}`,
+  })
+
+  /** One message by id, if the Chat has it. */
+  const find = (id: string) =>
+    byId(id).pipe(
+      Effect.map((row) => row.pipe(Option.map(toMessage))),
+      Effect.orDie,
+    )
+
+  /** Replaces one message's program, keeping its prose and its place. */
+  const setUiText = (id: string, uiText: string | null) =>
+    sql`UPDATE chat_message SET ui_text = ${uiText} WHERE id = ${id}`.pipe(
+      Effect.asVoid,
+      Effect.orDie,
+    )
+
+  return { append, find, page, recent, setUiText } as const
 })

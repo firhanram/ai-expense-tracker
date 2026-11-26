@@ -96,8 +96,9 @@ Cloudflare Access covers the whole hostname. Every route but `/api/health` requi
 
 | Route | Purpose |
 |---|---|
-| `POST /chat` | Streams a response. Body: `{ message, clientDate, receiptKey? }`. Returns a text stream: prose interleaved with OpenUI Lang. |
+| `POST /chat` | Streams a response. Body: `{ message, clientDate, receiptKey? }`. Returns a text stream: prose interleaved with OpenUI Lang. The `X-Chat-Message-Id` header names the assistant message the reply is stored as. |
 | `GET /chat` | The conversation, newest page first. |
+| `POST /chat/:messageId/rerender` | Redraws a stored assistant reply whose program cannot be drawn. No tools, nothing re-sent; replaces `ui_text`, keeps `content`. Returns the updated message. See "Failure path". |
 | `GET /expenses` | `?status=&from=&to=&categoryId=`. Confirmed by default. |
 | `POST /expenses` | Manual create, bypassing the agent. |
 | `GET /expenses/:id` | One Expense, any status. What a rendered card fetches (ADR-0001). |
@@ -136,7 +137,9 @@ Two successes are not JSON and have no envelope: `POST /chat` streams text, and 
 | `EXPENSE_CONFIRMED` | 409 | Discarding a confirmed Expense. | `{ id }` |
 | `RECEIPT_NOT_FOUND` | 404 | No stored Receipt has this key (`GET /receipts/:key`, or `receiptKey` on `POST /chat`). | `{ receiptKey }` |
 | `INVALID_RECEIPT` | 400 | The upload is not one accepted image within the size cap; `message` says which. | — |
-| `MODEL_UNREACHABLE` | 503 | The model failed before the first word of a reply. | `{ reason }`, the AI error kind. |
+| `MESSAGE_NOT_FOUND` | 404 | No assistant message has this id (`POST /chat/:messageId/rerender`): unknown, or the user's own. | `{ id }` |
+| `MODEL_UNREACHABLE` | 503 | The model failed before the first word of a reply, or of a re-render. | `{ reason }`, the AI error kind. |
+| `RERENDER_FAILED` | 502 | A re-render's rewrite still does not pass the library's check, or names an id the reply did not. The message is unchanged. | `{ problems }` |
 | `TOO_MANY_REQUESTS` | 429 | The model provider answered 429 (rate limited) before the first word. The app has no rate limiter of its own. | — |
 | `INTERNAL_ERROR` | 500 | Anything unexpected: a defect, D1 down, a response that fails its own schema. | — |
 
@@ -171,11 +174,11 @@ Four components in `packages/ui`, each a `defineComponent` with Zod 4 props:
 
 Each fetches its own data with TanStack Query. `SpendingChart` renders Recharts; it computes nothing.
 
-There is no `openuiLibrary` outside `@openuidev/react-ui`, so `packages/ui` builds its own with `createLibrary`, including a `Stack` root container. The components are defined React-free (`@openuidev/lang-core`, `component: null`); the web app pairs the same definitions with React components and creates its library at module scope, or the Renderer re-parses on every render. The Worker imports only `@expense/ui/server`: the system prompt as a checked-in generated string (`pnpm --filter @expense/ui generate`; a test fails on drift) and the prose/program split, so it never loads OpenUI or Zod.
+There is no `openuiLibrary` outside `@openuidev/react-ui`, so `packages/ui` builds its own with `createLibrary`, including a `Stack` root container. The components are defined React-free (`@openuidev/lang-core`, `component: null`); the web app pairs the same definitions with React components and creates its library at module scope, or the Renderer re-parses on every render. The Worker imports only `@expense/ui/server`: the system prompt as a checked-in generated string (`pnpm --filter @expense/ui generate`; a test fails on drift) and the prose/program split, so a Chat turn never loads OpenUI or Zod. The one exception is the re-render route, which imports the library's check lazily (`import("@expense/ui")`) to validate the rewrite.
 
 Streaming: accumulate text chunks into `response`, pass to `<Renderer response={response} isStreaming={isStreaming} library={lib} onAction={...} onError={...} />`.
 
-**Failure path, part of the feature:** if `onError` reports a failed program or `root` is null, render the prose as plain text and offer one retry. `inlineMode: true` in the prompt options so questions with no UI answer ("how much did I spend last month?") come back as text rather than a forced chart.
+**Failure path, part of the feature:** if `onError` reports a failed program or `root` is null, render the prose as plain text and offer one retry, on a live reply and a reloaded one alike. Retry is a re-render, not a re-send: `POST /chat/:messageId/rerender` gives the model the stored prose and broken program, with no tools, and asks for a valid program using only the ids already in it. The rewrite must pass `checkProgram` (outcome `ok`, a component to draw, no new id) before it replaces the message's `ui_text`; the user's message is never sent again, so history does not grow and no second Draft can be proposed. The client swaps the message in place; a second failure stays text. Any failure leaves the row as it was. `inlineMode: true` in the prompt options so questions with no UI answer ("how much did I spend last month?") come back as text rather than a forced chart.
 
 **Actions:** `defineAction` for `ConfirmExpense` and `DiscardExpense`, handled in `onAction` by calling the API directly. They are added only to the web app's library: a library action is listed in the generated prompt, and the model must never be told it can confirm (ADR-0007). `@ToAssistant` is not used for these — it would put the model in the confirmation path.
 

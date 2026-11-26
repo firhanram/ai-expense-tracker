@@ -28,8 +28,11 @@ export {
   ChatHistoryPageSize,
   ChatMessage,
   ChatRole,
+  chatMessageIdHeader,
+  MessageNotFound,
   ModelRateLimited,
   ModelUnreachable,
+  RerenderFailed,
   SendChatMessage,
 } from "./chat/ChatApi.ts"
 export {

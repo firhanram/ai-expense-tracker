@@ -69,13 +69,42 @@ const modelRateLimited = apiError(
   () => "The model is receiving too many requests. Wait a moment, then send again.",
 )
 
+/** No assistant message in the Chat has this id: unknown, or the user's own. */
+export class MessageNotFound extends Schema.TaggedError<MessageNotFound>()("MessageNotFound", {
+  id: Schema.String,
+  ...errorIdField,
+}) {}
+
+/** The model's rewrite of a reply's program still does not draw, or names an id the reply did not. */
+export class RerenderFailed extends Schema.TaggedError<RerenderFailed>()("RerenderFailed", {
+  /** What the check objected to, one line each. */
+  problems: Schema.Array(Schema.String),
+  ...errorIdField,
+}) {}
+
+const messageNotFound = apiError(
+  MessageNotFound,
+  "MESSAGE_NOT_FOUND",
+  (e) => `No assistant message has the id ${e.id}.`,
+)
+const rerenderFailed = apiError(
+  RerenderFailed,
+  "RERENDER_FAILED",
+  () => "The reply could not be redrawn. It is shown as text.",
+)
+
+/** The header on a `POST /chat` reply naming the assistant message it is stored as. */
+export const chatMessageIdHeader = "x-chat-message-id"
+
 export class ChatGroup extends HttpApiGroup.make("chat").add(
   /**
    * Streams the reply as `text/plain` while the model writes it: the one
    * JSON-less success, so it has no envelope. Fails, enveloped, with
    * `MODEL_UNREACHABLE` (503) or `TOO_MANY_REQUESTS` (429) only if the model
    * fails before the first word, and with `RECEIPT_NOT_FOUND` (404), storing
-   * nothing, when `receiptKey` names no stored Receipt.
+   * nothing, when `receiptKey` names no stored Receipt. The reply's
+   * `x-chat-message-id` header (`chatMessageIdHeader`) is the id it is
+   * stored under, for `rerender`.
    */
   HttpApiEndpoint.post("send", "/chat", {
     payload: SendChatMessage,
@@ -98,5 +127,17 @@ export class ChatGroup extends HttpApiGroup.make("chat").add(
       ),
     },
     success: ok(ChatHistoryPage),
+  }),
+  /**
+   * Redraws an assistant reply whose program cannot be drawn ("Showing text
+   * only", Retry): the model, offered no tools, rewrites the stored prose
+   * and program as a valid program using only the ids already in it. The
+   * message's `uiText` is replaced and `content` kept; nothing is sent
+   * again and no message is added. Any failure leaves the message as it was.
+   */
+  HttpApiEndpoint.post("rerender", "/chat/:messageId/rerender", {
+    params: { messageId: Schema.String },
+    success: ok(ChatMessage),
+    error: [messageNotFound, modelUnreachable, modelRateLimited, rerenderFailed],
   }),
 ) {}

@@ -54,6 +54,15 @@ describe("POST /api/chat", () => {
     expect(response.body).toBe("Hello there")
   })
 
+  it("names the message the reply is stored as, so the client can redraw it", async () => {
+    const model = scriptedLanguageModel(textReply("Hello"))
+
+    const response = await sendChat(model.layer, { message: "hi", clientDate })
+
+    const [stored] = (await history(model.layer)).messages
+    expect(response.headers.get("x-chat-message-id")).toBe(stored!.id)
+  })
+
   it("gives the model the recent Chat, the client's date, and the new message", async () => {
     const model = scriptedLanguageModel(textReply("Hi!"), textReply("Noted."))
     await sendChat(model.layer, { message: "hello", clientDate })
