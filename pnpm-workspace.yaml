@@ -5,3 +5,7 @@ packages:
 onlyBuiltDependencies:
   - esbuild
   - workerd
+
+# OpenUI's postinstall is install-time telemetry (ADR-0006); never run it.
+ignoredBuiltDependencies:
+  - "@openuidev/lang-core"

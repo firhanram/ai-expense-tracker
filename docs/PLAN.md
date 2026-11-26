@@ -51,7 +51,7 @@ There is no `@effect/ai-deepseek` provider, and there does not need to be: DeepS
 
 ## Data
 
-One D1 database. Migrations are numbered SQL files in `apps/api/migrations/`, applied by Alchemy's `D1Database` on deploy and in `alchemy dev`. Never call `sql.withTransaction`, because on D1 it dies at runtime. An atomic write is one statement or one `D1Client.batch` (ADR-0010). Confirm is `UPDATE expense SET status = 'confirmed' WHERE id = ? AND status IN ('draft','confirmed')`, so it is idempotent and needs no transaction.
+One D1 database. Migrations are numbered SQL files in `apps/api/migrations/`, applied by Alchemy's `D1Database` on deploy and in `alchemy dev`. Never call `sql.withTransaction`, because on D1 it dies at runtime. An atomic write is one statement or one `D1Client.batch` (ADR-0010). Confirm is `UPDATE expense SET status = 'confirmed', needs_review = 0 WHERE id = ? AND status IN ('draft','confirmed')`, so it is idempotent and needs no transaction.
 
 ```sql
 CREATE TABLE category (
@@ -100,14 +100,45 @@ All routes require `Authorization: Bearer $API_TOKEN`, except under loopback in 
 | `GET /chat` | The conversation, newest page first. |
 | `GET /expenses` | `?status=&from=&to=&categoryId=`. Confirmed by default. |
 | `POST /expenses` | Manual create, bypassing the agent. |
-| `PATCH /expenses/:id` | Edit amount, category, merchant, note, date. Works on drafts and confirmed. |
+| `PATCH /expenses/:id` | Edit amount, category, merchant, note, date, `needsReview`. Works on drafts and confirmed. |
 | `POST /expenses/:id/confirm` | Draft → confirmed. Idempotent. |
 | `POST /expenses/:id/discard` | Draft → discarded. Keeps the row. |
 | `DELETE /expenses/:id` | Hard delete, and deletes the R2 object if present. |
 | `GET /reports` | `?from=&to=&groupBy=category|month`. Both dates required; the client computes the range. Aggregated in SQL. |
 | `POST /receipts` | Multipart upload → R2, returns `receiptKey`. |
+| `GET /receipts/:key` | The Receipt image, behind the bearer token. |
 
 `POST /reports` is absent deliberately — Reports are reads.
+
+### Response envelope
+
+Every JSON response, health included, is one of two shapes, typed in `packages/contract` (`ApiResponse.ts`):
+
+- **Success** — `{ "success": true, "data": <payload> }`, with the route's status (201 for `POST /expenses` and `POST /receipts`). `DELETE /expenses/:id` answers `200 { "success": true, "data": null }`, not an empty 204. An endpoint's success schema is `ok(Payload)`: the envelope is on the wire only, so handlers and an `HttpApiClient` see the payload itself.
+- **Failure** — `{ "success": false, "error": { "errorId", "errorCode", "message", "details"? } }`, with the code's status.
+  - `errorId` is a random UUID made per error response and logged with it (a 5xx with its cause), so an id a user quotes can be found in the Worker's logs.
+  - `errorCode` is from the closed catalog below; clients match on it, never on `message`, which is for a human.
+  - `details` is structured context when there is any: the field paths that failed validation, the id not found.
+  - A 500 says nothing more than its code and errorId: no cause, stack or SQL in the body.
+
+Two successes are not JSON and have no envelope: `POST /chat` streams text, and `GET /receipts/:key` is the image bytes. A failure on either before the body starts is an ordinary error envelope; a model failure after the first word of a reply ends the stream (see "The chat turn").
+
+| `errorCode` | Status | When | `details` |
+|---|---|---|---|
+| `UNAUTHORIZED` | 401 | The bearer token is missing or wrong, on any path but health, known or not. | — |
+| `VALIDATION_FAILED` | 400 | Params, query or body do not match the endpoint's schema, or the body is not JSON. | `{ issues: [{ path, message }] }`, `path` starting with the slot: `["payload", "amount"]`. |
+| `NOT_FOUND` | 404 | No route has this method and path. | — |
+| `EXPENSE_NOT_FOUND` | 404 | No Expense the route can act on has this id. | `{ id }` |
+| `UNKNOWN_CATEGORY` | 400 | The Category id is not in the seeded set. | `{ categoryId }` |
+| `EXPENSE_DISCARDED` | 409 | Confirming a discarded Expense. | `{ id }` |
+| `EXPENSE_CONFIRMED` | 409 | Discarding a confirmed Expense. | `{ id }` |
+| `RECEIPT_NOT_FOUND` | 404 | No stored Receipt has this key (`GET /receipts/:key`, or `receiptKey` on `POST /chat`). | `{ receiptKey }` |
+| `INVALID_RECEIPT` | 400 | The upload is not one accepted image within the size cap; `message` says which. | — |
+| `MODEL_UNREACHABLE` | 503 | The model failed before the first word of a reply. | `{ reason }`, the AI error kind. |
+| `TOO_MANY_REQUESTS` | 429 | The model provider answered 429 (rate limited) before the first word. The app has no rate limiter of its own. | — |
+| `INTERNAL_ERROR` | 500 | Anything unexpected: a defect, D1 down, a response that fails its own schema. | — |
+
+The codes, and the status each is sent with, live in one place (`errorCatalog` in `packages/contract/src/ApiResponse.ts`). Adding a code is a contract change; renaming one breaks clients.
 
 ## The chat turn
 
@@ -123,7 +154,7 @@ All routes require `Authorization: Bearer $API_TOKEN`, except under loopback in 
    - **No confirm tool.** (ADR-0007.)
 4. **Run the model again** if the response contains tool results rather than text. `streamText` resolves tools and returns; it does not re-call the model. The loop is ours, ~30 lines, with a step cap and a stop condition this app can state precisely: once a draft has been proposed and rendered, stop. Cap at 5 steps.
 5. Let the model write OpenUI Lang as its text output. Components take ids, never values (ADR-0001).
-6. Persist `content` (prose) and `ui_text` (the raw program). The assistant message is stored **as text**, not as a rendered snapshot: reload re-parses `ui_text` client-side with the current component library, at no model cost. If it no longer parses, the stored prose is shown instead. This is the same fallback path as a live parse failure, so it is one implementation rather than two.
+6. Persist `content` (prose) and `ui_text` (the raw program). The assistant message is stored **as text**, not as a rendered snapshot: reload re-parses `ui_text` client-side with the current component library, at no model cost. If it no longer parses, the stored prose is shown instead. This is the same fallback path as a live parse failure, so it is one implementation rather than two. `ui_text` is one program with one `root`: where a reply defines it twice, the last wins, as the parser reads it. Once the model has written, the turn runs to its end apart from the response, under the Worker's `waitUntil`, so a client that leaves mid-reply still gets the whole reply stored and a proposed Draft keeps its card; a model failure mid-reply stores what was written before it.
 
 ## OpenUI component library
 
@@ -138,13 +169,13 @@ Four components in `packages/ui`, each a `defineComponent` with Zod 4 props:
 
 Each fetches its own data with TanStack Query. `SpendingChart` renders Recharts; it computes nothing.
 
-Wrap the default `openuiLibrary` with `.extend()` at module scope, or the Renderer re-parses on every render.
+There is no `openuiLibrary` outside `@openuidev/react-ui`, so `packages/ui` builds its own with `createLibrary`, including a `Stack` root container. The components are defined React-free (`@openuidev/lang-core`, `component: null`); the web app pairs the same definitions with React components and creates its library at module scope, or the Renderer re-parses on every render. The Worker imports only `@expense/ui/server`: the system prompt as a checked-in generated string (`pnpm --filter @expense/ui generate`; a test fails on drift) and the prose/program split, so it never loads OpenUI or Zod.
 
 Streaming: accumulate text chunks into `response`, pass to `<Renderer response={response} isStreaming={isStreaming} library={lib} onAction={...} onError={...} />`.
 
 **Failure path, part of the feature:** if `onError` reports a failed program or `root` is null, render the prose as plain text and offer one retry. `inlineMode: true` in the prompt options so questions with no UI answer ("how much did I spend last month?") come back as text rather than a forced chart.
 
-**Actions:** `defineAction` for `ConfirmExpense` and `DiscardExpense`, handled in `onAction` by calling the API directly. `@ToAssistant` is not used for these — it would put the model in the confirmation path.
+**Actions:** `defineAction` for `ConfirmExpense` and `DiscardExpense`, handled in `onAction` by calling the API directly. They are added only to the web app's library: a library action is listed in the generated prompt, and the model must never be told it can confirm (ADR-0007). `@ToAssistant` is not used for these — it would put the model in the confirmation path.
 
 ## Reports
 
@@ -158,6 +189,12 @@ Negative amounts (refunds) fall out of `SUM` correctly. The agent receives the t
 ## Receipts
 
 Client downscales before upload — DeepSeek caps images at 1,024 tokens regardless of resolution, so uploading a 12MP photo wastes bytes and loses nothing. Upload returns a key; the chat request carries it; the API fetches the bytes and sends them inline to the model. Serving is proxied through `GET /receipts/:key` behind the bearer token, not presigned.
+
+- **Upload.** One `file` field, JPEG, PNG or WebP, at most 5 MiB (the client downscales well below that). The form is read from the web `Request`: Effect's buffered multipart needs a temp directory a Worker does not have. The key is a random UUID.
+- **One Receipt, one Draft.** A Draft proposed in a turn that carries a Receipt holds its key. A unique index on `receipt_key` and an upsert in `propose_expense` mean proposing again from the same Receipt, in the same turn or a later one, overwrites that Draft rather than adding a second. The model is also told, per turn, which Draft the Receipt already became. A Receipt whose Expense is confirmed is refused back to the model.
+- **Needs review.** `propose_expense` takes `needsReview`; the model sets it when it guessed or could not read a field. Expenses expose `needsReview` and `receiptKey` (null when there is none), so the list can mark both. It clears when the user sets it false (`PATCH`, or `update_draft` once they have answered the model) or confirms: confirming is the user saying they checked it.
+- **Unreadable Receipts still yield a Draft.** The model is asked to propose one anyway (amount 0, `Other`, `needsReview`). If a Receipt turn ends with nothing holding the Receipt, the server makes that placeholder Draft itself and adds its `DraftExpenseCard` to the root of the program the model wrote (or makes it the program), streamed and stored like the model's text.
+- **Lifecycle.** Deleting an Expense deletes its object, after the row. Discarding a Draft deletes its object and clears `receipt_key`, keeping the row (ADR-0002). Everything else (an upload whose Chat message never came, a turn that failed before the model wrote, an R2 delete that failed) is caught by a daily cron sweep (03:00 UTC) that deletes objects over a day old that no Expense holds. The sweep, not the chat turn, does this because upload and message are separate requests: a turn that produced no Draft is not proof the upload is abandoned.
 
 ## Slices
 

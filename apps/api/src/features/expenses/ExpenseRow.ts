@@ -1,0 +1,39 @@
+import {
+  CategoryId,
+  type Expense,
+  ExpenseId,
+  ExpenseStatus,
+  ReceiptKey,
+  Rupiah,
+} from "@expense/contract"
+import { Schema } from "effect"
+
+/** An `expense` row as D1 returns it. */
+export const ExpenseRow = Schema.Struct({
+  id: ExpenseId,
+  amount: Rupiah,
+  category_id: CategoryId,
+  merchant: Schema.NullOr(Schema.String),
+  note: Schema.NullOr(Schema.String),
+  occurred_at: Schema.String,
+  created_at: Schema.String,
+  status: ExpenseStatus,
+  needs_review: Schema.Literals([0, 1]),
+  receipt_key: Schema.NullOr(ReceiptKey),
+})
+export type ExpenseRow = typeof ExpenseRow.Type
+
+export const decodeRows = Schema.decodeUnknownEffect(Schema.Array(ExpenseRow))
+
+export const toExpense = (row: ExpenseRow): Expense => ({
+  id: row.id,
+  amount: row.amount,
+  categoryId: row.category_id,
+  merchant: row.merchant,
+  note: row.note,
+  occurredAt: row.occurred_at,
+  createdAt: row.created_at,
+  status: row.status,
+  needsReview: row.needs_review === 1,
+  receiptKey: row.receipt_key,
+})

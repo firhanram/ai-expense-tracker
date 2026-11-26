@@ -9,6 +9,7 @@
     "**/.wrangler/**",
     "**/*.md",
     "docs/**",
-    ".commandcode/**"
+    ".commandcode/**",
+    "packages/ui/src/system-prompt.ts"
   ]
 }

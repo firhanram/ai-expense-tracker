@@ -1,0 +1,88 @@
+import {
+  type ExpenseId,
+  type ExpenseStatus,
+  type IsoDate,
+  type ReceiptKey,
+  ReceiptNotFound,
+} from "@expense/contract"
+import { extendProgram } from "@expense/ui/server"
+import { Effect, Option } from "effect"
+import { fallbackCategory, fallbackCategoryName } from "../expenses/Categories.ts"
+import { proposeFromReceipt, receiptHolder } from "../expenses/ExpenseStore.ts"
+import { ReceiptStore, type StoredReceipt } from "./ReceiptStore.ts"
+
+/** The Receipt a Chat turn carries: its image, and what it has already become. */
+export interface TurnReceipt {
+  readonly key: ReceiptKey
+  readonly image: StoredReceipt
+  /**
+   * The Expense already read from this Receipt, if any. One Receipt, one
+   * Draft: the turn resumes it rather than proposing a second.
+   */
+  readonly expense: { readonly id: ExpenseId; readonly status: ExpenseStatus } | null
+}
+
+/**
+ * Reads the Receipt a Chat message names. A key with nothing stored under it
+ * (never uploaded, deleted, or swept) fails the turn before anything is kept.
+ */
+export const loadTurnReceipt = (key: ReceiptKey) =>
+  Effect.gen(function* () {
+    const receipts = yield* ReceiptStore
+    const image = yield* receipts.get(key)
+    if (Option.isNone(image)) return yield* new ReceiptNotFound({ receiptKey: key })
+    const holder = yield* receiptHolder(key)
+    return { key, image: image.value, expense: Option.getOrNull(holder) } satisfies TurnReceipt
+  })
+
+/**
+ * Story 14: an unreadable Receipt still yields a Draft the user can fill in.
+ * Run once the model has finished a Receipt turn. When nothing holds the
+ * Receipt (the model did not, or could not, propose from it), this makes a
+ * placeholder Draft for it (amount 0, the fallback Category, the client's
+ * date, marked for review) and returns text to append to `reply`, the
+ * model's: a line of prose and a block adding the Draft's card to the
+ * reply's program. Otherwise it returns "" and changes nothing.
+ */
+export const draftForUnreadReceipt = (receiptKey: ReceiptKey, clientDate: IsoDate, reply: string) =>
+  Effect.gen(function* () {
+    if (Option.isSome(yield* receiptHolder(receiptKey))) return ""
+    const category = yield* fallbackCategory
+    const draft = yield* proposeFromReceipt(
+      { amount: 0, categoryId: category.id, merchant: null, note: null, occurredAt: clientDate },
+      { receiptKey, needsReview: true },
+    ).pipe(Effect.orDie)
+    return [
+      "",
+      "",
+      "I could not read everything on this Receipt, so here is a Draft to fill in:",
+      "",
+      // Into the root the model wrote, if any, so the reply stays one program.
+      extendProgram(reply, "unreadReceiptDraft", `DraftExpenseCard("${draft.id}")`),
+    ].join("\n")
+  })
+
+/**
+ * What the model is told about the attached Receipt. Read it, propose one
+ * Draft from it, and flag what it could not read; or, when the Receipt is
+ * already a Draft, change and show that one instead.
+ */
+export const receiptNote = (receipt: TurnReceipt): string => {
+  if (receipt.expense === null) {
+    return [
+      "The user attached a Receipt image to this message.",
+      "Read it and call propose_expense once for its total, with needsReview true if you were unsure of any field.",
+      `If you cannot read it, still call propose_expense: amount 0 for a total you cannot read, categoryName ${fallbackCategoryName}, needsReview true, and tell the user what to fill in.`,
+    ].join(" ")
+  }
+  if (receipt.expense.status === "draft") {
+    return [
+      `The attached Receipt is already Draft Expense ${receipt.expense.id}.`,
+      "Do not propose another from it: change that Draft with update_draft if the user asks, and show it with DraftExpenseCard.",
+    ].join(" ")
+  }
+  return [
+    `The attached Receipt is already recorded as Expense ${receipt.expense.id}.`,
+    "Do not propose another from it; show it with ExpenseCard.",
+  ].join(" ")
+}
