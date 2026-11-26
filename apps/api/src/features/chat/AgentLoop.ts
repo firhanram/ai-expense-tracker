@@ -9,7 +9,7 @@ import {
 } from "effect/ai"
 
 /** Model calls one Chat turn may make (PLAN, "The chat turn"). */
-export const maxSteps = 5
+const maxSteps = 5
 
 /** One model call and everything it streamed, including resolved tool results. */
 export interface AgentStep<Tools extends Record<string, Tool.Any>> {
@@ -22,8 +22,6 @@ export interface AgentLoopOptions<Tools extends Record<string, Tool.Any>> {
   readonly prompt: Prompt.RawInput
   /** Tools the model may call. `LanguageModel` runs their handlers; the loop feeds the results back. */
   readonly toolkit?: Toolkit.WithHandler<Tools> | undefined
-  /** Defaults to `maxSteps`. */
-  readonly maxSteps?: number | undefined
   /**
    * Ends the turn after a step even though it ran tools, e.g. once a Draft
    * Expense has been proposed (#12). Asked only when the loop would go on.
@@ -31,17 +29,18 @@ export interface AgentLoopOptions<Tools extends Record<string, Tool.Any>> {
   readonly stopAfter?: ((step: AgentStep<Tools>) => boolean) | undefined
 }
 
-type Tools_<Tools extends Record<string, Tool.Any>> = Tools[keyof Tools]
+/** Any one of the toolkit's tools, the shape `Tool`'s type helpers take. */
+type ToolOf<Tools extends Record<string, Tool.Any>> = Tools[keyof Tools]
 
 export type AgentLoopError<Tools extends Record<string, Tool.Any>> =
   | AiError.AiError
-  | Tool.HandlerError<Tools_<Tools>>
+  | Tool.HandlerError<ToolOf<Tools>>
 
 export type AgentLoopServices<Tools extends Record<string, Tool.Any>> =
   | LanguageModel.LanguageModel
-  | Tool.HandlerServices<Tools_<Tools>>
-  | Tool.ResultDecodingServices<Tools_<Tools>>
-  | Tool.ParametersEncodingServices<Tools_<Tools>>
+  | Tool.HandlerServices<ToolOf<Tools>>
+  | Tool.ResultDecodingServices<ToolOf<Tools>>
+  | Tool.ParametersEncodingServices<ToolOf<Tools>>
 
 type AgentStream<Tools extends Record<string, Tool.Any>> = Stream.Stream<
   Response.StreamPart<Tools, "opaque">,
@@ -66,8 +65,6 @@ const ranTools = (parts: ReadonlyArray<Response.AnyPart>) =>
 export const runAgentLoop = <Tools extends Record<string, Tool.Any> = {}>(
   options: AgentLoopOptions<Tools>,
 ): AgentStream<Tools> => {
-  const limit = options.maxSteps ?? maxSteps
-
   const step = (index: number, prompt: Prompt.Prompt): AgentStream<Tools> => {
     const parts: Array<Response.StreamPart<Tools, "opaque">> = []
     const call = (
@@ -79,9 +76,9 @@ export const runAgentLoop = <Tools extends Record<string, Tool.Any> = {}>(
       call.pipe(Stream.tap((part) => Effect.sync(() => parts.push(part)))),
       Stream.suspend((): AgentStream<Tools> => {
         if (!ranTools(parts) || options.stopAfter?.({ index, parts })) return Stream.empty
-        if (index + 1 >= limit) {
+        if (index + 1 >= maxSteps) {
           return Stream.drain(
-            Stream.fromEffect(Effect.logWarning(`Chat turn hit the ${limit}-step cap`)),
+            Stream.fromEffect(Effect.logWarning(`Chat turn hit the ${maxSteps}-step cap`)),
           )
         }
         return step(index + 1, Prompt.concat(prompt, Prompt.fromResponseParts(parts)))
