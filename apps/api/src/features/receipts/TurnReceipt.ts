@@ -1,4 +1,5 @@
 import { type ExpenseStatus, type IsoDate, ReceiptNotFound } from "@expense/contract"
+import { extendProgram } from "@expense/ui/server"
 import { Effect, Option, Schema } from "effect"
 import { SqlClient } from "effect/sql"
 import { ExpenseRow } from "../expenses/ExpenseRow.ts"
@@ -42,10 +43,11 @@ export const loadTurnReceipt = (key: string) =>
  * Run once the model has finished a Receipt turn. When nothing holds the
  * Receipt (the model did not, or could not, propose from it), this makes a
  * placeholder Draft for it (amount 0, Other, the client's date, marked for
- * review) and returns a card program to append to the reply. Otherwise it
- * returns "" and changes nothing.
+ * review) and returns text to append to `reply`, the model's: a line of
+ * prose and a block adding the Draft's card to the reply's program.
+ * Otherwise it returns "" and changes nothing.
  */
-export const draftForUnreadReceipt = (receiptKey: string, clientDate: IsoDate) =>
+export const draftForUnreadReceipt = (receiptKey: string, clientDate: IsoDate, reply: string) =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
     const held = yield* sql`SELECT id FROM expense WHERE receipt_key = ${receiptKey}`.pipe(
@@ -65,10 +67,8 @@ export const draftForUnreadReceipt = (receiptKey: string, clientDate: IsoDate) =
       "",
       "I could not read everything on this Receipt, so here is a Draft to fill in:",
       "",
-      "```openui-lang",
-      "root = Stack([receipt])",
-      `receipt = DraftExpenseCard("${draft.id}")`,
-      "```",
+      // Into the root the model wrote, if any, so the reply stays one program.
+      extendProgram(reply, "unreadReceiptDraft", `DraftExpenseCard("${draft.id}")`),
     ].join("\n")
   })
 

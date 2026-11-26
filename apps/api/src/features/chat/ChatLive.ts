@@ -31,13 +31,14 @@ export const ChatLive = HttpApiBuilder.group(Api, "chat", (handlers) =>
         Effect.gen(function* () {
           const receipt = yield* receiptFor(payload.receiptKey)
           const toolkit = yield* toolkitFor(payload)
-          const coda =
+          const afterModel =
             receipt === undefined
               ? undefined
-              : draftForUnreadReceipt(receipt.key, payload.clientDate).pipe(
-                  Effect.provideService(SqlClient.SqlClient, sql),
-                )
-          const turn = yield* runChatTurn({ model, history, toolkit, coda }, payload, receipt)
+              : (reply: string) =>
+                  draftForUnreadReceipt(receipt.key, payload.clientDate, reply).pipe(
+                    Effect.provideService(SqlClient.SqlClient, sql),
+                  )
+          const turn = yield* runChatTurn({ model, history, toolkit, afterModel }, payload, receipt)
           return Stream.encodeText(turn)
         }),
       )

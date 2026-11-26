@@ -1,10 +1,10 @@
-import type { Expense } from "@expense/contract"
+import type { ChatHistoryPage, Expense } from "@expense/contract"
 import { env } from "cloudflare:workers"
-import { Schema } from "effect"
-import type { Prompt } from "effect/ai"
+import { Effect, Schema, Stream } from "effect"
+import type { Prompt, Response } from "effect/ai"
 import { beforeEach, describe, expect, it } from "vitest"
 import { callApi } from "../../testing/callWorker.ts"
-import { sendChat } from "../../testing/callWithModel.ts"
+import { sendChat, sendChatAndLeave } from "../../testing/callWithModel.ts"
 import {
   type FakeReply,
   scriptedLanguageModel,
@@ -271,6 +271,47 @@ describe("changing a Draft by chatting", () => {
     expect(toolResultsIn(model.calls[1]!.prompt)[0]).toMatchObject({
       name: "get_expense",
       result: { id, amount: 70000, categoryName: "Shopping", status: "draft" },
+    })
+  })
+})
+
+describe("a client that leaves mid-reply", () => {
+  it("still gets the whole reply stored, card and all, so the Draft is not orphaned", async () => {
+    let leave!: () => void
+    const left = new Promise<void>((resolve) => (leave = resolve))
+    const usage = { inputTokens: {}, outputTokens: {} }
+    const model = scriptedLanguageModel(proposeCloth, (prompt) =>
+      Stream.concat(
+        Stream.fromIterable<Response.StreamPartEncoded>([
+          { type: "text-start", id: "t" },
+          { type: "text-delta", id: "t", delta: "Here is your draft:\n" },
+        ]),
+        // The model writes the card only once the client has gone.
+        Stream.fromEffect(Effect.promise(() => left)).pipe(
+          Stream.flatMap(() =>
+            Stream.fromIterable<Response.StreamPartEncoded>([
+              { type: "text-delta", id: "t", delta: cards(proposedIds(prompt)) },
+              { type: "text-end", id: "t" },
+              { type: "finish", reason: "stop", usage },
+            ]),
+          ),
+        ),
+      ),
+    )
+
+    const { firstChunk } = await sendChatAndLeave(
+      model.layer,
+      { message: "buy cloth 70rb", clientDate },
+      leave,
+    )
+
+    expect(firstChunk).not.toContain("DraftExpenseCard")
+    const [draft] = await drafts()
+    const page: ChatHistoryPage = await (await callApi("/api/chat")).json()
+    expect(page.messages[0]).toMatchObject({
+      role: "assistant",
+      content: "Here is your draft:",
+      uiText: `root = Stack([d0])\nd0 = DraftExpenseCard("${draft!.id}")`,
     })
   })
 })

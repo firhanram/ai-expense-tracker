@@ -1,3 +1,5 @@
+import { createExecutionContext } from "cloudflare:test"
+import { env } from "cloudflare:workers"
 import worker from "../index.ts"
 
 /** The `API_TOKEN` the test Worker is bound with (see `vitest.config.ts`). */
@@ -8,7 +10,7 @@ export const testApiToken = "test-api-token"
  * No socket, no deploy. Sends no token; `callApi` is the authorised call.
  */
 export const callWorker = (path: string, init?: RequestInit) =>
-  worker.fetch(new Request(`http://localhost${path}`, init))
+  worker.fetch(new Request(`http://localhost${path}`, init), env, createExecutionContext())
 
 /** `callWorker` as the SPA calls it: with the bearer token. */
 export const callApi = (path: string, init?: RequestInit) => {
