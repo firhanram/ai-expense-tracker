@@ -3,6 +3,7 @@ import { env } from "cloudflare:workers"
 import { describe, expect, it } from "vitest"
 import { callApi } from "../../testing/callWorker.ts"
 import { jpeg, uploadReceipt } from "../../testing/receipts.ts"
+import { anError, readData, readError } from "../../testing/envelope.ts"
 
 const record = async (merchant: string): Promise<Expense> => {
   const response = await callApi("/api/expenses", {
@@ -11,7 +12,7 @@ const record = async (merchant: string): Promise<Expense> => {
     body: JSON.stringify({ amount: 10000, categoryId: 1, merchant, occurredAt: "2026-11-01" }),
   })
   expect(response.status).toBe(201)
-  return response.json()
+  return readData(response)
 }
 
 // No route creates a Draft yet (the agent does, later), so seed one directly.
@@ -29,7 +30,7 @@ const seedDraft = async () => {
 const remove = (id: string) => callApi(`/api/expenses/${id}`, { method: "DELETE" })
 
 const listedIds = async () => {
-  const expenses: Array<Expense> = await callApi("/api/expenses").then((r) => r.json())
+  const expenses = await callApi("/api/expenses").then(readData<Array<Expense>>)
   return expenses.map((expense) => expense.id)
 }
 
@@ -40,7 +41,8 @@ describe("DELETE /api/expenses/:id", () => {
 
     const response = await remove(deleted.id)
 
-    expect(response.status).toBe(204)
+    expect(response.status).toBe(200)
+    expect(await readData(response)).toBeNull()
     const ids = await listedIds()
     expect(ids).toContain(kept.id)
     expect(ids).not.toContain(deleted.id)
@@ -64,7 +66,7 @@ describe("DELETE /api/expenses/:id", () => {
   it("deletes a Draft", async () => {
     const id = await seedDraft()
 
-    expect((await remove(id)).status).toBe(204)
+    expect((await remove(id)).status).toBe(200)
     expect((await remove(id)).status).toBe(404)
   })
 
@@ -75,7 +77,7 @@ describe("DELETE /api/expenses/:id", () => {
       .bind(receiptKey, id)
       .run()
 
-    expect((await remove(id)).status).toBe(204)
+    expect((await remove(id)).status).toBe(200)
 
     expect((await callApi(`/api/receipts/${receiptKey}`)).status).toBe(404)
   })
@@ -84,6 +86,8 @@ describe("DELETE /api/expenses/:id", () => {
     const response = await remove("no-such-expense")
 
     expect(response.status).toBe(404)
-    expect(await response.json()).toEqual({ _tag: "ExpenseNotFound", id: "no-such-expense" })
+    expect(await readError(response)).toEqual(
+      anError("EXPENSE_NOT_FOUND", { id: "no-such-expense" }),
+    )
   })
 })

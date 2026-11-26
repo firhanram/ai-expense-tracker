@@ -1,4 +1,9 @@
-import { type ChatMessage, ModelUnreachable, type SendChatMessage } from "@expense/contract"
+import {
+  type ChatMessage,
+  ModelRateLimited,
+  ModelUnreachable,
+  type SendChatMessage,
+} from "@expense/contract"
 import { joinReply, splitReply } from "@expense/ui/server"
 import { type Cause, Effect, Exit, Option, Queue, Scope, Sink, Stream } from "effect"
 import { type AiError, LanguageModel, type Prompt, type Response, type Toolkit } from "effect/ai"
@@ -52,14 +57,22 @@ export const buildPrompt = (
   },
 ]
 
-const toUnreachable = (error: AiError.AiError) =>
+/**
+ * A provider 429 (rate limited) is `ModelRateLimited`, sent as
+ * `TOO_MANY_REQUESTS`; any other failure before the first word is
+ * `ModelUnreachable`.
+ */
+const toUnreachable = (error: AiError.AiError) => {
   // oxlint-disable-next-line no-underscore-dangle -- `_tag` is how Effect names an error's kind.
-  new ModelUnreachable({ reason: error.reason._tag })
+  const reason = error.reason._tag
+  return reason === "RateLimitError" ? new ModelRateLimited() : new ModelUnreachable({ reason })
+}
 
 /**
  * Waits for the first piece of prose so a model that cannot be reached is a
- * typed `ModelUnreachable` (503) rather than a 200 whose body is cut off.
- * The remainder streams in a scope this owns, closed when it ends.
+ * typed `ModelUnreachable` (503) or `ModelRateLimited` (429) rather than a
+ * 200 whose body is cut off. The remainder streams in a scope this owns,
+ * closed when it ends.
  */
 const firstChunk = <E>(prose: Stream.Stream<string, E>) =>
   Effect.gen(function* () {

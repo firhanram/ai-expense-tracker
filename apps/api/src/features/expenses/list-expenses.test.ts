@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers"
 import { beforeEach, describe, expect, it } from "vitest"
 import { callApi } from "../../testing/callWorker.ts"
+import { readData, readIssues } from "../../testing/envelope.ts"
 
 // Tests in one file share D1, so each starts from an empty ledger.
 beforeEach(async () => {
@@ -28,7 +29,7 @@ const seedWithStatus = (merchant: string, status: "draft" | "discarded") =>
 const listMerchants = async (path = "/api/expenses") => {
   const response = await callApi(path)
   expect(response.status).toBe(200)
-  const expenses: Array<{ merchant: string }> = await response.json()
+  const expenses: Array<{ merchant: string }> = await readData(response)
   return expenses.map((expense) => expense.merchant)
 }
 
@@ -65,9 +66,9 @@ describe("GET /api/expenses", () => {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ amount: -5000, categoryId: 6, occurredAt: "2026-11-12" }),
-    }).then((response) => response.json())
+    }).then(readData)
 
-    const listed = await callApi("/api/expenses").then((response) => response.json())
+    const listed = await callApi("/api/expenses").then(readData)
 
     expect(listed).toEqual([created])
   })
@@ -99,8 +100,8 @@ describe("GET /api/expenses", () => {
       const response = await callApi("/api/expenses?status=pending")
 
       expect(response.status).toBe(400)
-      const problem: { errors: ReadonlyArray<unknown> } = await response.json()
-      expect(problem.errors).toContainEqual(expect.objectContaining({ path: ["query", "status"] }))
+      const issues = await readIssues(response)
+      expect(issues).toContainEqual(expect.objectContaining({ path: ["query", "status"] }))
     })
   })
 
@@ -113,9 +114,7 @@ describe("GET /api/expenses", () => {
       .bind(crypto.randomUUID())
       .run()
 
-    const expenses: Array<Record<string, unknown>> = await callApi("/api/expenses").then((r) =>
-      r.json(),
-    )
+    const expenses = await callApi("/api/expenses").then(readData<Array<Record<string, unknown>>>)
 
     expect(expenses).toEqual([
       expect.objectContaining({ merchant: "Typed in", receiptKey: null, needsReview: false }),

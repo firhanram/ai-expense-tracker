@@ -1,6 +1,7 @@
 import type { Expense } from "@expense/contract"
 import { describe, expect, it } from "vitest"
 import { callApi } from "../../testing/callWorker.ts"
+import { anError, readData, readError, readIssues } from "../../testing/envelope.ts"
 
 const createExpense = (body: unknown) =>
   callApi("/api/expenses", {
@@ -22,7 +23,7 @@ describe("POST /api/expenses", () => {
     const response = await createExpense(nasiGoreng)
 
     expect(response.status).toBe(201)
-    const expense: Expense = await response.json()
+    const expense: Expense = await readData(response)
     expect(expense).toMatchObject({
       amount: 25000,
       categoryId: 2,
@@ -40,14 +41,14 @@ describe("POST /api/expenses", () => {
     const response = await createExpense({ ...nasiGoreng, amount: -25000 })
 
     expect(response.status).toBe(201)
-    expect(await response.json()).toMatchObject({ amount: -25000 })
+    expect(await readData(response)).toMatchObject({ amount: -25000 })
   })
 
   it("leaves merchant and note empty when omitted", async () => {
     const response = await createExpense({ amount: 15000, categoryId: 3, occurredAt: "2026-11-21" })
 
     expect(response.status).toBe(201)
-    expect(await response.json()).toMatchObject({ merchant: null, note: null })
+    expect(await readData(response)).toMatchObject({ merchant: null, note: null })
   })
 
   describe("rejects invalid input with a 400", () => {
@@ -55,7 +56,7 @@ describe("POST /api/expenses", () => {
       const response = await createExpense({ ...nasiGoreng, categoryId: 99 })
 
       expect(response.status).toBe(400)
-      expect(await response.json()).toMatchObject({ _tag: "UnknownCategory", categoryId: 99 })
+      expect(await readError(response)).toEqual(anError("UNKNOWN_CATEGORY", { categoryId: 99 }))
     })
 
     it.each([
@@ -68,9 +69,9 @@ describe("POST /api/expenses", () => {
       const response = await createExpense({ ...nasiGoreng, ...override })
 
       expect(response.status).toBe(400)
-      expect(response.headers.get("content-type")).toContain("application/problem+json")
-      const problem: { errors: ReadonlyArray<unknown> } = await response.json()
-      expect(problem.errors).toContainEqual(expect.objectContaining({ path: ["payload", field] }))
+      expect(response.headers.get("content-type")).toContain("application/json")
+      const issues = await readIssues(response)
+      expect(issues).toContainEqual(expect.objectContaining({ path: ["payload", field] }))
     })
   })
 })

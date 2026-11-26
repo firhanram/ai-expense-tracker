@@ -1,3 +1,25 @@
+export {
+  ApiErrors,
+  InternalError,
+  internalErrorMessage,
+  Unauthorized,
+  ValidationFailed,
+  ValidationIssue,
+} from "./ApiErrors.ts"
+export {
+  ApiErrorBody,
+  ApiFailure,
+  type ApiResponse,
+  ApiSuccess,
+  apiError,
+  errorCatalog,
+  ErrorCode,
+  errorCodes,
+  errorIdField,
+  makeErrorId,
+  ok,
+  okNull,
+} from "./ApiResponse.ts"
 export { Api } from "./Api.ts"
 export {
   ChatGroup,
@@ -5,6 +27,7 @@ export {
   ChatHistoryPageSize,
   ChatMessage,
   ChatRole,
+  ModelRateLimited,
   ModelUnreachable,
   SendChatMessage,
 } from "./chat/ChatApi.ts"

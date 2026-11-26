@@ -2,6 +2,7 @@ import type { Expense } from "@expense/contract"
 import { env } from "cloudflare:workers"
 import { describe, expect, it } from "vitest"
 import { callApi } from "../../testing/callWorker.ts"
+import { anError, readData, readError, readIssues } from "../../testing/envelope.ts"
 
 const json = (method: string, body: unknown) => ({
   method,
@@ -21,7 +22,7 @@ const record = async (): Promise<Expense> => {
     }),
   )
   expect(response.status).toBe(201)
-  return response.json()
+  return readData(response)
 }
 
 // No route creates a Draft yet (the agent does, later), so seed rows directly.
@@ -51,7 +52,7 @@ describe("PATCH /api/expenses/:id", () => {
     })
 
     expect(response.status).toBe(200)
-    expect(await response.json()).toEqual({
+    expect(await readData(response)).toEqual({
       ...expense,
       amount: 32000,
       categoryId: 3,
@@ -67,14 +68,14 @@ describe("PATCH /api/expenses/:id", () => {
     const response = await edit(expense.id, { amount: 27000, note: null })
 
     expect(response.status).toBe(200)
-    expect(await response.json()).toEqual({ ...expense, amount: 27000, note: null })
+    expect(await readData(response)).toEqual({ ...expense, amount: 27000, note: null })
   })
 
   it("shows the edit in the list", async () => {
     const expense = await record()
     await edit(expense.id, { merchant: "Warung Pak Darto" })
 
-    const listed: Array<Expense> = await callApi("/api/expenses").then((r) => r.json())
+    const listed = await callApi("/api/expenses").then(readData<Array<Expense>>)
 
     expect(listed.find((e) => e.id === expense.id)).toMatchObject({ merchant: "Warung Pak Darto" })
   })
@@ -86,7 +87,7 @@ describe("PATCH /api/expenses/:id", () => {
     const response = await edit(id, { needsReview: false })
 
     expect(response.status).toBe(200)
-    expect(await response.json()).toMatchObject({ id, needsReview: false, amount: 10000 })
+    expect(await readData(response)).toMatchObject({ id, needsReview: false, amount: 10000 })
   })
 
   it("edits a Draft and leaves it a Draft", async () => {
@@ -95,7 +96,7 @@ describe("PATCH /api/expenses/:id", () => {
     const response = await edit(id, { amount: 12500, categoryId: 2 })
 
     expect(response.status).toBe(200)
-    expect(await response.json()).toMatchObject({
+    expect(await readData(response)).toMatchObject({
       id,
       amount: 12500,
       categoryId: 2,
@@ -109,7 +110,9 @@ describe("PATCH /api/expenses/:id", () => {
       const response = await edit("no-such-expense", { amount: 1000 })
 
       expect(response.status).toBe(404)
-      expect(await response.json()).toEqual({ _tag: "ExpenseNotFound", id: "no-such-expense" })
+      expect(await readError(response)).toEqual(
+        anError("EXPENSE_NOT_FOUND", { id: "no-such-expense" }),
+      )
     })
 
     it("for an empty edit of an id that does not exist", async () => {
@@ -124,7 +127,7 @@ describe("PATCH /api/expenses/:id", () => {
       const response = await edit(id, { amount: 1000 })
 
       expect(response.status).toBe(404)
-      expect(await response.json()).toEqual({ _tag: "ExpenseNotFound", id })
+      expect(await readError(response)).toEqual(anError("EXPENSE_NOT_FOUND", { id }))
     })
   })
 
@@ -135,8 +138,8 @@ describe("PATCH /api/expenses/:id", () => {
       const response = await edit(expense.id, { categoryId: 99, amount: 1 })
 
       expect(response.status).toBe(400)
-      expect(await response.json()).toEqual({ _tag: "UnknownCategory", categoryId: 99 })
-      const listed: Array<Expense> = await callApi("/api/expenses").then((r) => r.json())
+      expect(await readError(response)).toEqual(anError("UNKNOWN_CATEGORY", { categoryId: 99 }))
+      const listed = await callApi("/api/expenses").then(readData<Array<Expense>>)
       expect(listed.find((e) => e.id === expense.id)).toEqual(expense)
     })
 
@@ -149,8 +152,8 @@ describe("PATCH /api/expenses/:id", () => {
       const response = await edit(expense.id, body)
 
       expect(response.status).toBe(400)
-      const problem: { errors: ReadonlyArray<unknown> } = await response.json()
-      expect(problem.errors).toContainEqual(expect.objectContaining({ path: ["payload", field] }))
+      const issues = await readIssues(response)
+      expect(issues).toContainEqual(expect.objectContaining({ path: ["payload", field] }))
     })
   })
 })

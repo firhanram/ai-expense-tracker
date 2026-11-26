@@ -110,6 +110,36 @@ All routes require `Authorization: Bearer $API_TOKEN`, except under loopback in 
 
 `POST /reports` is absent deliberately — Reports are reads.
 
+### Response envelope
+
+Every JSON response, health included, is one of two shapes, typed in `packages/contract` (`ApiResponse.ts`):
+
+- **Success** — `{ "success": true, "data": <payload> }`, with the route's status (201 for `POST /expenses` and `POST /receipts`). `DELETE /expenses/:id` answers `200 { "success": true, "data": null }`, not an empty 204. An endpoint's success schema is `ok(Payload)`: the envelope is on the wire only, so handlers and an `HttpApiClient` see the payload itself.
+- **Failure** — `{ "success": false, "error": { "errorId", "errorCode", "message", "details"? } }`, with the code's status.
+  - `errorId` is a random UUID made per error response and logged with it (a 5xx with its cause), so an id a user quotes can be found in the Worker's logs.
+  - `errorCode` is from the closed catalog below; clients match on it, never on `message`, which is for a human.
+  - `details` is structured context when there is any: the field paths that failed validation, the id not found.
+  - A 500 says nothing more than its code and errorId: no cause, stack or SQL in the body.
+
+Two successes are not JSON and have no envelope: `POST /chat` streams text, and `GET /receipts/:key` is the image bytes. A failure on either before the body starts is an ordinary error envelope; a model failure after the first word of a reply ends the stream (see "The chat turn").
+
+| `errorCode` | Status | When | `details` |
+|---|---|---|---|
+| `UNAUTHORIZED` | 401 | The bearer token is missing or wrong, on any path but health, known or not. | — |
+| `VALIDATION_FAILED` | 400 | Params, query or body do not match the endpoint's schema, or the body is not JSON. | `{ issues: [{ path, message }] }`, `path` starting with the slot: `["payload", "amount"]`. |
+| `NOT_FOUND` | 404 | No route has this method and path. | — |
+| `EXPENSE_NOT_FOUND` | 404 | No Expense the route can act on has this id. | `{ id }` |
+| `UNKNOWN_CATEGORY` | 400 | The Category id is not in the seeded set. | `{ categoryId }` |
+| `EXPENSE_DISCARDED` | 409 | Confirming a discarded Expense. | `{ id }` |
+| `EXPENSE_CONFIRMED` | 409 | Discarding a confirmed Expense. | `{ id }` |
+| `RECEIPT_NOT_FOUND` | 404 | No stored Receipt has this key (`GET /receipts/:key`, or `receiptKey` on `POST /chat`). | `{ receiptKey }` |
+| `INVALID_RECEIPT` | 400 | The upload is not one accepted image within the size cap; `message` says which. | — |
+| `MODEL_UNREACHABLE` | 503 | The model failed before the first word of a reply. | `{ reason }`, the AI error kind. |
+| `TOO_MANY_REQUESTS` | 429 | The model provider answered 429 (rate limited) before the first word. The app has no rate limiter of its own. | — |
+| `INTERNAL_ERROR` | 500 | Anything unexpected: a defect, D1 down, a response that fails its own schema. | — |
+
+The codes, and the status each is sent with, live in one place (`errorCatalog` in `packages/contract/src/ApiResponse.ts`). Adding a code is a contract change; renaming one breaks clients.
+
 ## The chat turn
 
 1. Validate the request; append the user message.

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { callApi } from "../../testing/callWorker.ts"
+import { readData } from "../../testing/envelope.ts"
 
 describe("GET /api/health", () => {
   it("answers ok when D1 is reachable", async () => {
@@ -7,7 +8,7 @@ describe("GET /api/health", () => {
 
     expect(response.status).toBe(200)
     expect(response.headers.get("content-type")).toContain("application/json")
-    expect(await response.json()).toEqual({ status: "ok" })
+    expect(await readData(response)).toEqual({ status: "ok" })
   })
 
   it("is mounted under /api, not at the root", async () => {

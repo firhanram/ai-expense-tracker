@@ -25,6 +25,6 @@ export const ExpensesLive = HttpApiBuilder.group(Api, "expenses", (handlers) =>
       .handle("confirm", ({ params }) => withStores(confirmExpense(params.id)))
       .handle("discard", ({ params }) => withStores(discardExpense(params.id)))
       .handle("edit", ({ params, payload }) => withStores(editExpense(params.id, payload)))
-      .handle("remove", ({ params }) => withStores(deleteExpense(params.id)))
+      .handle("remove", ({ params }) => withStores(deleteExpense(params.id)).pipe(Effect.as(null)))
   }),
 )
