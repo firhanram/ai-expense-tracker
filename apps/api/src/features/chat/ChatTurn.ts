@@ -1,9 +1,11 @@
 import { type ChatMessage, ModelUnreachable, type SendChatMessage } from "@expense/contract"
 import { joinReply, splitReply } from "@expense/ui/server"
 import { Effect, Exit, Option, Scope, Sink, Stream } from "effect"
-import { type AiError, LanguageModel, type Prompt, type Response } from "effect/ai"
+import { type AiError, LanguageModel, type Prompt, type Response, type Toolkit } from "effect/ai"
 import { runAgentLoop } from "./AgentLoop.ts"
 import type { NewChatMessage } from "./ChatHistory.ts"
+import type { ChatTools } from "./ChatToolkit.ts"
+import { draftsShown } from "./DraftShown.ts"
 import { SystemPrompt } from "./SystemPrompt.ts"
 
 /** How much of the Chat the model sees each turn. */
@@ -55,6 +57,8 @@ export interface ChatTurnDeps {
     readonly recent: (count: number) => Effect.Effect<ReadonlyArray<ChatMessage>>
     readonly append: (message: NewChatMessage) => Effect.Effect<void>
   }
+  /** The agent's tools, their handlers bound to this turn's client date. */
+  readonly toolkit: Toolkit.WithHandler<ChatTools>
 }
 
 /**
@@ -73,7 +77,11 @@ export const runChatTurn = (deps: ChatTurnDeps, request: SendChatMessage) =>
     yield* deps.history.append({ role: "user", content: request.message })
 
     const systemPrompt = yield* SystemPrompt
-    const prose = runAgentLoop({ prompt: buildPrompt(systemPrompt, history, request) }).pipe(
+    const prose = runAgentLoop({
+      prompt: buildPrompt(systemPrompt, history, request),
+      toolkit: deps.toolkit,
+      stopAfter: draftsShown(),
+    }).pipe(
       Stream.filter((part): part is Response.TextDeltaPart => part.type === "text-delta"),
       Stream.map((part) => part.delta),
       Stream.filter((delta) => delta.length > 0),

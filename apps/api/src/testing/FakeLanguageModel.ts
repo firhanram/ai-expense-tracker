@@ -50,9 +50,12 @@ export const unreachable = (): AiError.AiError =>
 /**
  * S2 seam: a `LanguageModel` the test scripts. `respond` gets the zero-based
  * call index, so a test can answer every call the same way (to drive a loop
- * into its cap) or follow a fixed script. No network, no key.
+ * into its cap) or follow a fixed script, and the prompt, so a reply can use
+ * an id a tool returned earlier in the turn. No network, no key.
  */
-export const makeFakeLanguageModel = (respond: (call: number) => FakeReply) => {
+export const makeFakeLanguageModel = (
+  respond: (call: number, prompt: Prompt.Prompt) => FakeReply,
+) => {
   const calls: Array<FakeCall> = []
 
   const layer = Layer.effect(
@@ -61,7 +64,7 @@ export const makeFakeLanguageModel = (respond: (call: number) => FakeReply) => {
       generateText: () => Effect.die("the fake model only streams"),
       streamText: (options) =>
         Stream.suspend(() => {
-          const reply = respond(calls.length)
+          const reply = respond(calls.length, options.prompt)
           calls.push({ prompt: options.prompt, toolNames: options.tools.map((tool) => tool.name) })
           if (reply instanceof AiError.AiError) return Stream.fail(reply)
           return Stream.isStream(reply) ? reply : Stream.fromIterable(reply)
@@ -82,12 +85,30 @@ export const failsMidway = (text: string): FakeReply =>
     Stream.fail(unreachable()),
   )
 
-/** `makeFakeLanguageModel` answering call `n` with `replies[n]`, failing loudly past the end. */
-export const scriptedLanguageModel = (...replies: ReadonlyArray<FakeReply>) =>
-  makeFakeLanguageModel((call) => {
+/**
+ * `makeFakeLanguageModel` answering call `n` with `replies[n]`, failing loudly
+ * past the end. A reply may be a function of the prompt, to use an id a tool
+ * returned earlier in the turn.
+ */
+export const scriptedLanguageModel = (
+  ...replies: ReadonlyArray<FakeReply | ((prompt: Prompt.Prompt) => FakeReply)>
+) =>
+  makeFakeLanguageModel((call, prompt) => {
     const reply = replies[call]
     if (reply === undefined) {
       throw new Error(`model called ${call + 1} times; the script has ${replies.length}`)
     }
-    return reply
+    return typeof reply === "function" ? reply(prompt) : reply
   })
+
+/** The tool results the model has been sent back so far, as it reads them. */
+export const toolResultsIn = (prompt: Prompt.Prompt) =>
+  prompt.content.flatMap((message) =>
+    message.role === "tool"
+      ? message.content.flatMap((part) =>
+          part.type === "tool-result"
+            ? [{ name: part.name, isFailure: part.isFailure, result: part.result }]
+            : [],
+        )
+      : [],
+  )

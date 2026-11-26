@@ -1,4 +1,9 @@
-import { type EditExpense, ExpenseNotFound, UnknownCategory } from "@expense/contract"
+import {
+  type EditExpense,
+  type ExpenseStatus,
+  ExpenseNotFound,
+  UnknownCategory,
+} from "@expense/contract"
 import { Effect } from "effect"
 import type { SqlClient } from "effect/sql"
 import { decodeRows, toExpense } from "./ExpenseRow.ts"
@@ -6,8 +11,14 @@ import { decodeRows, toExpense } from "./ExpenseRow.ts"
 /**
  * `PATCH /expenses/:id`. Drafts and confirmed Expenses are editable; a
  * discarded one is out of the user's reach, so it reads as not found.
+ * `editable` narrows that further: the agent may edit only Drafts (ADR-0007).
  */
-export const editExpense = (sql: SqlClient.SqlClient, id: string, edit: EditExpense) =>
+export const editExpense = (
+  sql: SqlClient.SqlClient,
+  id: string,
+  edit: EditExpense,
+  editable: ReadonlyArray<ExpenseStatus> = ["draft", "confirmed"],
+) =>
   Effect.gen(function* () {
     // The Category set is fixed by migration (ADR-0004), so checking it before
     // the UPDATE cannot race; the UPDATE itself stays one statement (ADR-0010).
@@ -32,7 +43,7 @@ export const editExpense = (sql: SqlClient.SqlClient, id: string, edit: EditExpe
 
     const [row] = yield* sql`
       UPDATE expense SET ${set}
-      WHERE id = ${id} AND status IN ('draft', 'confirmed')
+      WHERE id = ${id} AND status IN ${sql.in(editable)}
       RETURNING *`.pipe(Effect.flatMap(decodeRows), Effect.orDie)
     if (row === undefined) {
       return yield* new ExpenseNotFound({ id })
