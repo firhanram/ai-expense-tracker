@@ -72,6 +72,9 @@ importers:
       '@expense/contract':
         specifier: workspace:*
         version: link:../../packages/contract
+      '@expense/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@tanstack/react-query':
         specifier: 5.108.4
         version: 5.108.4(@types/react@19.3.3)(react@19.3.1)
