@@ -1,6 +1,8 @@
 import type { SendChatMessage } from "@expense/contract"
+import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useReducer } from "react"
 import { useOnline } from "../../shared/shell/useOnline.ts"
+import { expensesKey } from "../expenses/useExpenses.ts"
 import { type SendChat, SendChatFailure, type SendChatFailureReason } from "./sendChat.ts"
 
 /** What became of a message sent this visit. */
@@ -96,11 +98,13 @@ let nextId = 0
 /**
  * The messages sent this visit and their replies. Sending never waits: a
  * message sent while a reply streams, or while offline, queues and goes once
- * the one before it has finished and the browser is online.
+ * the one before it has finished and the browser is online. Every finished
+ * reply refreshes the cached Expenses, which the agent may have changed.
  */
 export const useChatSession = (sendChat: SendChat) => {
   const [state, dispatch] = useReducer(reduce, { turns: [], queue: [], active: null })
   const online = useOnline()
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     const id = state.queue[0]
@@ -118,10 +122,14 @@ export const useChatSession = (sendChat: SendChat) => {
         const reason =
           error instanceof SendChatFailure ? error.reason : started ? "cut-off" : "failed"
         dispatch({ type: "fail", id, reason })
+      } finally {
+        // The agent's tools may have changed Drafts (update_draft, discard_draft);
+        // cards fetch by id, so a refetch is how earlier cards follow.
+        void queryClient.invalidateQueries({ queryKey: expensesKey })
       }
     }
     void run()
-  }, [state, online, sendChat])
+  }, [state, online, sendChat, queryClient])
 
   const send = useCallback((request: SendChatMessage) => {
     nextId += 1

@@ -156,6 +156,27 @@ describe("generated UI in a live reply", () => {
     expect(within(log()).getByText("November so far:")).toBeInTheDocument()
   })
 
+  it("keeps an earlier Draft card in step with what the agent changed in a later turn", async () => {
+    const server = {
+      expenses: [expense({ status: "draft" })],
+      history: [
+        message("m1", "user", "here's the indomaret one"),
+        message("m2", "assistant", "", 'root = Stack([card])\ncard = DraftExpenseCard("exp_1")'),
+      ],
+      replies: ["Updated. Check it and confirm when it looks right."],
+    }
+    serve(server)
+    await renderApp("/")
+    await within(log()).findByRole("article", { name: "Draft Expense Rp146.500" })
+
+    server.expenses = [expense({ status: "draft", amount: 164500 })]
+    await userEvent.type(composer(), "that was actually 164.500{Enter}")
+
+    expect(
+      await within(log()).findByRole("article", { name: "Draft Expense Rp164.500" }),
+    ).toBeInTheDocument()
+  })
+
   it("shows the prose with one Retry when the program fails, and sends again on Retry", async () => {
     const broken = "Here you go.\n\n```openui-lang\nroot = Stack([card]\n```"
     serve({ replies: [broken, broken] })

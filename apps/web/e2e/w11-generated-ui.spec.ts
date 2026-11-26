@@ -1,6 +1,6 @@
 import type { ChatMessage, Expense } from "@expense/contract"
 import { expect, type Page, test } from "@playwright/test"
-import { type ApiCall, mockApi, ok, stream } from "./support/api.ts"
+import { type ApiCall, fail, mockApi, ok, stream } from "./support/api.ts"
 import { expense } from "./support/fixtures.ts"
 import { screenshot, showAs, themes } from "./support/screenshot.ts"
 
@@ -52,6 +52,13 @@ const listExpenses = (call: ApiCall) => {
   )
 }
 
+/** `GET /api/expenses/:id`, any status. */
+const getExpense = (call: ApiCall) => {
+  const id = call.params["id"] ?? ""
+  const found = expenses.find((candidate) => candidate.id === id)
+  return found === undefined ? fail("EXPENSE_NOT_FOUND", { details: { id } }) : ok(found)
+}
+
 /** Newest first, as `GET /api/chat` pages it. */
 const stored: ReadonlyArray<ChatMessage> = [
   message(
@@ -93,6 +100,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       await mockApi(page, {
         "GET /api/chat": history(stored),
         "GET /api/expenses": listExpenses,
+        "GET /api/expenses/:id": getExpense,
         "POST /api/chat": stream(liveCard),
       })
       await showAs(page, viewport, theme)
@@ -126,6 +134,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
           message("m1", "user", "how much did I spend on dining last week?"),
         ]),
         "GET /api/expenses": listExpenses,
+        "GET /api/expenses/:id": getExpense,
         "POST /api/chat": stream(
           'Here it is.\n\n```openui-lang\nroot = Stack([card])\ncard = ExpenseCard("exp-gone")\n```',
         ),
@@ -153,6 +162,7 @@ test("a live program that fails shows the prose and retries once", async ({ page
   await mockApi(page, {
     "GET /api/chat": history([]),
     "GET /api/expenses": listExpenses,
+    "GET /api/expenses/:id": getExpense,
     "POST /api/chat": () => {
       sends += 1
       return stream(replies[sends - 1] ?? "")
@@ -182,6 +192,7 @@ test("a Category-filtered list shows only that Category", async ({ page }) => {
       ),
     ]),
     "GET /api/expenses": listExpenses,
+    "GET /api/expenses/:id": getExpense,
   })
   await open(page)
 

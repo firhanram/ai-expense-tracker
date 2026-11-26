@@ -41,7 +41,7 @@ const Fields = ({
   readonly disabled: boolean
 }) => (
   <>
-    <div className="flex items-start justify-between gap-3">
+    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
       <InlineEdit
         expense={expense}
         label="amount"
@@ -49,7 +49,7 @@ const Fields = ({
         initial={String(expense.amount)}
         toPayload={edits.amount}
         disabled={disabled}
-        className={`font-num text-2xl tabular ${expense.amount < 0 ? "text-danger" : ""}`}
+        className={`shrink-0 font-num text-2xl tabular ${expense.amount < 0 ? "text-danger" : ""}`}
         inputClassName="w-44 font-num text-2xl tabular"
       />
       <CategoryEdit expense={expense} disabled={disabled} />
@@ -140,7 +140,7 @@ const Actions = ({
             shown="Add note"
             initial=""
             toPayload={edits.note}
-            className="ml-auto text-sm text-text-muted"
+            className="ml-auto text-sm text-text-muted transition-opacity duration-(--motion-color) pointer-fine:opacity-0 pointer-fine:group-focus-within:opacity-100 pointer-fine:group-hover:opacity-100"
             inputClassName="w-48 text-sm"
           />
         ) : null}
@@ -179,7 +179,7 @@ const DraftCardBody = ({ expense }: { readonly expense: Expense }) => {
     <article
       aria-label={`Draft Expense ${formatRupiah(expense.amount)}`}
       data-state={state}
-      className="flex gap-3 rounded-lg border border-line bg-surface p-4 transition-[background-color,opacity] duration-(--motion-layout) data-[state=confirmed]:bg-surface-2 data-[state=confirming]:opacity-70"
+      className="group flex gap-3 rounded-lg border border-line bg-surface p-4 transition-[background-color,opacity] duration-(--motion-layout) data-[state=confirmed]:bg-surface-2 data-[state=confirming]:opacity-70"
     >
       {expense.receiptKey === null ? null : <ReceiptThumbnail receiptKey={expense.receiptKey} />}
       <div className="flex min-w-0 flex-1 flex-col gap-1">
