@@ -2,6 +2,7 @@ import { Api, type ListExpensesQuery } from "@expense/contract"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/http-api"
 import { SqlClient } from "effect/sql"
+import { ReceiptStore } from "../receipts/ReceiptStore.ts"
 import { deleteExpense } from "./deleteExpense.ts"
 import { editExpense } from "./editExpense.ts"
 import { decodeRows, toExpense } from "./ExpenseRow.ts"
@@ -10,6 +11,7 @@ import { confirmExpense, discardExpense, insertExpense } from "./ExpenseStore.ts
 export const ExpensesLive = HttpApiBuilder.group(Api, "expenses", (handlers) =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
+    const receipts = yield* ReceiptStore
 
     /**
      * One predicate per filter, ANDed. A filter added to `ListExpensesQuery`
@@ -23,8 +25,12 @@ export const ExpensesLive = HttpApiBuilder.group(Api, "expenses", (handlers) =>
       ...(query.categoryId === undefined ? [] : [sql`category_id = ${query.categoryId}`]),
     ]
 
-    // The store asks for `SqlClient` per call; handlers may not leave it to the request.
-    const withSql = Effect.provideService(SqlClient.SqlClient, sql)
+    // The stores ask for their services per call; handlers may not leave them to the request.
+    const withSql = <A, E>(effect: Effect.Effect<A, E, SqlClient.SqlClient | ReceiptStore>) =>
+      effect.pipe(
+        Effect.provideService(SqlClient.SqlClient, sql),
+        Effect.provideService(ReceiptStore, receipts),
+      )
 
     return handlers
       .handle("list", ({ query }) =>
@@ -41,6 +47,6 @@ export const ExpensesLive = HttpApiBuilder.group(Api, "expenses", (handlers) =>
       .handle("confirm", ({ params }) => withSql(confirmExpense(params.id)))
       .handle("discard", ({ params }) => withSql(discardExpense(params.id)))
       .handle("edit", ({ params, payload }) => editExpense(sql, params.id, payload))
-      .handle("remove", ({ params }) => deleteExpense(sql, params.id))
+      .handle("remove", ({ params }) => withSql(deleteExpense(sql, params.id)))
   }),
 )

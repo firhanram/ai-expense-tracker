@@ -2,6 +2,7 @@ import type { Expense } from "@expense/contract"
 import { env } from "cloudflare:workers"
 import { describe, expect, it } from "vitest"
 import { callApi } from "../../testing/callWorker.ts"
+import { jpeg, uploadReceipt } from "../../testing/receipts.ts"
 
 const record = async (merchant: string): Promise<Expense> => {
   const response = await callApi("/api/expenses", {
@@ -65,6 +66,18 @@ describe("DELETE /api/expenses/:id", () => {
 
     expect((await remove(id)).status).toBe(204)
     expect((await remove(id)).status).toBe(404)
+  })
+
+  it("deletes the Expense's Receipt with it", async () => {
+    const { receiptKey } = await uploadReceipt(jpeg)
+    const id = await seedDraft()
+    await env.DB.prepare("UPDATE expense SET status = 'confirmed', receipt_key = ? WHERE id = ?")
+      .bind(receiptKey, id)
+      .run()
+
+    expect((await remove(id)).status).toBe(204)
+
+    expect((await callApi(`/api/receipts/${receiptKey}`)).status).toBe(404)
   })
 
   it("returns 404 ExpenseNotFound for an id that does not exist", async () => {

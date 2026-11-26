@@ -16,6 +16,7 @@ export default defineConfig({
               compatibilityDate: "2026-11-20",
               compatibilityFlags: ["nodejs_compat"],
               d1Databases: ["DB"],
+              r2Buckets: ["RECEIPTS"],
               bindings: { API_TOKEN: "test-api-token", TEST_MIGRATIONS: migrations },
             },
           }),

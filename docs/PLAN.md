@@ -106,6 +106,7 @@ All routes require `Authorization: Bearer $API_TOKEN`, except under loopback in 
 | `DELETE /expenses/:id` | Hard delete, and deletes the R2 object if present. |
 | `GET /reports` | `?from=&to=&groupBy=category|month`. Both dates required; the client computes the range. Aggregated in SQL. |
 | `POST /receipts` | Multipart upload → R2, returns `receiptKey`. |
+| `GET /receipts/:key` | The Receipt image, behind the bearer token. |
 
 `POST /reports` is absent deliberately — Reports are reads.
 
@@ -158,6 +159,12 @@ Negative amounts (refunds) fall out of `SUM` correctly. The agent receives the t
 ## Receipts
 
 Client downscales before upload — DeepSeek caps images at 1,024 tokens regardless of resolution, so uploading a 12MP photo wastes bytes and loses nothing. Upload returns a key; the chat request carries it; the API fetches the bytes and sends them inline to the model. Serving is proxied through `GET /receipts/:key` behind the bearer token, not presigned.
+
+- **Upload.** One `file` field, JPEG, PNG or WebP, at most 5 MiB (the client downscales well below that). The form is read from the web `Request`: Effect's buffered multipart needs a temp directory a Worker does not have. The key is a random UUID.
+- **One Receipt, one Draft.** A Draft proposed in a turn that carries a Receipt holds its key. A unique index on `receipt_key` and an upsert in `propose_expense` mean proposing again from the same Receipt, in the same turn or a later one, overwrites that Draft rather than adding a second. The model is also told, per turn, which Draft the Receipt already became. A Receipt whose Expense is confirmed is refused back to the model.
+- **Needs review.** `propose_expense` takes `needsReview`; the model sets it when it guessed or could not read a field. Expenses expose `needsReview` and `receiptKey` (null when there is none), so the list can mark both.
+- **Unreadable Receipts still yield a Draft.** The model is asked to propose one anyway (amount 0, `Other`, `needsReview`). If a Receipt turn ends with nothing holding the Receipt, the server makes that placeholder Draft itself and appends its `DraftExpenseCard` to the reply, streamed and stored like the model's text.
+- **Lifecycle.** Deleting an Expense deletes its object, after the row. Discarding a Draft deletes its object and clears `receipt_key`, keeping the row (ADR-0002). Everything else (an upload whose Chat message never came, a turn that failed before the model wrote, an R2 delete that failed) is caught by a daily cron sweep (03:00 UTC) that deletes objects over a day old that no Expense holds. The sweep, not the chat turn, does this because upload and message are separate requests: a turn that produced no Draft is not proof the upload is abandoned.
 
 ## Slices
 

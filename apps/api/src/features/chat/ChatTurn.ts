@@ -2,6 +2,7 @@ import { type ChatMessage, ModelUnreachable, type SendChatMessage } from "@expen
 import { joinReply, splitReply } from "@expense/ui/server"
 import { Effect, Exit, Option, Scope, Sink, Stream } from "effect"
 import { type AiError, LanguageModel, type Prompt, type Response, type Toolkit } from "effect/ai"
+import { receiptNote, type TurnReceipt } from "../receipts/TurnReceipt.ts"
 import { runAgentLoop } from "./AgentLoop.ts"
 import type { NewChatMessage } from "./ChatHistory.ts"
 import type { ChatTools } from "./ChatToolkit.ts"
@@ -16,11 +17,14 @@ export const contextMessages = 20
  * client's date and the new message. The date sits after the history so
  * the prefix stays cacheable across days (ADR-0008, ADR-0009). Earlier
  * replies carry their programs, so the model sees the ids it rendered.
+ * A Receipt rides on the new message as an image (PLAN, "The chat turn"),
+ * with a note saying which Draft, if any, it already became.
  */
 export const buildPrompt = (
   systemPrompt: string,
   history: ReadonlyArray<ChatMessage>,
   request: SendChatMessage,
+  receipt?: TurnReceipt,
 ): Array<Prompt.MessageEncoded> => [
   { role: "system", content: systemPrompt },
   ...history.map((message): Prompt.MessageEncoded =>
@@ -29,7 +33,22 @@ export const buildPrompt = (
       : { role: "assistant", content: [{ type: "text", text: joinReply(message) }] },
   ),
   { role: "system", content: `The user's local date today is ${request.clientDate}.` },
-  { role: "user", content: [{ type: "text", text: request.message }] },
+  ...(receipt === undefined ? [] : [{ role: "system", content: receiptNote(receipt) } as const]),
+  {
+    role: "user",
+    content: [
+      { type: "text", text: request.message },
+      ...(receipt === undefined
+        ? []
+        : [
+            {
+              type: "file",
+              mediaType: receipt.image.contentType,
+              data: receipt.image.bytes,
+            } as const,
+          ]),
+    ],
+  },
 ]
 
 const toUnreachable = (error: AiError.AiError) =>
@@ -59,6 +78,12 @@ export interface ChatTurnDeps {
   }
   /** The agent's tools, their handlers bound to this turn's client date. */
   readonly toolkit: Toolkit.WithHandler<ChatTools>
+  /**
+   * Run once the model has finished; what it returns is appended to the
+   * reply, streamed and stored like the model's own text. A Receipt turn
+   * uses it to guarantee the Receipt a Draft (`draftForUnreadReceipt`).
+   */
+  readonly coda?: Effect.Effect<string> | undefined
 }
 
 /**
@@ -69,16 +94,17 @@ export interface ChatTurnDeps {
  * parsing it here would load OpenUI into the Worker, and the client parses
  * it anyway, falling back to the prose when it fails.
  * An empty reply is a 200 with an empty body, and is stored as such. A model
- * failure after the first word ends the stream and stores no reply.
+ * failure after the first word ends the stream and stores no reply, and
+ * skips the coda.
  */
-export const runChatTurn = (deps: ChatTurnDeps, request: SendChatMessage) =>
+export const runChatTurn = (deps: ChatTurnDeps, request: SendChatMessage, receipt?: TurnReceipt) =>
   Effect.gen(function* () {
     const history = yield* deps.history.recent(contextMessages)
     yield* deps.history.append({ role: "user", content: request.message })
 
     const systemPrompt = yield* SystemPrompt
     const prose = runAgentLoop({
-      prompt: buildPrompt(systemPrompt, history, request),
+      prompt: buildPrompt(systemPrompt, history, request, receipt),
       toolkit: deps.toolkit,
       stopAfter: draftsShown(),
     }).pipe(
@@ -86,6 +112,11 @@ export const runChatTurn = (deps: ChatTurnDeps, request: SendChatMessage) =>
       Stream.map((part) => part.delta),
       Stream.filter((delta) => delta.length > 0),
       Stream.provideService(LanguageModel.LanguageModel, deps.model),
+      Stream.concat(
+        deps.coda === undefined
+          ? Stream.empty
+          : Stream.fromEffect(deps.coda).pipe(Stream.filter((text) => text.length > 0)),
+      ),
     )
 
     const { head, rest } = yield* firstChunk(prose).pipe(Effect.mapError(toUnreachable))

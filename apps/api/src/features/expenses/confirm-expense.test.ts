@@ -2,6 +2,7 @@ import type { Expense } from "@expense/contract"
 import { env } from "cloudflare:workers"
 import { beforeEach, describe, expect, it } from "vitest"
 import { callApi } from "../../testing/callWorker.ts"
+import { jpeg, uploadReceipt } from "../../testing/receipts.ts"
 
 // Tests in one file share D1, so each starts from an empty ledger.
 beforeEach(async () => {
@@ -110,6 +111,30 @@ describe("POST /api/expenses/:id/discard", () => {
 
     expect(second.status).toBe(200)
     expect(await second.json()).toEqual(await first.json())
+  })
+
+  it("deletes the Draft's Receipt, since it never became an Expense", async () => {
+    const { receiptKey } = await uploadReceipt(jpeg)
+    const id = await seed("draft")
+    await env.DB.prepare("UPDATE expense SET receipt_key = ? WHERE id = ?")
+      .bind(receiptKey, id)
+      .run()
+
+    const response = await post(`/api/expenses/${id}/discard`)
+
+    expect(await response.json()).toMatchObject({ id, status: "discarded", receiptKey: null })
+    expect((await callApi(`/api/receipts/${receiptKey}`)).status).toBe(404)
+  })
+
+  it("keeps the Receipt of a confirmed Expense it refuses to discard", async () => {
+    const { receiptKey } = await uploadReceipt(jpeg)
+    const id = await seed("confirmed")
+    await env.DB.prepare("UPDATE expense SET receipt_key = ? WHERE id = ?")
+      .bind(receiptKey, id)
+      .run()
+
+    expect((await post(`/api/expenses/${id}/discard`)).status).toBe(409)
+    expect((await callApi(`/api/receipts/${receiptKey}`)).status).toBe(200)
   })
 
   it("refuses to discard a confirmed Expense with a 409", async () => {

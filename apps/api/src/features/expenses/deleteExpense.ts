@@ -1,6 +1,7 @@
 import { ExpenseNotFound } from "@expense/contract"
 import { Effect, Schema } from "effect"
 import type { SqlClient } from "effect/sql"
+import { ReceiptStore } from "../receipts/ReceiptStore.ts"
 
 const decodeDeleted = Schema.decodeUnknownEffect(
   Schema.Array(Schema.Struct({ receipt_key: Schema.NullOr(Schema.String) })),
@@ -8,7 +9,8 @@ const decodeDeleted = Schema.decodeUnknownEffect(
 
 /**
  * `DELETE /expenses/:id`. A hard delete of any Expense, whatever its status:
- * it leaves the list and every Report because the row is gone.
+ * it leaves the list and every Report because the row is gone. Its Receipt
+ * goes with it (story 16).
  */
 export const deleteExpense = (sql: SqlClient.SqlClient, id: string) =>
   Effect.gen(function* () {
@@ -21,8 +23,11 @@ export const deleteExpense = (sql: SqlClient.SqlClient, id: string) =>
     if (deleted === undefined) {
       return yield* new ExpenseNotFound({ id })
     }
-    // TODO(#14): when `deleted.receipt_key` is not null, delete that R2 object
-    // here. Nothing writes `receipt_key` until receipts land, so it is always
-    // null today.
+    if (deleted.receipt_key !== null) {
+      // After the row: an R2 failure then leaves an orphan the sweep removes,
+      // never an Expense pointing at a missing image.
+      const receipts = yield* ReceiptStore
+      yield* receipts.remove([deleted.receipt_key])
+    }
     return undefined
   })
