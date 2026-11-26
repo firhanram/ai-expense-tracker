@@ -26,3 +26,5 @@ export {
   UnknownCategory,
 } from "./expenses/ExpensesApi.ts"
 export { HealthGroup, HealthStatus } from "./health/HealthApi.ts"
+export { Report, ReportGroupBy, ReportQuery, ReportTotal } from "./reports/Report.ts"
+export { ReportsGroup } from "./reports/ReportsApi.ts"
