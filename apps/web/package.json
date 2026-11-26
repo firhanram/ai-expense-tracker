@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@expense/contract": "workspace:*",
+    "@expense/ui": "workspace:*",
     "@tanstack/react-query": "5.108.4",
     "@tanstack/react-router": "1.170.46",
     "@ui-sdk/core": "0.1.0-beta.17",
