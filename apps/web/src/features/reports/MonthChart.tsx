@@ -70,24 +70,29 @@ const Figure = ({
   top,
   bottom,
   room,
+  within,
 }: {
   readonly amount: number
   readonly x: number
   readonly top: number
   readonly bottom: number
   readonly room: number
+  /** The plot's width, when a figure centred on its mark could run off either edge. */
+  readonly within?: number | undefined
 }) => {
   const refund = amount < 0
+  const text = fitFigure(amount, room)
+  const half = labelWidth(text, refund ? 13 : 12) / 2
   return (
     <text
-      x={x}
+      x={within === undefined ? x : Math.min(Math.max(x, half), within - half)}
       y={refund ? bottom + labelInset : top - labelInset}
       textAnchor="middle"
       dominantBaseline={refund ? "hanging" : "auto"}
       fill={refund ? "var(--danger)" : "var(--text-muted)"}
       style={refund ? refundFont : labelFont}
     >
-      {fitFigure(amount, room)}
+      {text}
     </text>
   )
 }
@@ -111,7 +116,7 @@ const MonthBar = (props: BarShapeProps) => {
         x={box.left + box.width / 2}
         top={box.top}
         bottom={box.top + box.height}
-        room={box.width + 2 * labelInset}
+        room={props.background?.width ?? box.width + 2 * labelInset}
       />
     </g>
   )
@@ -142,7 +147,7 @@ const useWidth = () => {
 const monthAxis = (
   <XAxis
     dataKey="name"
-    axisLine={{ stroke: "var(--line)" }}
+    axisLine={false}
     tickLine={false}
     tick={{ fill: "var(--text-muted)", fontSize: 12 }}
     interval={0}
@@ -171,11 +176,14 @@ export const MonthChart = ({
   const amounts = rows.map((row) => row.amount)
   const lowest = Math.min(0, ...amounts)
   const highest = Math.max(0, ...amounts)
-  const domain = [lowest, highest === 0 ? 1 : highest]
-  const style = { width: "100%", height: chartHeight + (lowest < 0 ? 24 : 0) }
-  const chartMargin = { ...margin, bottom: lowest < 0 ? 24 : 0 }
+  // Room under a refund for its figure, clear of the month names.
+  const floor = lowest < 0 ? lowest - (highest - lowest) * 0.15 : 0
+  const domain = [floor, highest === 0 ? 1 : highest]
+  const style = { width: "100%", height: chartHeight }
+  const chartMargin = margin
   const valueAxis = <YAxis hide domain={domain} />
-  const zero = lowest < 0 ? <ReferenceLine y={0} stroke="var(--line)" /> : null
+  // The baseline is zero, not the bottom of the plot, so refunds hang below it.
+  const zero = <ReferenceLine y={0} stroke="var(--line)" />
 
   if (chartType === "line") {
     const room = rows.length > 0 ? (measured.width - 48) / rows.length : 0
@@ -185,7 +193,14 @@ export const MonthChart = ({
       return (
         <g key={index}>
           <circle cx={cx} cy={cy} r={4} fill={color} stroke="var(--surface)" strokeWidth={2} />
-          <Figure amount={payload.amount} x={cx} top={cy - 2} bottom={cy + 2} room={room} />
+          <Figure
+            amount={payload.amount}
+            x={cx}
+            top={cy - 2}
+            bottom={cy + 2}
+            room={room}
+            within={measured.width}
+          />
         </g>
       )
     }

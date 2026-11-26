@@ -34,14 +34,14 @@ const SpendingChartCard = ({
   return (
     <figure
       aria-labelledby={`${titleId} ${groupId}`}
-      className="m-0 flex flex-col gap-4 rounded-lg border border-line bg-surface p-4"
+      className="m-0 flex flex-col gap-5 rounded-lg border border-line bg-surface p-4"
     >
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p id={titleId} className="text-md font-semibold">
+          <p id={titleId} className="text-md leading-5 font-semibold">
             {rangeTitle(report)}
           </p>
-          <p id={groupId} className="text-sm text-text-muted">
+          <p id={groupId} className="text-sm leading-4 text-text-muted">
             by {report.groupBy}
           </p>
         </div>
@@ -52,7 +52,8 @@ const SpendingChartCard = ({
           {formatRupiah(report.total)}
         </p>
       </header>
-      <div aria-hidden="true">
+      {/* A bar row is 34px with the 24px bar centred: pull the first and last row's slack into the gap. */}
+      <div aria-hidden="true" className={report.groupBy === "category" ? "-my-[5px]" : undefined}>
         {report.groupBy === "category" ? (
           <CategoryBars totals={report.totals} />
         ) : (
