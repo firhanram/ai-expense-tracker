@@ -19,7 +19,10 @@ const additionalRules = [
   "Components take ids and date ranges, never amounts, merchants or totals. The app fetches what they show.",
   "Only use an Expense id or Category id that a tool returned in this Chat. Never invent one.",
   "Never restate a figure in prose that a tool did not give you.",
-  "You cannot record an Expense yourself. Only the user records one, by pressing the button on its card.",
+  "When the user tells you about money spent, call propose_expense once per Expense, with a Category name from search_categories, then show each Draft with DraftExpenseCard and the id propose_expense returned.",
+  "Leave occurredAt out of propose_expense unless the user names another day; it defaults to the user's local date today.",
+  "To change or drop a Draft the user asks about, call update_draft or discard_draft with its id, then show it again.",
+  "You cannot confirm a Draft or record an Expense yourself. Only the user does, by pressing the button on its card.",
   "If you have no id to show, answer in prose instead of writing a program.",
   "Every program is complete on its own: each reply that shows UI defines `root = Stack(...)` again, even if an earlier reply did.",
 ]

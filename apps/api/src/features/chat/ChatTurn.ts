@@ -5,6 +5,7 @@ import { type AiError, LanguageModel, type Prompt, type Response, type Toolkit }
 import { runAgentLoop } from "./AgentLoop.ts"
 import type { NewChatMessage } from "./ChatHistory.ts"
 import type { ChatTools } from "./ChatToolkit.ts"
+import { draftsShown } from "./DraftShown.ts"
 import { SystemPrompt } from "./SystemPrompt.ts"
 
 /** How much of the Chat the model sees each turn. */
@@ -52,12 +53,12 @@ const firstChunk = <E>(prose: Stream.Stream<string, E>) =>
 
 export interface ChatTurnDeps {
   readonly model: LanguageModel.LanguageModel
-  /** The tools the model may call; none when omitted. */
-  readonly toolkit?: Toolkit.WithHandler<ChatTools> | undefined
   readonly history: {
     readonly recent: (count: number) => Effect.Effect<ReadonlyArray<ChatMessage>>
     readonly append: (message: NewChatMessage) => Effect.Effect<void>
   }
+  /** The agent's tools, their handlers bound to this turn's client date. */
+  readonly toolkit: Toolkit.WithHandler<ChatTools>
 }
 
 /**
@@ -79,6 +80,7 @@ export const runChatTurn = (deps: ChatTurnDeps, request: SendChatMessage) =>
     const prose = runAgentLoop({
       prompt: buildPrompt(systemPrompt, history, request),
       toolkit: deps.toolkit,
+      stopAfter: draftsShown(),
     }).pipe(
       Stream.filter((part): part is Response.TextDeltaPart => part.type === "text-delta"),
       Stream.map((part) => part.delta),
