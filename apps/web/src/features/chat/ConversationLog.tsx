@@ -1,32 +1,35 @@
 import type { ChatMessage } from "@expense/contract"
 import { splitReply } from "@expense/ui/server"
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef } from "react"
 import { AssistantMessage } from "./AssistantMessage.tsx"
 import { SystemLine } from "./SystemLine.tsx"
 import type { ReplyFailure, Turn } from "./useChatSession.ts"
 import { UserMessage } from "./UserMessage.tsx"
+import { useRedraw } from "./useRedraw.ts"
 
 const nearBottomPx = 96
 
 const distanceFromBottom = () =>
   document.documentElement.scrollHeight - window.scrollY - window.innerHeight
 
-const TurnView = ({ turn, onRetry }: { readonly turn: Turn; readonly onRetry: () => void }) => {
+const TurnView = ({
+  turn,
+  redraw,
+  onRetry,
+}: {
+  readonly turn: Turn
+  readonly redraw: ReturnType<typeof useRedraw>
+  readonly onRetry: () => void
+}) => {
   const { reply } = turn
-  // A program that cannot be drawn gets one retry (ADR-0006); the second failure stays text.
-  const [programRetried, setProgramRetried] = useState(false)
-  const retryProgram = () => {
-    setProgramRetried(true)
-    onRetry()
-  }
   return (
     <>
       <UserMessage content={turn.request.message} attachment={turn.request.receipt?.name ?? null} />
       {reply.state === "streaming" || reply.state === "done" ? (
         <AssistantMessage
-          reply={splitReply(reply.text)}
+          reply={redraw.replyFor(reply.messageId, splitReply(reply.text))}
           streaming={reply.state === "streaming"}
-          onRetry={programRetried ? undefined : retryProgram}
+          onRetry={redraw.retryFor(reply.messageId)}
         />
       ) : null}
       {reply.state === "failed" ? (
@@ -63,6 +66,7 @@ export const ConversationLog = ({
   readonly onRetryHistory: () => void
   readonly onRetry: (turnId: string) => void
 }) => {
+  const redraw = useRedraw()
   const top = useRef<HTMLDivElement>(null)
   const stuckToBottom = useRef(true)
   const keptFromBottom = useRef<number | null>(null)
@@ -120,11 +124,16 @@ export const ConversationLog = ({
         message.role === "user" ? (
           <UserMessage key={message.id} content={message.content} />
         ) : (
-          <AssistantMessage key={message.id} reply={message} streaming={false} />
+          <AssistantMessage
+            key={message.id}
+            reply={redraw.replyFor(message.id, message)}
+            streaming={false}
+            onRetry={redraw.retryFor(message.id)}
+          />
         ),
       )}
       {turns.map((turn) => (
-        <TurnView key={turn.id} turn={turn} onRetry={() => onRetry(turn.id)} />
+        <TurnView key={turn.id} turn={turn} redraw={redraw} onRetry={() => onRetry(turn.id)} />
       ))}
     </div>
   )

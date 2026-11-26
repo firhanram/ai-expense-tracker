@@ -53,10 +53,15 @@ export const GeneratedUi = ({
   readonly onRetry?: (() => void) | undefined
 }) => {
   const onAction = useCardActions()
-  const [renderFailed, setRenderFailed] = useState(false)
-  const onError = useCallback((errors: Array<OpenUIError>) => {
-    if (breaksRender(errors)) setRenderFailed(true)
-  }, [])
+  // Keyed by program, so a redrawn program gets a fresh chance to render.
+  const [failedProgram, setFailedProgram] = useState<string | null>(null)
+  const onError = useCallback(
+    (errors: Array<OpenUIError>) => {
+      if (breaksRender(errors)) setFailedProgram(program)
+    },
+    [program],
+  )
+  const renderFailed = failedProgram === program
 
   const failed = useMemo(() => !streaming && drawsNothing(program), [program, streaming])
 

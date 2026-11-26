@@ -6,6 +6,7 @@ export interface MockResponse {
   readonly status: number
   readonly contentType: string
   readonly body: string | Buffer
+  readonly headers?: Readonly<Record<string, string>> | undefined
 }
 
 /** One request the page sent to `/api/*`. */
@@ -57,11 +58,12 @@ export const bytes = (body: Buffer, contentType: string): MockResponse => ({
   body,
 })
 
-/** A `POST /chat` reply: the streamed text, delivered in one body. */
-export const stream = (text: string): MockResponse => ({
+/** A `POST /chat` reply: the streamed text, delivered in one body, stored as `messageId`. */
+export const stream = (text: string, messageId = "reply-1"): MockResponse => ({
   status: 200,
   contentType: "text/plain; charset=utf-8",
   body: text,
+  headers: { "x-chat-message-id": messageId },
 })
 
 const matchPath = (pattern: string, path: string): Record<string, string> | undefined => {
@@ -130,6 +132,7 @@ export const mockApi = async (
       status: response.status,
       contentType: response.contentType,
       body: response.body,
+      ...(response.headers === undefined ? {} : { headers: response.headers }),
     })
   })
 

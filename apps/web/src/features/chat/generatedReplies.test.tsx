@@ -7,8 +7,10 @@ import { renderApp } from "../../shared/testing/renderApp.tsx"
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } })
 
-const reply = (text: string) =>
-  new Response(text, { headers: { "content-type": "text/plain; charset=utf-8" } })
+const reply = (text: string, messageId: string) =>
+  new Response(text, {
+    headers: { "content-type": "text/plain; charset=utf-8", "x-chat-message-id": messageId },
+  })
 
 const expense = (overrides: Partial<Expense> = {}): Expense => ({
   id: "exp_1",
@@ -32,11 +34,14 @@ const message = (
 ): ChatMessage => ({ id, role, content, uiText, createdAt: "2026-11-25T03:00:00.000Z" })
 
 let sends = 0
+let rerenders: Array<string> = []
 
 const serve = (server: {
   readonly history?: ReadonlyArray<ChatMessage>
   readonly expenses?: ReadonlyArray<Expense>
   readonly replies?: ReadonlyArray<string>
+  /** The redrawn message for an id, or null to fail the redraw. */
+  readonly rerender?: (id: string) => ChatMessage | null
 }) => {
   vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
     const request = new Request(input, init)
@@ -49,7 +54,24 @@ const serve = (server: {
     }
     if (url.pathname === "/api/chat" && request.method === "POST") {
       sends += 1
-      return reply(server.replies?.[sends - 1] ?? "")
+      return reply(server.replies?.[sends - 1] ?? "", `reply-${sends}`)
+    }
+    const redraw = /^\/api\/chat\/([^/]+)\/rerender$/.exec(url.pathname)
+    if (redraw !== null && request.method === "POST") {
+      const id = decodeURIComponent(redraw[1] ?? "")
+      rerenders.push(id)
+      const redrawn = server.rerender?.(id) ?? null
+      return redrawn === null
+        ? json(502, {
+            success: false,
+            error: {
+              errorId: "e",
+              errorCode: "RERENDER_FAILED",
+              message: "",
+              details: { problems: [] },
+            },
+          })
+        : json(200, { success: true, data: redrawn })
     }
     if (url.pathname === "/api/expenses") {
       const status = url.searchParams.get("status") ?? "confirmed"
@@ -78,6 +100,7 @@ const composer = () => screen.getByRole("textbox", { name: "Message" })
 
 beforeEach(() => {
   sends = 0
+  rerenders = []
   vi.useFakeTimers({ toFake: ["Date"], now: new Date("2026-11-25T10:00:00+07:00") })
 })
 
@@ -129,6 +152,27 @@ describe("generated UI in a stored Chat", () => {
     expect(within(log()).getByText("Showing text only.")).toBeInTheDocument()
   })
 
+  it("redraws a stored reply in place on Retry, without sending anything again", async () => {
+    serve({
+      expenses: [expense()],
+      history: [message("m2", "assistant", "This one:", "root = Stack([card, gone])")],
+      rerender: (id) =>
+        message(id, "assistant", "This one:", 'root = Stack([card])\ncard = ExpenseCard("exp_1")'),
+    })
+    await renderApp("/")
+    await within(log()).findByText("Showing text only.")
+
+    await userEvent.click(within(log()).getByRole("button", { name: "Retry" }))
+
+    expect(
+      await within(log()).findByRole("article", { name: "Expense Rp146.500" }),
+    ).toBeInTheDocument()
+    expect(within(log()).queryByText("Showing text only.")).toBeNull()
+    expect(within(log()).getAllByText("This one:")).toHaveLength(1)
+    expect(rerenders).toEqual(["m2"])
+    expect(sends).toBe(0)
+  })
+
   it("leaves a prose-only reply as prose", async () => {
     serve({ history: [message("m2", "assistant", "You spent Rp187.000 on dining.")] })
     await renderApp("/")
@@ -177,9 +221,19 @@ describe("generated UI in a live reply", () => {
     ).toBeInTheDocument()
   })
 
-  it("shows the prose with one Retry when the program fails, and sends again on Retry", async () => {
+  it("redraws a live reply in place on Retry, without sending the message again", async () => {
     const broken = "Here you go.\n\n```openui-lang\nroot = Stack([card]\n```"
-    serve({ replies: [broken, broken] })
+    serve({
+      expenses: [expense()],
+      replies: [broken],
+      rerender: (id) =>
+        message(
+          id,
+          "assistant",
+          "Here you go.",
+          'root = Stack([card])\ncard = ExpenseCard("exp_1")',
+        ),
+    })
     await renderApp("/")
 
     await userEvent.type(composer(), "show it{Enter}")
@@ -188,8 +242,26 @@ describe("generated UI in a live reply", () => {
 
     await userEvent.click(within(log()).getByRole("button", { name: "Retry" }))
 
+    expect(
+      await within(log()).findByRole("article", { name: "Expense Rp146.500" }),
+    ).toBeInTheDocument()
+    expect(within(log()).getAllByText("Here you go.")).toHaveLength(1)
+    expect(within(log()).getAllByText("show it")).toHaveLength(1)
+    expect(rerenders).toEqual(["reply-1"])
+    expect(sends).toBe(1)
+  })
+
+  it("keeps the text, with no second Retry, when the redraw fails", async () => {
+    serve({ replies: ["Here you go.\n\n```openui-lang\nroot = Stack([card]\n```"] })
+    await renderApp("/")
+    await userEvent.type(composer(), "show it{Enter}")
+    await within(log()).findByText("Showing text only.")
+
+    await userEvent.click(within(log()).getByRole("button", { name: "Retry" }))
+
+    await vi.waitFor(() => expect(rerenders).toEqual(["reply-1"]))
     expect(await within(log()).findByText("Showing text only.")).toBeInTheDocument()
-    expect(sends).toBe(2)
     expect(within(log()).queryByRole("button", { name: "Retry" })).toBeNull()
+    expect(sends).toBe(1)
   })
 })

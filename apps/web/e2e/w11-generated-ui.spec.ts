@@ -153,20 +153,27 @@ for (const viewport of ["desktop", "mobile"] as const) {
   }
 }
 
-test("a live program that fails shows the prose and retries once", async ({ page }) => {
+test("a live program that fails shows the prose and redraws it once, without re-sending", async ({
+  page,
+}) => {
   let sends = 0
-  const replies = [
-    "Here you go.\n\n```openui-lang\nroot = Stack([card]\n```",
-    'Here you go.\n\n```openui-lang\nroot = Stack([card])\ncard = ExpenseCard("exp-uniqlo")\n```',
-  ]
-  await mockApi(page, {
+  const { calls } = await mockApi(page, {
     "GET /api/chat": history([]),
     "GET /api/expenses": listExpenses,
     "GET /api/expenses/:id": getExpense,
     "POST /api/chat": () => {
       sends += 1
-      return stream(replies[sends - 1] ?? "")
+      return stream("Here you go.\n\n```openui-lang\nroot = Stack([card]\n```", "m9")
     },
+    "POST /api/chat/:messageId/rerender": ({ params }) =>
+      ok(
+        message(
+          params["messageId"] ?? "",
+          "assistant",
+          "Here you go.",
+          'root = Stack([card])\ncard = ExpenseCard("exp-uniqlo")',
+        ),
+      ),
   })
   await open(page)
 
@@ -178,7 +185,9 @@ test("a live program that fails shows the prose and retries once", async ({ page
 
   await expect(log(page).getByRole("article", { name: "Expense Rp70.000" })).toBeVisible()
   await expect(log(page).getByText("Showing text only.")).toHaveCount(0)
-  expect(sends).toBe(2)
+  await expect(log(page).getByText("show the uniqlo one")).toHaveCount(1)
+  expect(sends).toBe(1)
+  expect(calls.filter((call) => call.url === "/api/chat/m9/rerender")).toHaveLength(1)
 })
 
 test("a Category-filtered list shows only that Category", async ({ page }) => {

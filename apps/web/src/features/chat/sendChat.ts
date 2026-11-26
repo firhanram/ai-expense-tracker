@@ -1,4 +1,4 @@
-import type { SendChatMessage } from "@expense/contract"
+import { chatMessageIdHeader, type SendChatMessage } from "@expense/contract"
 import { Data, Option, Schema } from "effect"
 
 /**
@@ -61,11 +61,17 @@ export interface SendChatOptions {
 
 /**
  * `POST /api/chat` with a plain `fetch`, since the typed client cannot stream.
- * Resolves once the reply starts, with its text as it arrives; rejects with a
- * `SendChatFailure` when the request fails before the first word. A failure
- * after it surfaces as the iterator throwing.
+ * Resolves once the reply starts, with its text as it arrives and the id it
+ * is stored under; rejects with a `SendChatFailure` when the request fails
+ * before the first word. A failure after it surfaces as the iterator throwing.
  */
-export type SendChat = (request: SendChatMessage) => Promise<AsyncIterable<string>>
+export type SendChat = (request: SendChatMessage) => Promise<ChatReply>
+
+export interface ChatReply {
+  /** The stored assistant message, for a redraw; null if the server did not say. */
+  readonly messageId: string | null
+  readonly chunks: AsyncIterable<string>
+}
 
 export const createSendChat =
   (options: SendChatOptions): SendChat =>
@@ -81,5 +87,8 @@ export const createSendChat =
         throw new SendChatFailure({ reason: "network" })
       })
     if (!response.ok) throw await failureOf(response)
-    return decode(response.body)
+    return {
+      messageId: response.headers.get(chatMessageIdHeader),
+      chunks: decode(response.body),
+    }
   }

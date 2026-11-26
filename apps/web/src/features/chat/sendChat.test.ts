@@ -29,13 +29,17 @@ describe("sending a chat message", () => {
       baseUrl: "http://app.test",
       fetch: async (input, init) => {
         sent.push(new Request(input, init))
-        return new Response(textStream("You spent ", "Rp70.000."), { status: 200 })
+        return new Response(textStream("You spent ", "Rp70.000."), {
+          status: 200,
+          headers: { "x-chat-message-id": "m9" },
+        })
       },
     })
 
     const reply = await send({ message: "how much?", clientDate: "2026-11-25" })
 
-    expect(await collect(reply)).toBe("You spent Rp70.000.")
+    expect(await collect(reply.chunks)).toBe("You spent Rp70.000.")
+    expect(reply.messageId).toBe("m9")
     const request = sent[0]
     expect(request?.url).toBe("http://app.test/api/chat")
     expect(request?.method).toBe("POST")

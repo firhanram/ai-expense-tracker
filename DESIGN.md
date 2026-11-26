@@ -330,7 +330,7 @@ The page behind the empty state carries a faint radial wash of `--line` from the
 | Failure | Presentation |
 |---|---|
 | Model unreachable | A system line, not a card: `--text-sm`, `--danger`, "Couldn't reach the model. Retry." with Retry as a text button. |
-| UI parse failed | The stored prose renders as text, plus a `--text-sm` line "Showing text only" and Retry. Never a blank area. |
+| UI parse failed | The stored prose renders as text, plus a `--text-sm` line "Showing text only" and Retry. Never a blank area. Retry redraws that reply in place, live or reloaded; it never sends the message again. One Retry per reply: if the redraw fails too, the text stays. |
 | API 401 | No screen of its own: the token is set at deployment, not typed by the user. A system line in `--danger`: "Not authorised. Check the API token." |
 | Network offline | A `--warn-bg` bar above the composer: "Offline. Messages will send when reconnected." The top bar's dot turns grey with an "offline" label. No modal. |
 

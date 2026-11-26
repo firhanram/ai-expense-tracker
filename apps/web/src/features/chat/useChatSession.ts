@@ -3,15 +3,23 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useReducer } from "react"
 import { useOnline } from "../../shared/shell/useOnline.ts"
 import { expensesKey } from "../expenses/useExpenses.ts"
-import { SendChatFailure, type SendChatFailureReason } from "./sendChat.ts"
+import { type ChatReply, SendChatFailure, type SendChatFailureReason } from "./sendChat.ts"
 
-/** What became of a message sent this visit. */
+/**
+ * What became of a message sent this visit. `messageId` is the stored
+ * assistant message, once the server has named it.
+ */
 export type Reply =
   | { readonly state: "queued" }
-  | { readonly state: "streaming"; readonly text: string }
-  | { readonly state: "done"; readonly text: string }
+  | { readonly state: "streaming"; readonly text: string; readonly messageId: string | null }
+  | { readonly state: "done"; readonly text: string; readonly messageId: string | null }
   /** `text` is what streamed before it failed; empty when it failed before the first word. */
-  | { readonly state: "failed"; readonly text: string; readonly reason: ReplyFailure }
+  | {
+      readonly state: "failed"
+      readonly text: string
+      readonly messageId: string | null
+      readonly reason: ReplyFailure
+    }
 
 /** Why a reply failed: the send was refused, or the stream broke after it began (`cut-off`). */
 export type ReplyFailure = SendChatFailureReason | "cut-off"
@@ -27,7 +35,7 @@ export interface ChatRequest {
 }
 
 /** Sends one turn; resolves once the reply starts, like `SendChat`. */
-export type SendTurn = (request: ChatRequest) => Promise<AsyncIterable<string>>
+export type SendTurn = (request: ChatRequest) => Promise<ChatReply>
 
 /** One message the user sent this visit, and its reply. */
 export interface Turn {
@@ -47,12 +55,14 @@ interface State {
 type Action =
   | { readonly type: "send"; readonly id: string; readonly request: ChatRequest }
   | { readonly type: "start"; readonly id: string }
+  | { readonly type: "opened"; readonly id: string; readonly messageId: string | null }
   | { readonly type: "chunk"; readonly id: string; readonly text: string }
   | { readonly type: "done"; readonly id: string }
   | { readonly type: "fail"; readonly id: string; readonly reason: ReplyFailure }
   | { readonly type: "retry"; readonly id: string }
 
 const replyText = (reply: Reply) => (reply.state === "queued" ? "" : reply.text)
+const replyId = (reply: Reply) => (reply.state === "queued" ? null : reply.messageId)
 
 const reduce = (state: State, action: Action): State => {
   const update = (change: (turn: Turn) => Reply) => ({
@@ -72,19 +82,36 @@ const reduce = (state: State, action: Action): State => {
       }
     case "start":
       return {
-        ...update(() => ({ state: "streaming", text: "" })),
+        ...update(() => ({ state: "streaming", text: "", messageId: null })),
         queue: state.queue.filter((id) => id !== action.id),
         active: action.id,
+      }
+    case "opened":
+      return {
+        ...state,
+        ...update((turn) => ({
+          state: "streaming",
+          text: replyText(turn.reply),
+          messageId: action.messageId,
+        })),
       }
     case "chunk":
       return {
         ...state,
-        ...update((turn) => ({ state: "streaming", text: replyText(turn.reply) + action.text })),
+        ...update((turn) => ({
+          state: "streaming",
+          text: replyText(turn.reply) + action.text,
+          messageId: replyId(turn.reply),
+        })),
       }
     case "done":
       return {
         ...state,
-        ...update((turn) => ({ state: "done", text: replyText(turn.reply) })),
+        ...update((turn) => ({
+          state: "done",
+          text: replyText(turn.reply),
+          messageId: replyId(turn.reply),
+        })),
         active: null,
       }
     case "fail":
@@ -93,6 +120,7 @@ const reduce = (state: State, action: Action): State => {
         ...update((turn) => ({
           state: "failed",
           text: replyText(turn.reply),
+          messageId: replyId(turn.reply),
           reason: action.reason,
         })),
         active: null,
@@ -127,9 +155,10 @@ export const useChatSession = (sendChat: SendTurn) => {
     const run = async () => {
       let started = false
       try {
-        const chunks = await sendChat(turn.request)
+        const reply = await sendChat(turn.request)
         started = true
-        for await (const text of chunks) dispatch({ type: "chunk", id, text })
+        dispatch({ type: "opened", id, messageId: reply.messageId })
+        for await (const text of reply.chunks) dispatch({ type: "chunk", id, text })
         dispatch({ type: "done", id })
       } catch (error) {
         const reason =
