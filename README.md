@@ -10,7 +10,8 @@ The deployed app sits behind one Cloudflare Access application. Access signs you
 2. Go to **Access** > **Applications** > **Add an application** > **Self-hosted**.
 3. Name it (for example `Expense tracker`) and add the app's hostname, for example `expenses.example.com`. Leave the path empty so the whole hostname is covered: the SPA and `/api/*`.
 4. Set the session duration you want, for example 24 hours or 1 month.
-5. Save. Open the application again and copy its **Application Audience (AUD) Tag** from the **Overview** tab.
+5. Under **Advanced settings** > **Cookie settings**, set **SameSite attribute** to **Strict** (or **Lax**) and turn on **HTTP Only**. Then other sites can't get the browser to send your Access cookie with their requests, and scripts on the page can't read it. The Worker also refuses writes that don't come from the app's own pages (`403 CROSS_SITE_REQUEST`); the cookie settings are a second layer.
+6. Save. Open the application again and copy its **Application Audience (AUD) Tag** from the **Overview** tab.
 
 ### 2. Add the login policy
 
@@ -54,7 +55,16 @@ Scripts and other non-browser callers cannot sign in through a login page. Give 
      -H "CF-Access-Client-Secret: $CF_ACCESS_CLIENT_SECRET"
    ```
 
-Access checks the pair and passes the request on with the same signed `Cf-Access-Jwt-Assertion` header a browser gets, so the Worker needs nothing extra. Keep the secret out of the repository. To revoke a script's access, delete its service token.
+Access checks the pair and passes the request on with the same signed `Cf-Access-Jwt-Assertion` header a browser gets, so the Worker needs nothing extra. A script that writes (POST, PATCH, PUT or DELETE) must also send the app's own origin, or the Worker answers `403 CROSS_SITE_REQUEST`:
+
+```sh
+curl -X POST https://expenses.example.com/api/expenses/<id>/confirm \
+  -H "Origin: https://expenses.example.com" \
+  -H "CF-Access-Client-Id: $CF_ACCESS_CLIENT_ID" \
+  -H "CF-Access-Client-Secret: $CF_ACCESS_CLIENT_SECRET"
+```
+
+Keep the secret out of the repository. To revoke a script's access, delete its service token.
 
 ### When your session expires
 

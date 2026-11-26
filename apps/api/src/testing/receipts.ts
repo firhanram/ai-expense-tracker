@@ -11,7 +11,7 @@ export const receiptForm = (bytes: Uint8Array, type = "image/jpeg", field = "fil
 }
 
 /**
- * `POST /api/receipts` with the bearer token. `receiptKey` is undefined when
+ * `POST /api/receipts` as the signed-in owner. `receiptKey` is undefined when
  * it was refused; `body` is the envelope either way.
  */
 export const uploadReceipt = async (bytes: Uint8Array, type = "image/jpeg") => {

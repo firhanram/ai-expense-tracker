@@ -49,7 +49,7 @@ export class ReceiptsGroup extends HttpApiGroup.make("receipts").add(
     error: invalidReceipt,
   }),
   /**
-   * The image itself, behind the bearer token like every route; never a
+   * The image itself, behind Cloudflare Access like every route; never a
    * presigned URL. Raw bytes, so the success has no envelope; a failure does.
    */
   HttpApiEndpoint.get("get", "/receipts/:key", {

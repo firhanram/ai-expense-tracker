@@ -12,24 +12,49 @@ const publicPaths = new Set(["/api/health"])
  */
 const loopbackHosts = new Set(["localhost", "127.0.0.1"])
 
-const hostOf = (url: string) => {
+/** Methods that change something, and so must come from the app's own pages. */
+const unsafeMethods = new Set(["POST", "PATCH", "PUT", "DELETE"])
+
+const urlOf = (url: string | undefined) => {
+  if (url === undefined) return undefined
   try {
-    return new URL(url).hostname
+    return new URL(url)
   } catch {
     return undefined
   }
 }
 
+/**
+ * True when the browser says the request came from the app's own origin:
+ * `Sec-Fetch-Site: same-origin`, or, from a browser that sends no
+ * `Sec-Fetch-Site`, an `Origin` equal to the request's. A request with
+ * neither is refused too.
+ */
+const isSameOrigin = (request: HttpServerRequest.HttpServerRequest, url: URL | undefined) => {
+  const site = request.headers["sec-fetch-site"]
+  if (site !== undefined) return site === "same-origin"
+  const origin = urlOf(request.headers["origin"])
+  return origin !== undefined && url !== undefined && origin.origin === url.origin
+}
+
 const unauthorized = () =>
   errorResponse("UNAUTHORIZED", "A valid Cloudflare Access token is required.")
 
+const crossSite = () =>
+  errorResponse("CROSS_SITE_REQUEST", "This request must come from the app's own pages.")
+
 /**
- * Requires a valid `Cf-Access-Jwt-Assertion` on every route but health
- * (ADR-0011), so "not public" holds even on a route to the Worker that
- * Access does not cover. Global, so it also covers paths no route matches:
- * a caller without a token learns nothing about which routes exist. A
- * missing team domain or AUD tag refuses everything rather than letting
- * everything in.
+ * Two checks before any route runs (ADR-0011), global so they also cover
+ * paths no route matches:
+ *
+ * - Same origin: an unsafe method must come from the app's own pages.
+ *   Access's cookie rides along with any request the browser sends here, a
+ *   cross-site form POST included, so a valid token alone does not show the
+ *   owner meant it. Applies on loopback too.
+ * - Access token: a valid `Cf-Access-Jwt-Assertion` on every route but
+ *   health, so "not public" holds even on a route to the Worker that Access
+ *   does not cover. A missing team domain or AUD tag refuses everything
+ *   rather than letting everything in.
  */
 export const AccessAuth = (config: {
   readonly teamDomain: string | undefined
@@ -42,9 +67,12 @@ export const AccessAuth = (config: {
     (httpEffect) =>
       Effect.gen(function* () {
         const request = yield* HttpServerRequest.HttpServerRequest
+        const url = urlOf(request.originalUrl)
+        if (unsafeMethods.has(request.method) && !isSameOrigin(request, url)) {
+          return yield* crossSite()
+        }
         const path = new URL(request.url, "http://localhost").pathname
-        const host = hostOf(request.originalUrl)
-        if (publicPaths.has(path) || (host !== undefined && loopbackHosts.has(host))) {
+        if (publicPaths.has(path) || (url !== undefined && loopbackHosts.has(url.hostname))) {
           return yield* httpEffect
         }
         const token = request.headers["cf-access-jwt-assertion"]

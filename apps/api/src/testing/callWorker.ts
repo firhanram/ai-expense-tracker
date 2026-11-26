@@ -17,9 +17,14 @@ export const deployedOrigin = "https://expenses.example.com"
 export const callWorker = (path: string, init?: RequestInit, origin = deployedOrigin) =>
   worker.fetch(new Request(`${origin}${path}`, init), env, createExecutionContext())
 
-/** `init` with a valid `Cf-Access-Jwt-Assertion`, as Access adds it at the edge. */
+/**
+ * `init` as the owner's browser sends it from the app's own page
+ * (`Sec-Fetch-Site: same-origin`), with the valid `Cf-Access-Jwt-Assertion`
+ * Access adds at the edge.
+ */
 export const withAccessToken = async (init?: RequestInit): Promise<RequestInit> => {
   const headers = new Headers(init?.headers)
+  headers.set("sec-fetch-site", "same-origin")
   headers.set("cf-access-jwt-assertion", await signAccessToken())
   return { ...init, headers }
 }
