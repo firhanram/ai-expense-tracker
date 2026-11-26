@@ -200,10 +200,10 @@ Streaming: text appears token by token with a `1px` caret block that disappears 
 | needs review | as above, plus the warning badge |
 | confirming | Confirm button shows a label change to "Confirming…", both buttons disabled, card at `opacity: 0.7` |
 | confirmed | buttons removed; a `Confirmed ✓` line replaces them at `--text-sm`; the card fades to `--surface-2` over `200ms` |
-| discarded | card collapses to one line, `--text-sm` `--text-muted`: "Discarded · Rp70.000 · Uniqlo", with an Undo that appears for 10 seconds |
+| discarded | card collapses to one line, `--text-sm` `--text-muted`: "Discarded · Rp70.000 · Uniqlo" |
 | not found | dereferenced draft already deleted: one line, `--text-muted`: "This draft no longer exists" |
 
-The discarded state collapsing rather than vanishing is deliberate: the user asked to discard, so the row should acknowledge it happened, and Undo covers the misclick.
+The discarded state collapsing rather than vanishing is deliberate: the user asked to discard, so the row should acknowledge it happened. Discard is one-way, with no Undo: discarding a Draft is a status change the server does not reverse (ADR-0002), and a misclick costs re-telling the agent.
 
 ### Expense card
 
