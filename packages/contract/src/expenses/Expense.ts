@@ -79,5 +79,7 @@ export const EditExpense = Schema.Struct({
   merchant: Schema.optional(Schema.NullOr(Schema.String)),
   note: Schema.optional(Schema.NullOr(Schema.String)),
   occurredAt: Schema.optional(IsoDate),
+  /** `false` once the user has checked what the agent was unsure of. Confirming clears it too. */
+  needsReview: Schema.optional(Schema.Boolean),
 })
 export type EditExpense = typeof EditExpense.Type

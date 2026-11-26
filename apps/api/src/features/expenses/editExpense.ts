@@ -37,6 +37,7 @@ export const editExpense = (
       ...(edit.merchant !== undefined && { merchant: edit.merchant }),
       ...(edit.note !== undefined && { note: edit.note }),
       ...(edit.occurredAt !== undefined && { occurred_at: edit.occurredAt }),
+      ...(edit.needsReview !== undefined && { needs_review: edit.needsReview ? 1 : 0 }),
     }
     // An empty edit still has to find the Expense, so it assigns nothing real.
     const set = Object.keys(assignments).length > 0 ? sql.update(assignments) : sql`id = id`

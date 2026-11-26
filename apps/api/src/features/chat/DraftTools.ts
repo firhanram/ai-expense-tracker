@@ -73,6 +73,10 @@ export const UpdateDraft = Tool.make("update_draft", {
     occurredAt: Schema.optional(IsoDate),
     categoryName: Schema.optional(categoryName),
     note: Schema.optional(Schema.NullOr(Schema.String)),
+    needsReview: Schema.optional(Schema.Boolean).annotate({
+      description:
+        "False once the user has told you the fields you were unsure of; true if you are now unsure",
+    }),
   }),
   success: ExpenseView,
   failure: ToolFailure,

@@ -79,6 +79,16 @@ describe("PATCH /api/expenses/:id", () => {
     expect(listed.find((e) => e.id === expense.id)).toMatchObject({ merchant: "Warung Pak Darto" })
   })
 
+  it("clears needsReview once the user has checked the Expense", async () => {
+    const id = await seedWithStatus("draft")
+    await env.DB.prepare("UPDATE expense SET needs_review = 1 WHERE id = ?").bind(id).run()
+
+    const response = await edit(id, { needsReview: false })
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({ id, needsReview: false, amount: 10000 })
+  })
+
   it("edits a Draft and leaves it a Draft", async () => {
     const id = await seedWithStatus("draft")
 

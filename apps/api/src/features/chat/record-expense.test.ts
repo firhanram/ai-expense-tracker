@@ -226,6 +226,19 @@ describe("changing a Draft by chatting", () => {
     })
   })
 
+  it("clears needsReview once the user has settled what the model was unsure of", async () => {
+    const id = await recordCloth()
+    await env.DB.prepare("UPDATE expense SET needs_review = 1 WHERE id = ?").bind(id).run()
+    const model = scriptedLanguageModel(
+      toolCallReply("update_draft", { id, amount: 72000, needsReview: false }),
+      textReply(`Updated:\n${cards([id])}`),
+    )
+
+    await sendChat(model.layer, { message: "it was 72rb, that's right", clientDate })
+
+    expect(await drafts()).toMatchObject([{ id, amount: 72000, needsReview: false }])
+  })
+
   it("discards a Draft the user no longer wants", async () => {
     const id = await recordCloth()
     const model = scriptedLanguageModel(

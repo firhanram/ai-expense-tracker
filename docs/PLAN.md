@@ -100,7 +100,7 @@ All routes require `Authorization: Bearer $API_TOKEN`, except under loopback in 
 | `GET /chat` | The conversation, newest page first. |
 | `GET /expenses` | `?status=&from=&to=&categoryId=`. Confirmed by default. |
 | `POST /expenses` | Manual create, bypassing the agent. |
-| `PATCH /expenses/:id` | Edit amount, category, merchant, note, date. Works on drafts and confirmed. |
+| `PATCH /expenses/:id` | Edit amount, category, merchant, note, date, `needsReview`. Works on drafts and confirmed. |
 | `POST /expenses/:id/confirm` | Draft → confirmed. Idempotent. |
 | `POST /expenses/:id/discard` | Draft → discarded. Keeps the row. |
 | `DELETE /expenses/:id` | Hard delete, and deletes the R2 object if present. |
@@ -162,7 +162,7 @@ Client downscales before upload — DeepSeek caps images at 1,024 tokens regardl
 
 - **Upload.** One `file` field, JPEG, PNG or WebP, at most 5 MiB (the client downscales well below that). The form is read from the web `Request`: Effect's buffered multipart needs a temp directory a Worker does not have. The key is a random UUID.
 - **One Receipt, one Draft.** A Draft proposed in a turn that carries a Receipt holds its key. A unique index on `receipt_key` and an upsert in `propose_expense` mean proposing again from the same Receipt, in the same turn or a later one, overwrites that Draft rather than adding a second. The model is also told, per turn, which Draft the Receipt already became. A Receipt whose Expense is confirmed is refused back to the model.
-- **Needs review.** `propose_expense` takes `needsReview`; the model sets it when it guessed or could not read a field. Expenses expose `needsReview` and `receiptKey` (null when there is none), so the list can mark both.
+- **Needs review.** `propose_expense` takes `needsReview`; the model sets it when it guessed or could not read a field. Expenses expose `needsReview` and `receiptKey` (null when there is none), so the list can mark both. It clears when the user sets it false (`PATCH`, or `update_draft` once they have answered the model) or confirms: confirming is the user saying they checked it.
 - **Unreadable Receipts still yield a Draft.** The model is asked to propose one anyway (amount 0, `Other`, `needsReview`). If a Receipt turn ends with nothing holding the Receipt, the server makes that placeholder Draft itself and appends its `DraftExpenseCard` to the reply, streamed and stored like the model's text.
 - **Lifecycle.** Deleting an Expense deletes its object, after the row. Discarding a Draft deletes its object and clears `receipt_key`, keeping the row (ADR-0002). Everything else (an upload whose Chat message never came, a turn that failed before the model wrote, an R2 delete that failed) is caught by a daily cron sweep (03:00 UTC) that deletes objects over a day old that no Expense holds. The sweep, not the chat turn, does this because upload and message are separate requests: a turn that produced no Draft is not proof the upload is abandoned.
 

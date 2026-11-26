@@ -93,7 +93,11 @@ const transition = <E>(
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
     // Discarding lets go of the Receipt: an upload that never became an Expense is not kept.
-    const set = to === "discarded" ? sql`status = ${to}, receipt_key = NULL` : sql`status = ${to}`
+    // Confirming is the user saying they checked it, so it no longer needs review.
+    const set =
+      to === "discarded"
+        ? sql`status = ${to}, receipt_key = NULL`
+        : sql`status = ${to}, needs_review = 0`
     const updated = yield* sql`
       UPDATE expense SET ${set}
       WHERE id = ${id} AND status IN ${sql.in(from)}
