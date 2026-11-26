@@ -38,8 +38,9 @@ describe("the Expense list", () => {
     await renderApp("/expenses")
     await screen.findByText("No expenses in November 2026")
 
-    expect(calls).toHaveLength(1)
-    expect(Object.fromEntries(calls[0]?.query ?? [])).toEqual({
+    const lists = calls.filter((call) => call.path === "/api/expenses")
+    expect(lists).toHaveLength(1)
+    expect(Object.fromEntries(lists[0]?.query ?? [])).toEqual({
       from: "2026-11-01",
       to: "2026-11-30",
     })

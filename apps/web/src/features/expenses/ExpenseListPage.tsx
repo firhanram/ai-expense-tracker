@@ -1,11 +1,16 @@
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@ui-sdk/react/collapsible"
 import { Plus } from "lucide-react"
 import { useState } from "react"
+import type { CategoryId } from "@expense/contract"
+import { categoryName } from "../../shared/categories/categories.ts"
 import { formatRupiah } from "../../shared/format/rupiah.ts"
 import { localToday } from "../../shared/format/localDate.ts"
 import { AddExpenseForm } from "./AddExpenseForm.tsx"
+import { CategoryFilter } from "./CategoryFilter.tsx"
 import { ExpenseRow } from "./ExpenseRow.tsx"
-import { formatMonth, formatMonthShort, monthOf, monthRange } from "./month.ts"
+import { formatMonth, monthOf, monthRange } from "./month.ts"
+import { MonthStepper } from "./MonthStepper.tsx"
+import { useCategoryTotals } from "./useCategoryTotals.ts"
 import { useExpenses } from "./useExpenses.ts"
 
 const SkeletonRow = () => (
@@ -18,8 +23,11 @@ const SkeletonRow = () => (
 
 /** The Expense list at `/expenses`: one month of confirmed Expenses, newest date first. */
 export const ExpenseListPage = () => {
-  const [month] = useState(() => monthOf(localToday()))
-  const expenses = useExpenses(monthRange(month))
+  const [month, setMonth] = useState(() => monthOf(localToday()))
+  const [categoryId, setCategoryId] = useState<CategoryId | null>(null)
+  const range = monthRange(month)
+  const expenses = useExpenses(categoryId === null ? range : { ...range, categoryId })
+  const categoryTotals = useCategoryTotals(range)
   const [adding, setAdding] = useState(false)
   const total = expenses.data?.reduce((sum, expense) => sum + expense.amount, 0) ?? 0
 
@@ -31,15 +39,13 @@ export const ExpenseListPage = () => {
     >
       <h1 className="sr-only">Expenses</h1>
       <header className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 border-b border-line pb-4 [grid-template-areas:'title_total'_'controls_controls'] md:pb-3.5 md:[grid-template-areas:'title_controls'_'title_total']">
-        <h2 aria-label={formatMonth(month)} className="text-lg [grid-area:title]">
-          <span aria-hidden="true" className="md:hidden">
-            {formatMonthShort(month)}
-          </span>
-          <span aria-hidden="true" className="hidden md:inline">
-            {formatMonth(month)}
-          </span>
-        </h2>
+        <MonthStepper month={month} onMonthChange={setMonth} className="[grid-area:title]" />
         <div className="flex items-center gap-2 [grid-area:controls] md:justify-end">
+          <CategoryFilter
+            value={categoryId}
+            onValueChange={setCategoryId}
+            report={categoryTotals.data}
+          />
           <CollapsibleTrigger className="flex h-7 items-center gap-1.5 rounded-sm border border-line bg-surface px-2.5 text-sm transition-colors duration-(--motion-color) hover:bg-surface-2 data-open:border-ring data-open:bg-surface-2">
             <Plus aria-hidden="true" size={14} />
             Add expense
@@ -72,7 +78,11 @@ export const ExpenseListPage = () => {
           </button>
         </p>
       ) : expenses.data.length === 0 ? (
-        <p className="py-12 text-center text-text-muted">No expenses in {formatMonth(month)}</p>
+        <p className="py-12 text-center text-text-muted">
+          {categoryId === null
+            ? `No expenses in ${formatMonth(month)}`
+            : `No ${categoryName(categoryId)} expenses in ${formatMonth(month)}`}
+        </p>
       ) : (
         <ul aria-label="Expenses">
           {expenses.data.map((expense) => (
