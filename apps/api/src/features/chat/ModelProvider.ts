@@ -26,23 +26,18 @@ export interface ModelProviderConfig {
   /** Overrides the provider's default model name. */
   readonly model?: string | undefined
   /**
-   * The provider's API key, as a Secrets Store binding. Read on every model
-   * request, so the app starts (and health answers) without it, and a
-   * rotated key is picked up without a deploy.
+   * The provider's API key. Checked on every model request rather than at
+   * startup, so the app starts (and health answers) without it.
    */
-  readonly apiKey: SecretsStoreSecret
+  readonly apiKey: string | undefined
 }
 
 const isProviderName = (name: string): name is ModelProviderName =>
   Object.hasOwn(modelProviders, name)
 
 /** A missing key is a deployment mistake, not an unreachable model: it is a defect (500). */
-const readKey = (secret: SecretsStoreSecret) =>
-  Effect.tryPromise({
-    try: () => secret.get(),
-    catch: (cause) =>
-      new Error("API_PROVIDER_KEY could not be read from the Secrets Store", { cause }),
-  }).pipe(Effect.map(Redacted.make), Effect.orDie)
+const readKey = (key: string | undefined) =>
+  key ? Effect.succeed(Redacted.make(key)) : Effect.die(new Error("API_PROVIDER_KEY is not set"))
 
 /**
  * The `LanguageModel` the Chat talks to, chosen by configuration. Swapping

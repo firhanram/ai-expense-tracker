@@ -21,7 +21,7 @@ describe("GET /api/health with D1 down", () => {
       // Health reads only D1.
       RECEIPTS: env.RECEIPTS,
       API_TOKEN: "unused-health-is-public",
-      API_PROVIDER_KEY: { get: () => Promise.resolve("unused-no-model-call") },
+      API_PROVIDER_KEY: "unused-no-model-call",
     })
     try {
       const response = await app.handler(new Request("http://localhost/api/health"), undefined)

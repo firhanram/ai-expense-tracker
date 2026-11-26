@@ -41,8 +41,8 @@ not a pass; `checkProgram` also reads `meta.errors`, `meta.unresolved`, `meta.or
 
 ```sh
 # The real run (writes the Results section below). Needs the provider key in the environment;
-# the deployed Worker reads the same key from the Cloudflare Secrets Store.
-API_PROVIDER_KEY=<deepseek key> node apps/api/scripts/eval-openui.ts
+# Infisical supplies it, as it does for `pnpm dev` and `pnpm deploy`.
+infisical run --env=dev -- node apps/api/scripts/eval-openui.ts
 
 # Another provider or model:
 API_PROVIDER_KEY=<key> node apps/api/scripts/eval-openui.ts --provider gemini
@@ -68,7 +68,7 @@ pre-generated string (`@expense/ui/server`), so it never loads OpenUI or Zod and
 the prompt or parses a program; the client does that. This needs a real deploy to measure;
 procedure:
 
-1. Deploy (`pnpm deploy`) with the provider key in the Secrets Store.
+1. Deploy (`pnpm deploy`, which takes the provider key from Infisical `prod`).
 2. Send ten turns that each render a program and ten that are prose only, e.g.
    `curl -N -H "authorization: Bearer $API_TOKEN" -H "content-type: application/json"
    -d '{"message":"chart my spending by category this month","clientDate":"2026-11-25"}'

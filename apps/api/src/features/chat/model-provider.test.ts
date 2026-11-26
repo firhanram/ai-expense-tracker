@@ -4,8 +4,6 @@ import { FetchHttpClient } from "effect/http"
 import { describe, expect, it } from "vitest"
 import { ModelProviderLive } from "./ModelProvider.ts"
 
-const secret = (value: string): SecretsStoreSecret => ({ get: () => Promise.resolve(value) })
-
 interface Sent {
   readonly url: string
   readonly authorization: string | null
@@ -58,10 +56,10 @@ const streamOk = (layer: ReturnType<typeof ModelProviderLive>, fetchImpl: typeof
   )
 
 describe("the model provider layer", () => {
-  it("defaults to DeepSeek's API with the key read from the Secrets Store", async () => {
+  it("defaults to DeepSeek's API with the configured key", async () => {
     const sent: Array<Sent> = []
 
-    const exit = await streamOk(ModelProviderLive({ apiKey: secret("sk-test") }), fakeFetch(sent))
+    const exit = await streamOk(ModelProviderLive({ apiKey: "sk-test" }), fakeFetch(sent))
 
     expect(exit).toEqual(Exit.succeed("ok"))
     expect(sent).toEqual([
@@ -77,7 +75,7 @@ describe("the model provider layer", () => {
     const sent: Array<Sent> = []
 
     await streamOk(
-      ModelProviderLive({ provider: "gemini", model: "gemini-x", apiKey: secret("g-key") }),
+      ModelProviderLive({ provider: "gemini", model: "gemini-x", apiKey: "g-key" }),
       fakeFetch(sent),
     )
 
@@ -88,17 +86,24 @@ describe("the model provider layer", () => {
   })
 
   it("fails with a NetworkError when the provider cannot be reached", async () => {
-    const exit = await streamOk(ModelProviderLive({ apiKey: secret("sk-test") }), offline)
+    const exit = await streamOk(ModelProviderLive({ apiKey: "sk-test" }), offline)
 
     expect(Exit.isFailure(exit)).toBe(true)
     expect(JSON.stringify(exit)).toContain("NetworkError")
   })
 
-  it("refuses an unknown provider name", async () => {
-    const exit = await streamOk(
-      ModelProviderLive({ provider: "nope", apiKey: secret("k") }),
-      fakeFetch([]),
+  it("fails the request, without calling the provider, when the key is not set", async () => {
+    const sent: Array<Sent> = []
+    const exit = await streamOk(ModelProviderLive({ apiKey: undefined }), fakeFetch(sent))
+
+    expect(Exit.isFailure(exit) && Cause.pretty(exit.cause)).toContain(
+      "API_PROVIDER_KEY is not set",
     )
+    expect(sent).toHaveLength(0)
+  })
+
+  it("refuses an unknown provider name", async () => {
+    const exit = await streamOk(ModelProviderLive({ provider: "nope", apiKey: "k" }), fakeFetch([]))
 
     expect(Exit.isFailure(exit) && Cause.pretty(exit.cause)).toContain(
       'Unknown MODEL_PROVIDER "nope"',

@@ -19,7 +19,7 @@ import {
   ModelProviderLive,
   modelProviders,
 } from "../src/features/chat/ModelProvider.ts"
-import { fakeEvalModel, formatReport, plainSecret, runEval } from "./openui/OpenUiEval.ts"
+import { fakeEvalModel, formatReport, runEval } from "./openui/OpenUiEval.ts"
 
 const { values } = parseArgs({
   options: {
@@ -49,7 +49,7 @@ const languageModel = (() => {
     console.error("API_PROVIDER_KEY is not set. Pass --fake for a dry run.")
     process.exit(1)
   }
-  return ModelProviderLive({ provider: providerName, model: modelName, apiKey: plainSecret(key) })
+  return ModelProviderLive({ provider: providerName, model: modelName, apiKey: key })
 })()
 
 const generations = Number(values.generations)

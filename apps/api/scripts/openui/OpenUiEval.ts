@@ -13,7 +13,6 @@ import { ChatToolkit } from "../../src/features/chat/ChatToolkit.ts"
 import { buildPrompt } from "../../src/features/chat/ChatTurn.ts"
 import { draftsShown } from "../../src/features/chat/DraftShown.ts"
 import type { ExpenseView } from "../../src/features/chat/DraftTools.ts"
-import type { ModelProviderConfig } from "../../src/features/chat/ModelProvider.ts"
 
 /**
  * The OpenUI Lang eval (ADR-0008: "build a small eval against the real
@@ -444,8 +443,3 @@ export const fakeEvalModel = Layer.effect(
     })
   }),
 )
-
-/** A Secrets Store binding over a plain value, for running the real provider outside a Worker. */
-export const plainSecret = (value: string): ModelProviderConfig["apiKey"] => ({
-  get: () => Promise.resolve(value),
-})
