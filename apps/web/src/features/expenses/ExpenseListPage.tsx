@@ -4,8 +4,11 @@ import { useState } from "react"
 import { formatRupiah } from "../../shared/format/rupiah.ts"
 import { localToday } from "../../shared/format/localDate.ts"
 import { AddExpenseForm } from "./AddExpenseForm.tsx"
+import { DraftRow } from "./DraftRow.tsx"
 import { ExpenseRow } from "./ExpenseRow.tsx"
 import { formatMonth, formatMonthShort, monthOf, monthRange } from "./month.ts"
+import { type ListView, StatusSwitch } from "./StatusSwitch.tsx"
+import { useExpenseActions } from "./useExpenseActions.ts"
 import { useExpenses } from "./useExpenses.ts"
 
 const SkeletonRow = () => (
@@ -16,10 +19,14 @@ const SkeletonRow = () => (
   </li>
 )
 
-/** The Expense list at `/expenses`: one month of confirmed Expenses, newest date first. */
+/** The Expense list at `/expenses`: one month of confirmed Expenses (or, on request, Drafts), newest date first. */
 export const ExpenseListPage = () => {
   const [month] = useState(() => monthOf(localToday()))
-  const expenses = useExpenses(monthRange(month))
+  const [view, setView] = useState<ListView>("confirmed")
+  const expenses = useExpenses(
+    view === "draft" ? { ...monthRange(month), status: "draft" } : monthRange(month),
+  )
+  const actions = useExpenseActions()
   const [adding, setAdding] = useState(false)
   const total = expenses.data?.reduce((sum, expense) => sum + expense.amount, 0) ?? 0
 
@@ -40,19 +47,33 @@ export const ExpenseListPage = () => {
           </span>
         </h2>
         <div className="flex items-center gap-2 [grid-area:controls] md:justify-end">
+          <StatusSwitch value={view} onChange={setView} />
           <CollapsibleTrigger className="flex h-7 items-center gap-1.5 rounded-sm border border-line bg-surface px-2.5 text-sm transition-colors duration-(--motion-color) hover:bg-surface-2 data-open:border-ring data-open:bg-surface-2">
             <Plus aria-hidden="true" size={14} />
             Add expense
           </CollapsibleTrigger>
         </div>
-        <p className="text-right font-num text-lg tabular [grid-area:total]">
-          <span className="sr-only">Month total: </span>
-          <span>{expenses.isSuccess ? formatRupiah(total) : "—"}</span>
-        </p>
+        {view === "draft" ? (
+          <p className="text-right text-sm text-text-muted [grid-area:total]">
+            {expenses.isSuccess
+              ? `${expenses.data.length} ${expenses.data.length === 1 ? "draft" : "drafts"}`
+              : "—"}
+          </p>
+        ) : (
+          <p className="text-right font-num text-lg tabular [grid-area:total]">
+            <span className="sr-only">Month total: </span>
+            <span>{expenses.isSuccess ? formatRupiah(total) : "—"}</span>
+          </p>
+        )}
       </header>
       <CollapsiblePanel>
         <AddExpenseForm onDone={() => setAdding(false)} />
       </CollapsiblePanel>
+      {actions.errorMessage === null ? null : (
+        <p role="alert" className="border-b border-line py-3 text-sm text-danger">
+          {actions.errorMessage}
+        </p>
+      )}
 
       {expenses.isPending ? (
         <ul aria-label="Expenses" aria-busy="true">
@@ -72,12 +93,23 @@ export const ExpenseListPage = () => {
           </button>
         </p>
       ) : expenses.data.length === 0 ? (
-        <p className="py-12 text-center text-text-muted">No expenses in {formatMonth(month)}</p>
+        <p className="py-12 text-center text-text-muted">
+          {view === "draft" ? "No drafts" : "No expenses"} in {formatMonth(month)}
+        </p>
       ) : (
         <ul aria-label="Expenses">
-          {expenses.data.map((expense) => (
-            <ExpenseRow key={expense.id} expense={expense} />
-          ))}
+          {expenses.data.map((expense) =>
+            expense.status === "draft" ? (
+              <DraftRow
+                key={expense.id}
+                expense={expense}
+                onConfirm={() => actions.confirm(expense)}
+                onDiscard={() => actions.discard(expense)}
+              />
+            ) : (
+              <ExpenseRow key={expense.id} expense={expense} />
+            ),
+          )}
         </ul>
       )}
     </Collapsible>
