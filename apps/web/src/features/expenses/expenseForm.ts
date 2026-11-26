@@ -8,6 +8,7 @@ import {
 } from "@expense/contract"
 import { Schema } from "effect"
 import { HttpClientError } from "effect/http"
+import { notSignedIn } from "../../shared/api/accessSession.ts"
 
 /** What the user typed, as the inputs hold it. */
 export interface ExpenseFormValues {
@@ -90,7 +91,7 @@ export const errorsFromApi = (error: unknown): ExpenseFormErrors => {
     }
     return Object.keys(errors).length > 0 ? errors : { form: "The server refused this expense." }
   }
-  if (error instanceof Unauthorized) return { form: "Not authorised. Check the API token." }
+  if (error instanceof Unauthorized) return { form: notSignedIn }
   if (HttpClientError.isHttpClientError(error))
     return { form: "Couldn't reach the server. Check the connection and try again." }
   return { form: "Couldn't save the expense. Try again." }

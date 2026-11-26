@@ -25,5 +25,5 @@ test("an expired Access session reloads the page instead of showing an error", a
 
   await expect.poll(() => loads).toBe(2)
   await expect(page.getByRole("textbox", { name: "Message" })).toBeVisible()
-  await expect(page.getByRole("log").getByText(/Not authorised|Couldn't/)).toHaveCount(0)
+  await expect(page.getByRole("log").getByText(/Not signed in|Couldn't/)).toHaveCount(0)
 })

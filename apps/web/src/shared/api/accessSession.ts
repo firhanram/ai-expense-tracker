@@ -11,6 +11,9 @@
  * A real answer from the Worker, a `401 UNAUTHORIZED` included, passes through:
  * reloading on it could loop, and it is not an expired session.
  */
+/** What a `401 UNAUTHORIZED` says: there is no token to check, only an Access session to renew. */
+export const notSignedIn = "Not signed in. Reload to sign in again."
+
 export const reloadWhenSignedOut =
   (fetch: typeof globalThis.fetch, reload: () => void): typeof globalThis.fetch =>
   async (input, init) => {

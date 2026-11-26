@@ -258,11 +258,12 @@ test("Retry after an unreachable model sends the message again", async ({ page }
   expect(sentBodies(calls)).toHaveLength(2)
 })
 
-test("a refused token says so", async ({ page }) => {
+test("a refused session says the owner is not signed in, with Reload", async ({ page }) => {
   await mockApi(page, { "GET /api/chat": fail("UNAUTHORIZED") })
   await showAs(page, "desktop", "light")
   await open(page)
 
-  await expect(log(page).getByText("Not authorised. Check the API token.")).toBeVisible()
+  await expect(log(page).getByText("Not signed in. Reload to sign in again.")).toBeVisible()
+  await expect(log(page).getByRole("button", { name: "Reload" })).toBeVisible()
   await screenshot(page, "w10", "unauthorized-desktop-light")
 })

@@ -12,6 +12,7 @@ import {
   useMutationState,
   useQueryClient,
 } from "@tanstack/react-query"
+import { notSignedIn } from "../../shared/api/accessSession.ts"
 import { api } from "../../shared/api/api.ts"
 import { formatDayMonth } from "../../shared/format/shortDate.ts"
 import {
@@ -33,7 +34,7 @@ export const actionErrorMessage = (action: ExpenseAction, expense: Expense, erro
   if (error instanceof ExpenseDiscarded) return `${label} was discarded and can't be confirmed.`
   if (error instanceof ExpenseConfirmed) return `${label} is already confirmed. Delete it instead.`
   if (error instanceof ExpenseNotFound) return `${label} no longer exists.`
-  if (error instanceof Unauthorized) return "Not authorised. Check the API token."
+  if (error instanceof Unauthorized) return notSignedIn
   return `Couldn't ${action} ${label}. Try again.`
 }
 

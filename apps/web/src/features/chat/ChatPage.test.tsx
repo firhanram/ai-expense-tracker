@@ -139,13 +139,17 @@ describe("history", () => {
     expect(within(log()).queryByText(/root =/)).toBeNull()
   })
 
-  it("says the token was refused when the Chat cannot load", async () => {
+  it("says the owner is not signed in when the Chat cannot load, and offers a reload", async () => {
+    const reload = vi.fn()
+    vi.stubGlobal("location", { ...window.location, reload })
     serve({ history: () => failure(401, "UNAUTHORIZED") })
     await renderApp("/")
 
-    expect(
-      await within(log()).findByText("Not authorised. Check the API token."),
-    ).toBeInTheDocument()
+    const line = await within(log()).findByText(/^Not signed in\./)
+    expect(line.closest("p")).toHaveTextContent("Not signed in. Reload to sign in again.")
+
+    await userEvent.click(within(log()).getByRole("button", { name: "Reload" }))
+    expect(reload).toHaveBeenCalledOnce()
   })
 })
 
@@ -282,15 +286,15 @@ describe("errors", () => {
     expect(within(log()).queryByText(/Couldn't reach the model/)).toBeNull()
   })
 
-  it("says the token was refused", async () => {
+  it("says the owner is not signed in when the send is refused", async () => {
     serve({ send: () => failure(401, "UNAUTHORIZED") })
     await renderApp("/")
 
     await userEvent.type(composer(), "hello{Enter}")
 
-    expect(
-      await within(log()).findByText("Not authorised. Check the API token."),
-    ).toBeInTheDocument()
+    const line = await within(log()).findByText(/^Not signed in\./)
+    expect(line.closest("p")).toHaveTextContent("Not signed in. Reload to sign in again.")
+    expect(within(log()).queryByRole("button", { name: "Retry" })).toBeNull()
   })
 
   it("shows the offline bar while the connection is down", async () => {
