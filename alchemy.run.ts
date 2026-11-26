@@ -27,6 +27,24 @@ export default Alchemy.Stack(
     // Receipt images. Private: served only through the API behind the token.
     const receipts = yield* Cloudflare.R2.Bucket("Receipts")
 
+    // The model provider's key. Deploys look up the existing Secrets Store
+    // secret and never write it. `alchemy dev` cannot read production
+    // Secrets Store values, so locally the key comes from the environment
+    // (`pnpm dev` runs `infisical run`) and is seeded into the local
+    // simulator only (`.alchemy/local/secrets-store`), never to Cloudflare.
+    const mode = yield* Alchemy.ProviderMode.defaultProviderMode
+    const apiProviderKey =
+      mode === "local"
+        ? yield* Cloudflare.SecretsStore.Secret("ApiProviderKey", {
+            store: yield* Cloudflare.SecretsStore.Store("LocalSecrets"),
+            name: "API_PROVIDER_KEY",
+            value: yield* Config.Redacted("API_PROVIDER_KEY"),
+          })
+        : Cloudflare.SecretsStore.Secret.lookup({
+            storeId: secretsStoreId,
+            name: "API_PROVIDER_KEY",
+          })
+
     const worker = yield* Cloudflare.Worker("Api", {
       main: "./apps/api/src/index.ts",
       compatibility: { date: "2026-11-20", flags: ["nodejs_compat"] },
@@ -38,12 +56,7 @@ export default Alchemy.Stack(
         // API_TOKEN comes from the environment or `.env` (see `.env.example`),
         // and is bound as a secret, never a plain var.
         API_TOKEN: Config.Redacted("API_TOKEN"),
-        // Looked up, never managed: Alchemy binds the existing Secrets Store
-        // secret and never creates, updates or deletes it or its value.
-        API_PROVIDER_KEY: Cloudflare.SecretsStore.Secret.lookup({
-          storeId: secretsStoreId,
-          name: "API_PROVIDER_KEY",
-        }),
+        API_PROVIDER_KEY: apiProviderKey,
         // Which provider the key belongs to (apps/api/src/features/chat/ModelProvider.ts).
         MODEL_PROVIDER: "deepseek",
       },
