@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers"
 import { describe, expect, it } from "vitest"
 import { makeHandler } from "../../App.ts"
+import { anError } from "../../testing/envelope.ts"
 
 // Regression: health must reflect D1, not answer "ok" unconditionally.
 const unreachable = (): never => {
@@ -15,7 +16,7 @@ const unreachableDb: D1Database = {
 }
 
 describe("GET /api/health with D1 down", () => {
-  it("fails with a 500 problem instead of reporting ok", async () => {
+  it("fails with a 500 INTERNAL_ERROR that leaks nothing, instead of reporting ok", async () => {
     const app = makeHandler({
       DB: unreachableDb,
       // Health reads only D1.
@@ -27,7 +28,10 @@ describe("GET /api/health with D1 down", () => {
       const response = await app.handler(new Request("http://localhost/api/health"), undefined)
 
       expect(response.status).toBe(500)
-      expect(await response.text()).not.toContain('"ok"')
+      const body = await response.text()
+      expect(JSON.parse(body)).toEqual({ success: false, error: anError("INTERNAL_ERROR") })
+      expect(body).not.toContain("D1 unreachable")
+      expect(body).not.toContain('"ok"')
     } finally {
       await app.dispose()
     }

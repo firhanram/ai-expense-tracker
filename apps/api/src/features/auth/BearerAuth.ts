@@ -1,17 +1,14 @@
 import { Effect } from "effect"
-import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http"
+import { HttpRouter, HttpServerRequest } from "effect/http"
+import { errorResponse } from "../../ErrorEnvelope.ts"
 
 /** Routes reachable without the token. Health stays open so uptime checks need no secret. */
 const publicPaths = new Set(["/api/health"])
 
-const unauthorized = HttpServerResponse.jsonUnsafe(
-  { title: "Unauthorized", status: 401 },
-  {
-    status: 401,
+const unauthorized = () =>
+  errorResponse("UNAUTHORIZED", "A valid bearer token is required.", {
     headers: { "www-authenticate": "Bearer" },
-    contentType: "application/problem+json",
-  },
-)
+  })
 
 const encoder = new TextEncoder()
 
@@ -40,7 +37,7 @@ export const BearerAuth = (apiToken: string) =>
         if (publicPaths.has(path) || tokenMatches(request.headers.authorization, apiToken)) {
           return yield* httpEffect
         }
-        return unauthorized
+        return yield* unauthorized()
       }),
     { global: true },
   )

@@ -14,6 +14,7 @@ import {
   toolResultsIn,
 } from "../../testing/FakeLanguageModel.ts"
 import { jpeg, uploadReceipt } from "../../testing/receipts.ts"
+import { anError, readData, readError } from "../../testing/envelope.ts"
 
 const clientDate = "2026-11-25"
 
@@ -30,7 +31,7 @@ const upload = async () => {
 
 const drafts = async (): Promise<Array<Expense>> => {
   const response = await callApi("/api/expenses?status=draft")
-  return response.json()
+  return readData(response)
 }
 
 /** Ids of the Drafts `propose_expense` returned so far this turn. */
@@ -141,7 +142,7 @@ describe("a Chat turn with a Receipt", () => {
     })
     expect(response.body).toContain("I can't make out this receipt.")
     expect(response.body).toContain(`DraftExpenseCard("${draft!.id}")`)
-    const { messages }: ChatHistoryPage = await callApi("/api/chat").then((r) => r.json())
+    const { messages } = await callApi("/api/chat").then(readData<ChatHistoryPage>)
     expect(messages[0]).toMatchObject({
       role: "assistant",
       uiText: expect.stringContaining(`DraftExpenseCard("${draft!.id}")`),
@@ -165,7 +166,7 @@ describe("a Chat turn with a Receipt", () => {
     await sendChat(model.layer, { message: "this one", clientDate, receiptKey })
 
     const [draft] = await drafts()
-    const { messages }: ChatHistoryPage = await callApi("/api/chat").then((r) => r.json())
+    const { messages } = await callApi("/api/chat").then(readData<ChatHistoryPage>)
     const uiText = messages[0]!.uiText!
     expect(uiText.match(/^\s*root\s*=/gm)).toHaveLength(1)
     expect(checkProgram(uiText).outcome).toBe("ok")
@@ -196,12 +197,11 @@ describe("a Chat turn with a Receipt", () => {
     })
 
     expect(response.status).toBe(404)
-    expect(JSON.parse(response.body)).toEqual({
-      _tag: "ReceiptNotFound",
-      receiptKey: "no-such-receipt",
-    })
+    expect(await readError(response.body)).toEqual(
+      anError("RECEIPT_NOT_FOUND", { receiptKey: "no-such-receipt" }),
+    )
     expect(model.calls).toEqual([])
-    const history = await callApi("/api/chat").then((r) => r.json())
+    const history = await callApi("/api/chat").then(readData)
     expect(history).toMatchObject({ messages: [] })
   })
 })

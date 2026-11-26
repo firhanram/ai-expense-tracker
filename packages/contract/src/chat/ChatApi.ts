@@ -1,7 +1,8 @@
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/http-api"
 import { IsoDate, ReceiptKey } from "../expenses/Expense.ts"
-import { ReceiptNotFound } from "../receipts/ReceiptsApi.ts"
+import { apiError, errorIdField, ok } from "../ApiResponse.ts"
+import { receiptNotFound } from "../receipts/ReceiptsApi.ts"
 
 export const ChatRole = Schema.Literals(["user", "assistant"])
 export type ChatRole = typeof ChatRole.Type
@@ -43,26 +44,43 @@ export type ChatHistoryPage = typeof ChatHistoryPage.Type
  * anything. Distinct from an empty reply, which is a 200 with an empty body.
  * The user message is kept; sending again retries.
  */
-export class ModelUnreachable extends Schema.TaggedError<ModelUnreachable>()(
-  "ModelUnreachable",
-  {
-    /** Why, as the AI layer classified it, e.g. `NetworkError` or `RateLimitError`. */
-    reason: Schema.String,
-  },
-  { httpApiStatus: 503 },
-) {}
+export class ModelUnreachable extends Schema.TaggedError<ModelUnreachable>()("ModelUnreachable", {
+  /** Why, as the AI layer classified it, e.g. `NetworkError` or `RateLimitError`. */
+  reason: Schema.String,
+  ...errorIdField,
+}) {}
+
+/**
+ * The model provider is rate limiting us (it answered 429) before the model
+ * wrote anything. The user message is kept; sending again later retries.
+ */
+export class ModelRateLimited extends Schema.TaggedError<ModelRateLimited>()("ModelRateLimited", {
+  ...errorIdField,
+}) {}
+
+const modelUnreachable = apiError(
+  ModelUnreachable,
+  "MODEL_UNREACHABLE",
+  () => "The model could not be reached. Send the message again to retry.",
+)
+const modelRateLimited = apiError(
+  ModelRateLimited,
+  "TOO_MANY_REQUESTS",
+  () => "The model is receiving too many requests. Wait a moment, then send again.",
+)
 
 export class ChatGroup extends HttpApiGroup.make("chat").add(
   /**
-   * Streams the reply as `text/plain` while the model writes it. Fails with
-   * `ModelUnreachable` (503) only if the model fails before the first word,
-   * and with `ReceiptNotFound` (404), storing nothing, when `receiptKey`
-   * names no stored Receipt.
+   * Streams the reply as `text/plain` while the model writes it: the one
+   * JSON-less success, so it has no envelope. Fails, enveloped, with
+   * `MODEL_UNREACHABLE` (503) or `TOO_MANY_REQUESTS` (429) only if the model
+   * fails before the first word, and with `RECEIPT_NOT_FOUND` (404), storing
+   * nothing, when `receiptKey` names no stored Receipt.
    */
   HttpApiEndpoint.post("send", "/chat", {
     payload: SendChatMessage,
     success: HttpApiSchema.StreamUint8Array({ contentType: "text/plain; charset=utf-8" }),
-    error: [ModelUnreachable, ReceiptNotFound],
+    error: [modelUnreachable, modelRateLimited, receiptNotFound],
   }),
   HttpApiEndpoint.get("history", "/chat", {
     query: {
@@ -79,6 +97,6 @@ export class ChatGroup extends HttpApiGroup.make("chat").add(
         ),
       ),
     },
-    success: ChatHistoryPage,
+    success: ok(ChatHistoryPage),
   }),
 ) {}

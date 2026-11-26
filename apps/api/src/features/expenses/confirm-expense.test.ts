@@ -3,6 +3,7 @@ import { env } from "cloudflare:workers"
 import { beforeEach, describe, expect, it } from "vitest"
 import { callApi } from "../../testing/callWorker.ts"
 import { jpeg, uploadReceipt } from "../../testing/receipts.ts"
+import { anError, readData, readError } from "../../testing/envelope.ts"
 
 // Tests in one file share D1, so each starts from an empty ledger.
 beforeEach(async () => {
@@ -27,7 +28,7 @@ const list = async (status?: string) => {
   const response = await callApi(
     status === undefined ? "/api/expenses" : `/api/expenses?status=${status}`,
   )
-  const expenses: Array<Expense> = await response.json()
+  const expenses: Array<Expense> = await readData(response)
   return expenses.map((expense) => expense.id)
 }
 
@@ -38,7 +39,7 @@ describe("POST /api/expenses/:id/confirm", () => {
     const response = await post(`/api/expenses/${id}/confirm`)
 
     expect(response.status).toBe(200)
-    expect(await response.json()).toMatchObject({
+    expect(await readData(response)).toMatchObject({
       id,
       amount: 32000,
       merchant: "Kopi Kenangan",
@@ -54,7 +55,7 @@ describe("POST /api/expenses/:id/confirm", () => {
 
     const response = await post(`/api/expenses/${id}/confirm`)
 
-    expect(await response.json()).toMatchObject({ id, status: "confirmed", needsReview: false })
+    expect(await readData(response)).toMatchObject({ id, status: "confirmed", needsReview: false })
   })
 
   it("succeeds and changes nothing when confirmed again, recording one Expense", async () => {
@@ -64,7 +65,7 @@ describe("POST /api/expenses/:id/confirm", () => {
     const second = await post(`/api/expenses/${id}/confirm`)
 
     expect(second.status).toBe(200)
-    expect(await second.json()).toEqual(await first.json())
+    expect(await readData(second)).toEqual(await readData(first))
     expect(await list()).toEqual([id])
   })
 
@@ -86,7 +87,7 @@ describe("POST /api/expenses/:id/confirm", () => {
     const response = await post(`/api/expenses/${id}/confirm`)
 
     expect(response.status).toBe(409)
-    expect(await response.json()).toEqual({ _tag: "ExpenseDiscarded", id })
+    expect(await readError(response)).toEqual(anError("EXPENSE_DISCARDED", { id }))
     expect(await list()).toEqual([])
     expect(await list("discarded")).toEqual([id])
   })
@@ -95,7 +96,7 @@ describe("POST /api/expenses/:id/confirm", () => {
     const response = await post("/api/expenses/no-such-id/confirm")
 
     expect(response.status).toBe(404)
-    expect(await response.json()).toEqual({ _tag: "ExpenseNotFound", id: "no-such-id" })
+    expect(await readError(response)).toEqual(anError("EXPENSE_NOT_FOUND", { id: "no-such-id" }))
   })
 })
 
@@ -106,7 +107,7 @@ describe("POST /api/expenses/:id/discard", () => {
     const response = await post(`/api/expenses/${id}/discard`)
 
     expect(response.status).toBe(200)
-    expect(await response.json()).toMatchObject({ id, status: "discarded" })
+    expect(await readData(response)).toMatchObject({ id, status: "discarded" })
     expect(await list()).toEqual([])
     expect(await list("draft")).toEqual([])
     expect(await list("discarded")).toEqual([id])
@@ -119,7 +120,7 @@ describe("POST /api/expenses/:id/discard", () => {
     const second = await post(`/api/expenses/${id}/discard`)
 
     expect(second.status).toBe(200)
-    expect(await second.json()).toEqual(await first.json())
+    expect(await readData(second)).toEqual(await readData(first))
   })
 
   it("deletes the Draft's Receipt, since it never became an Expense", async () => {
@@ -131,7 +132,7 @@ describe("POST /api/expenses/:id/discard", () => {
 
     const response = await post(`/api/expenses/${id}/discard`)
 
-    expect(await response.json()).toMatchObject({ id, status: "discarded", receiptKey: null })
+    expect(await readData(response)).toMatchObject({ id, status: "discarded", receiptKey: null })
     expect((await callApi(`/api/receipts/${receiptKey}`)).status).toBe(404)
   })
 
@@ -152,7 +153,7 @@ describe("POST /api/expenses/:id/discard", () => {
     const response = await post(`/api/expenses/${id}/discard`)
 
     expect(response.status).toBe(409)
-    expect(await response.json()).toEqual({ _tag: "ExpenseConfirmed", id })
+    expect(await readError(response)).toEqual(anError("EXPENSE_CONFIRMED", { id }))
     expect(await list()).toEqual([id])
   })
 
@@ -160,6 +161,6 @@ describe("POST /api/expenses/:id/discard", () => {
     const response = await post("/api/expenses/no-such-id/discard")
 
     expect(response.status).toBe(404)
-    expect(await response.json()).toEqual({ _tag: "ExpenseNotFound", id: "no-such-id" })
+    expect(await readError(response)).toEqual(anError("EXPENSE_NOT_FOUND", { id: "no-such-id" }))
   })
 })

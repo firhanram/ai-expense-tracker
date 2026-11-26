@@ -3,8 +3,9 @@ import { ChatHistoryPage } from "@expense/contract"
 import { systemPrompt } from "@expense/ui/server"
 import { type Layer, Schema } from "effect"
 import type { LanguageModel, Prompt } from "effect/ai"
-import { beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { callApiWithModel, sendChat } from "../../testing/callWithModel.ts"
+import { anError, readData, readError } from "../../testing/envelope.ts"
 import {
   failsMidway,
   makeFakeLanguageModel,
@@ -12,6 +13,7 @@ import {
   textReply,
   unreachable,
 } from "../../testing/FakeLanguageModel.ts"
+import { ModelProviderLive } from "./ModelProvider.ts"
 
 const clientDate = "2026-11-25"
 
@@ -26,7 +28,7 @@ const history = async (
 ): Promise<ChatHistoryPage> => {
   const response = await callApiWithModel(model, `/api/chat${query}`)
   expect(response.status).toBe(200)
-  return Schema.decodeUnknownSync(ChatHistoryPage)(JSON.parse(response.body))
+  return Schema.decodeUnknownSync(ChatHistoryPage)(await readData(response.body))
 }
 
 const bubbles = (page: ChatHistoryPage) =>
@@ -110,14 +112,38 @@ describe("POST /api/chat", () => {
     )
   })
 
-  it("answers 503 ModelUnreachable when the model cannot be reached, keeping the message", async () => {
+  it("answers 503 MODEL_UNREACHABLE when the model cannot be reached, keeping the message", async () => {
     const model = makeFakeLanguageModel(unreachable)
 
     const response = await sendChat(model.layer, { message: "hi", clientDate })
 
     expect(response.status).toBe(503)
-    expect(JSON.parse(response.body)).toEqual({ _tag: "ModelUnreachable", reason: "NetworkError" })
+    expect(await readError(response.body)).toEqual(
+      anError("MODEL_UNREACHABLE", { reason: "NetworkError" }),
+    )
     expect(bubbles(await history(model.layer))).toEqual([["user", "hi"]])
+  })
+
+  describe("with the real provider client", () => {
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it("answers 429 TOO_MANY_REQUESTS when the provider rate limits, keeping the message", async () => {
+      vi.stubGlobal("fetch", async () =>
+        Response.json(
+          { error: { message: "Rate limit reached", type: "rate_limit_error" } },
+          { status: 429 },
+        ),
+      )
+      const provider = ModelProviderLive({ apiKey: "sk-test" })
+
+      const response = await sendChat(provider, { message: "hi", clientDate })
+
+      expect(response.status).toBe(429)
+      expect(await readError(response.body)).toEqual(anError("TOO_MANY_REQUESTS"))
+      expect(bubbles(await history(provider))).toEqual([["user", "hi"]])
+    })
   })
 
   it("answers an empty reply with 200 and an empty body, not an error", async () => {

@@ -12,6 +12,7 @@ import {
   toolCallReply,
   toolResultsIn,
 } from "../../testing/FakeLanguageModel.ts"
+import { readData } from "../../testing/envelope.ts"
 
 const clientDate = "2026-11-25"
 
@@ -23,7 +24,7 @@ beforeEach(async () => {
 
 const drafts = async (): Promise<Array<Expense>> => {
   const response = await callApi("/api/expenses?status=draft")
-  return response.json()
+  return readData(response)
 }
 
 /** Ids of the Drafts `propose_expense` returned so far this turn. */
@@ -249,7 +250,9 @@ describe("changing a Draft by chatting", () => {
     await sendChat(model.layer, { message: "never mind, discard that", clientDate })
 
     expect(await drafts()).toEqual([])
-    const discarded: Array<Expense> = await (await callApi("/api/expenses?status=discarded")).json()
+    const discarded: Array<Expense> = await readData(
+      await callApi("/api/expenses?status=discarded"),
+    )
     expect(discarded.map((expense) => expense.id)).toEqual([id])
   })
 
@@ -268,7 +271,7 @@ describe("changing a Draft by chatting", () => {
       true,
       true,
     ])
-    const confirmed: Array<Expense> = await (await callApi("/api/expenses")).json()
+    const confirmed: Array<Expense> = await readData(await callApi("/api/expenses"))
     expect(confirmed).toMatchObject([{ id, amount: 70000, status: "confirmed" }])
   })
 
@@ -320,7 +323,7 @@ describe("a client that leaves mid-reply", () => {
 
     expect(firstChunk).not.toContain("DraftExpenseCard")
     const [draft] = await drafts()
-    const page: ChatHistoryPage = await (await callApi("/api/chat")).json()
+    const page: ChatHistoryPage = await readData(await callApi("/api/chat"))
     expect(page.messages[0]).toMatchObject({
       role: "assistant",
       content: "Here is your draft:",

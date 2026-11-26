@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers"
 import { beforeEach, describe, expect, it } from "vitest"
 import { callApi } from "../../testing/callWorker.ts"
+import { readData, readIssues } from "../../testing/envelope.ts"
 
 // Tests in one file share D1, so each starts from an empty ledger.
 beforeEach(async () => {
@@ -19,7 +20,7 @@ const record = async (merchant: string, occurredAt: string, categoryId = 1) => {
 const listMerchants = async (query: string) => {
   const response = await callApi(`/api/expenses?${query}`)
   expect(response.status).toBe(200)
-  const expenses: Array<{ merchant: string }> = await response.json()
+  const expenses: Array<{ merchant: string }> = await readData(response)
   return expenses.map((expense) => expense.merchant)
 }
 
@@ -84,8 +85,8 @@ describe("GET /api/expenses filters", () => {
       const response = await callApi(`/api/expenses?${query}`)
 
       expect(response.status).toBe(400)
-      const problem: { errors: ReadonlyArray<unknown> } = await response.json()
-      expect(problem.errors).toContainEqual(expect.objectContaining({ path: ["query", field] }))
+      const issues = await readIssues(response)
+      expect(issues).toContainEqual(expect.objectContaining({ path: ["query", field] }))
     })
   })
 })

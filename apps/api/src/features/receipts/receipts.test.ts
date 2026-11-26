@@ -2,6 +2,7 @@ import { maxReceiptBytes } from "@expense/contract"
 import { describe, expect, it } from "vitest"
 import { callApi, callWorker } from "../../testing/callWorker.ts"
 import { jpeg, receiptForm, uploadReceipt } from "../../testing/receipts.ts"
+import { anError, readError } from "../../testing/envelope.ts"
 
 describe("POST /api/receipts and GET /api/receipts/:key", () => {
   it("stores an uploaded image and serves the same bytes back", async () => {
@@ -35,14 +36,14 @@ describe("POST /api/receipts and GET /api/receipts/:key", () => {
     const { status, body } = await uploadReceipt(jpeg, "application/pdf")
 
     expect(status).toBe(400)
-    expect(body).toMatchObject({ _tag: "InvalidReceipt" })
+    expect(body).toEqual({ success: false, error: anError("INVALID_RECEIPT") })
   })
 
   it("refuses an image over the size cap", async () => {
     const { status, body } = await uploadReceipt(new Uint8Array(maxReceiptBytes + 1))
 
     expect(status).toBe(400)
-    expect(body).toMatchObject({ _tag: "InvalidReceipt" })
+    expect(body).toEqual({ success: false, error: anError("INVALID_RECEIPT") })
   })
 
   it("refuses a form without the file field", async () => {
@@ -58,9 +59,8 @@ describe("POST /api/receipts and GET /api/receipts/:key", () => {
     const response = await callApi("/api/receipts/no-such-receipt")
 
     expect(response.status).toBe(404)
-    expect(await response.json()).toEqual({
-      _tag: "ReceiptNotFound",
-      receiptKey: "no-such-receipt",
-    })
+    expect(await readError(response)).toEqual(
+      anError("RECEIPT_NOT_FOUND", { receiptKey: "no-such-receipt" }),
+    )
   })
 })

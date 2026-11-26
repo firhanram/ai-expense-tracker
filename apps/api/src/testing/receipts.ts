@@ -10,12 +10,15 @@ export const receiptForm = (bytes: Uint8Array, type = "image/jpeg", field = "fil
   return form
 }
 
-/** `POST /api/receipts` with the bearer token. `receiptKey` is undefined when it was refused. */
+/**
+ * `POST /api/receipts` with the bearer token. `receiptKey` is undefined when
+ * it was refused; `body` is the envelope either way.
+ */
 export const uploadReceipt = async (bytes: Uint8Array, type = "image/jpeg") => {
   const response = await callApi("/api/receipts", {
     method: "POST",
     body: receiptForm(bytes, type),
   })
-  const body: { receiptKey?: string } = await response.json()
-  return { status: response.status, receiptKey: body.receiptKey, body }
+  const body: { data?: { receiptKey?: string }; error?: unknown } = await response.json()
+  return { status: response.status, receiptKey: body.data?.receiptKey, body }
 }

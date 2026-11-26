@@ -3,8 +3,9 @@ import { Api } from "@expense/contract"
 import { Effect, Layer, Scheduler } from "effect"
 import type { LanguageModel } from "effect/ai"
 import { HttpRouter, HttpServer } from "effect/http"
-import { HttpApiBuilder, HttpApiMiddleware } from "effect/http-api"
+import { HttpApiBuilder } from "effect/http-api"
 import { systemPrompt } from "@expense/ui/server"
+import { ApiErrorsLive, ErrorEnvelope } from "./ErrorEnvelope.ts"
 import { BearerAuth } from "./features/auth/BearerAuth.ts"
 import { ChatLive } from "./features/chat/ChatLive.ts"
 import { ModelProviderLive } from "./features/chat/ModelProvider.ts"
@@ -28,7 +29,7 @@ export interface AppOverrides {
 }
 
 export const makeApp = (env: Cloudflare.Env, overrides: AppOverrides = {}) =>
-  Layer.mergeAll(HttpApiBuilder.layer(Api), BearerAuth(env.API_TOKEN)).pipe(
+  Layer.mergeAll(HttpApiBuilder.layer(Api), BearerAuth(env.API_TOKEN), ErrorEnvelope).pipe(
     Layer.provide([HealthLive, ExpensesLive, ChatLive, ReportsLive, ReceiptsLive]),
     // The model is told what the component library lets it render (ADR-0006).
     Layer.provide(Layer.succeed(SystemPrompt, systemPrompt)),
@@ -40,8 +41,8 @@ export const makeApp = (env: Cloudflare.Env, overrides: AppOverrides = {}) =>
           apiKey: env.API_PROVIDER_KEY,
         }),
     ),
-    // Request validation 400s name the offending field; 500s still carry no detail.
-    Layer.provide(HttpApiMiddleware.layerProblemDetails({ includeDetails: true })),
+    // The error envelope (PLAN, "API"): validation 400s name the field; 500s carry no detail.
+    Layer.provide(ApiErrorsLive),
     Layer.provide(ReceiptStoreLive(env.RECEIPTS)),
     Layer.provide(D1Client.layer({ db: env.DB })),
     Layer.provide(HttpServer.layerServices),
