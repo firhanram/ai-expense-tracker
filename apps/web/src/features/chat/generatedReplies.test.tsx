@@ -58,6 +58,17 @@ const serve = (server: {
         data: (server.expenses ?? []).filter((candidate) => candidate.status === status),
       })
     }
+    const one = /^\/api\/expenses\/([^/]+)$/.exec(url.pathname)
+    if (one !== null && request.method === "GET") {
+      const id = decodeURIComponent(one[1] ?? "")
+      const found = (server.expenses ?? []).find((candidate) => candidate.id === id)
+      return found === undefined
+        ? json(404, {
+            success: false,
+            error: { errorId: "e", errorCode: "EXPENSE_NOT_FOUND", message: "", details: { id } },
+          })
+        : json(200, { success: true, data: found })
+    }
     return json(404, { success: false, error: { errorId: "e", errorCode: "NOT_FOUND" } })
   })
 }

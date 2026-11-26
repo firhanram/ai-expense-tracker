@@ -39,7 +39,7 @@ const wholeRupiah = "Use whole Rupiah, like 70000, or -70000 for a refund"
  * thousands, as Rupiah are written) or a leading minus for a refund.
  * Anything with a fraction is refused rather than rounded.
  */
-const parseAmount = (text: string): { amount: number } | { error: string } => {
+export const parseAmount = (text: string): { amount: number } | { error: string } => {
   const typed = text.trim().replace(/^−/, "-")
   if (typed === "") return { error: "Enter an amount" }
   const digits = /^-?\d{1,3}(\.\d{3})+$/.test(typed) ? typed.replaceAll(".", "") : typed

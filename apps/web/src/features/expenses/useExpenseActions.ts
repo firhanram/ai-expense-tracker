@@ -2,14 +2,26 @@ import {
   type Expense,
   ExpenseConfirmed,
   ExpenseDiscarded,
+  type ExpenseId,
   ExpenseNotFound,
   Unauthorized,
 } from "@expense/contract"
-import { type QueryClient, useMutation, useQueryClient } from "@tanstack/react-query"
+import {
+  type QueryClient,
+  useMutation,
+  useMutationState,
+  useQueryClient,
+} from "@tanstack/react-query"
 import { api } from "../../shared/api/api.ts"
 import { formatDayMonth } from "../../shared/format/shortDate.ts"
-import { type ExpenseAction, isExpense, isListQuery, placeExpense } from "./expenseLists.ts"
-import { expensesKey } from "./useExpenses.ts"
+import {
+  type ExpenseAction,
+  isExpense,
+  isExpenseAction,
+  isListQuery,
+  placeExpense,
+} from "./expenseLists.ts"
+import { expenseKey, expensesKey } from "./useExpenses.ts"
 
 /** How a message or a button names an Expense: the merchant, else the note, else its date. */
 export const expenseLabel = (expense: Expense) =>
@@ -25,7 +37,9 @@ export const actionErrorMessage = (action: ExpenseAction, expense: Expense, erro
   return `Couldn't ${action} ${label}. Try again.`
 }
 
-const writeIntoLists = (queryClient: QueryClient, expense: Expense) => {
+/** Puts a saved Expense into its own cache entry and every cached list, ahead of the refetch. */
+export const writeIntoLists = (queryClient: QueryClient, expense: Expense) => {
+  queryClient.setQueryData(expenseKey(expense.id), expense)
   for (const [key, list] of queryClient.getQueriesData<ReadonlyArray<Expense>>({
     queryKey: expensesKey,
   })) {
@@ -90,5 +104,38 @@ export const useExpenseActions = () => {
       error === null || variables === undefined
         ? null
         : actionErrorMessage(latest.action, variables, error),
+  }
+}
+
+/**
+ * The latest confirm or discard of one Expense, from whichever caller sent it
+ * (a chat card's actions run in the Renderer's `onAction`, not in the card):
+ * which one is in flight, and the error line if it failed.
+ */
+export const useExpenseActivity = (id: ExpenseId) => {
+  const latest = useMutationState({
+    filters: {
+      mutationKey: expensesKey,
+      predicate: (mutation) =>
+        isExpense(mutation.state.variables) && mutation.state.variables.id === id,
+    },
+    select: (mutation) => ({
+      action: mutation.options.mutationKey?.[1],
+      status: mutation.state.status,
+      error: mutation.state.error,
+      expense: mutation.state.variables,
+      submittedAt: mutation.state.submittedAt,
+    }),
+  })
+    .toSorted((a, b) => a.submittedAt - b.submittedAt)
+    .at(-1)
+  if (latest === undefined || !isExpenseAction(latest.action) || !isExpense(latest.expense))
+    return { pending: null, errorMessage: null }
+  return {
+    pending: latest.status === "pending" ? latest.action : null,
+    errorMessage:
+      latest.status === "error"
+        ? actionErrorMessage(latest.action, latest.expense, latest.error)
+        : null,
   }
 }

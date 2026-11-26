@@ -3,6 +3,7 @@ import { Check } from "lucide-react"
 import { categoryName } from "../../shared/categories/categories.ts"
 import { formatRupiah } from "../../shared/format/rupiah.ts"
 import { formatDayMonthYear } from "../../shared/format/shortDate.ts"
+import { CategoryEdit } from "./CardFields.tsx"
 import { CardLine, CardSkeleton } from "./CardSkeleton.tsx"
 import { useExpense } from "./useExpense.ts"
 
@@ -39,9 +40,13 @@ const ExpenseCardBody = ({ expense }: { readonly expense: Expense }) => (
       <p className="truncate text-sm text-text-muted">{details(expense)}</p>
     </div>
     <div className="flex shrink-0 flex-wrap items-center gap-2 md:justify-end">
-      <span className="rounded-sm bg-surface-2 px-2 py-[3px] text-sm">
-        {categoryName(expense.categoryId)}
-      </span>
+      {expense.status === "discarded" ? (
+        <span className="rounded-sm bg-surface-2 px-2 py-[3px] text-sm">
+          {categoryName(expense.categoryId)}
+        </span>
+      ) : (
+        <CategoryEdit expense={expense} />
+      )}
       <StatusChip status={expense.status} />
     </div>
   </article>

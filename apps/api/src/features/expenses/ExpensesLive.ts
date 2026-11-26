@@ -9,6 +9,7 @@ import {
   deleteExpense,
   discardExpense,
   editExpense,
+  getExpense,
   insertExpense,
   listExpenses,
 } from "./ExpenseStore.ts"
@@ -19,6 +20,7 @@ export const ExpensesLive = HttpApiBuilder.group(Api, "expenses", (handlers) =>
 
     return handlers
       .handle("list", ({ query }) => withStores(listExpenses(query)))
+      .handle("get", ({ params }) => withStores(getExpense(params.id)))
       .handle("create", ({ payload }) =>
         withStores(insertExpense(payload, { status: "confirmed" })),
       )

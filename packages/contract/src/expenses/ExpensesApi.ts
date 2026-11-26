@@ -60,6 +60,12 @@ export class ExpensesGroup extends HttpApiGroup.make("expenses").add(
     query: ListExpensesQuery,
     success: ok(Schema.Array(Expense)),
   }),
+  /** One Expense whatever its status, so a rendered card can show any state it is in (ADR-0001). */
+  HttpApiEndpoint.get("get", "/expenses/:id", {
+    params: { id: ExpenseId },
+    success: ok(Expense),
+    error: expenseNotFound,
+  }),
   HttpApiEndpoint.post("create", "/expenses", {
     payload: CreateExpense,
     success: ok(Expense).pipe(HttpApiSchema.status(201)),

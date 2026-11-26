@@ -35,7 +35,7 @@ const samples = [
   {
     name: "DraftExpenseCard",
     program: 'root = Stack([draft])\ndraft = DraftExpenseCard("exp_1")',
-    shows: () => screen.findByRole("status", { name: "Draft Expense" }),
+    shows: () => screen.findByRole("article", { name: "Draft Expense Rp70.000" }),
   },
   {
     name: "SpendingChart",
@@ -50,7 +50,7 @@ const parser = createParser(webLibrary.toJSONSchema(), webLibrary.root)
 describe("the web library (S3)", () => {
   for (const sample of samples) {
     it(`round-trips ${sample.name} through parse and mounts it`, async () => {
-      fakeApi({ "GET /api/expenses": ok([expense()]) })
+      fakeApi({ "GET /api/expenses": ok([expense()]), "GET /api/expenses/exp_1": ok(expense()) })
 
       const result = parser.parse(sample.program)
       expect(result.meta.errors).toEqual([])

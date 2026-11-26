@@ -100,6 +100,7 @@ Cloudflare Access covers the whole hostname. Every route but `/api/health` requi
 | `GET /chat` | The conversation, newest page first. |
 | `GET /expenses` | `?status=&from=&to=&categoryId=`. Confirmed by default. |
 | `POST /expenses` | Manual create, bypassing the agent. |
+| `GET /expenses/:id` | One Expense, any status. What a rendered card fetches (ADR-0001). |
 | `PATCH /expenses/:id` | Edit amount, category, merchant, note, date, `needsReview`. Works on drafts and confirmed. |
 | `POST /expenses/:id/confirm` | Draft → confirmed. Idempotent. |
 | `POST /expenses/:id/discard` | Draft → discarded. Keeps the row. |

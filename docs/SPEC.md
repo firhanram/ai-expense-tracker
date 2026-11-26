@@ -107,7 +107,7 @@ Asking a question gets an answer in kind: a Report question returns a chart of s
 
 **Agent loop.** `LanguageModel.streamText` resolves tool calls and returns; it does not re-call the model. The loop is ours, capped at five steps, terminating once a Draft has been proposed and rendered.
 
-**API surface.** `POST /chat` (streaming), `GET /chat`, `GET|POST /expenses`, `PATCH /expenses/:id`, `POST /expenses/:id/confirm`, `POST /expenses/:id/discard`, `DELETE /expenses/:id`, `GET /reports`, `POST /receipts`, `GET /receipts/:key`. Reports are reads with explicit `from`/`to`.
+**API surface.** `POST /chat` (streaming), `GET /chat`, `GET|POST /expenses`, `GET|PATCH /expenses/:id`, `POST /expenses/:id/confirm`, `POST /expenses/:id/discard`, `DELETE /expenses/:id`, `GET /reports`, `POST /receipts`, `GET /receipts/:key`. Reports are reads with explicit `from`/`to`.
 
 **Chat persistence.** Each assistant message stores prose and the raw OpenUI Lang text. Reload re-parses locally; a parse failure falls back to the stored prose. This is the same path as a live parse failure, so it is one implementation.
 

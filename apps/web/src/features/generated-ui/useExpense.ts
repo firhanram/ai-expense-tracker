@@ -1,7 +1,7 @@
-import { type Expense, type ExpenseId, ExpenseStatus } from "@expense/contract"
-import { useQueries } from "@tanstack/react-query"
+import { type Expense, type ExpenseId, ExpenseNotFound } from "@expense/contract"
+import { useQuery } from "@tanstack/react-query"
 import { api } from "../../shared/api/api.ts"
-import { expensesKey, useMovingExpenses } from "../expenses/useExpenses.ts"
+import { expenseKey, useMovingExpenses } from "../expenses/useExpenses.ts"
 
 export type ExpenseLookup =
   | { readonly state: "loading" }
@@ -10,28 +10,20 @@ export type ExpenseLookup =
   | { readonly state: "failed" }
 
 /**
- * One Expense by id. The contract has no `GET /expenses/:id`, so this reads
- * the lists of every status (the same cache entries as `useExpenses`, so a
- * confirm or edit that invalidates `expensesKey` refreshes the card too). A
- * confirm or discard still in flight shows as its outcome, as in the lists.
+ * `GET /expenses/:id`, whatever its status. The key starts with `expensesKey`,
+ * so a confirm, edit or delete that invalidates the lists refreshes the card
+ * too. A confirm or discard still in flight shows as its outcome, as in the lists.
  */
 export const useExpense = (id: ExpenseId): ExpenseLookup => {
   const moving = useMovingExpenses().find((candidate) => candidate.id === id)
-  const lists = useQueries({
-    queries: ExpenseStatus.literals.map((status) => {
-      const query = { status }
-      return {
-        queryKey: [...expensesKey, query],
-        queryFn: () => api((client) => client.expenses.list({ query })),
-      }
-    }),
+  const query = useQuery({
+    queryKey: expenseKey(id),
+    queryFn: () => api((client) => client.expenses.get({ params: { id } })),
+    retry: (failures, error) => !(error instanceof ExpenseNotFound) && failures < 3,
   })
   if (moving !== undefined) return { state: "found", expense: moving }
-  for (const list of lists) {
-    const expense = list.data?.find((candidate) => candidate.id === id)
-    if (expense !== undefined) return { state: "found", expense }
-  }
-  if (lists.some((list) => list.isPending)) return { state: "loading" }
-  if (lists.some((list) => list.isError)) return { state: "failed" }
-  return { state: "not-found" }
+  if (query.error instanceof ExpenseNotFound) return { state: "not-found" }
+  if (query.data !== undefined) return { state: "found", expense: query.data }
+  if (query.isPending) return { state: "loading" }
+  return { state: "failed" }
 }

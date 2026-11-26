@@ -10,6 +10,7 @@ import {
 } from "@expense/ui"
 import { type ComponentRenderer, createLibrary } from "@openuidev/react-lang"
 import { CardSkeleton } from "./CardSkeleton.tsx"
+import { DraftExpenseCard as DraftExpenseCardView } from "./DraftExpenseCard.tsx"
 import { ExpenseCard as ExpenseCardView } from "./ExpenseCard.tsx"
 import { ExpenseList as ExpenseListView } from "./ExpenseList.tsx"
 
@@ -47,7 +48,7 @@ export const webLibrary = createLibrary({
     withView(Stack, ({ props, renderNode }) => (
       <div className="flex flex-col gap-3">{renderNode(props.children)}</div>
     )),
-    withView(DraftExpenseCard, () => <CardSkeleton label="Draft Expense" />),
+    withView(DraftExpenseCard, ({ props }) => <DraftExpenseCardView id={props.id} />),
     withView(ExpenseCard, ({ props }) => <ExpenseCardView id={props.id} />),
     withView(ExpenseList, ({ props }) => <ExpenseListView query={listQuery(props)} />),
     withView(SpendingChart, () => <CardSkeleton label="Spending chart" />),

@@ -19,8 +19,9 @@ export const useDeleteExpense = (id: ExpenseId) => {
       }
     },
     onSuccess: () => {
-      queryClient.setQueriesData<ReadonlyArray<Expense>>({ queryKey: expensesKey }, (list) =>
-        list?.filter((expense) => expense.id !== id),
+      // Lists only: the same prefix also holds Reports and single Expenses.
+      queryClient.setQueriesData<unknown>({ queryKey: expensesKey }, (cached: unknown) =>
+        Array.isArray(cached) ? cached.filter((expense: Expense) => expense.id !== id) : cached,
       )
       return queryClient.invalidateQueries({ queryKey: expensesKey })
     },
