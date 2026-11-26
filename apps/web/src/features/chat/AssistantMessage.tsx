@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from "react"
+import { GeneratedUi } from "../generated-ui/GeneratedUi.tsx"
 
 /** An assistant reply as stored, or as split from the stream so far (`splitReply`). */
 export interface AssistantReply {
@@ -30,16 +31,18 @@ const paragraphs = (content: string) =>
     .filter((paragraph) => paragraph.length > 0)
 
 /**
- * An assistant turn: prose with no bubble, and a caret while it streams.
- * The one place a reply is drawn, so the generated UI (W11) renders
- * `reply.uiText` here, below the prose.
+ * An assistant turn: prose with no bubble, a caret while it streams, and the
+ * reply's program drawn below the prose. `onRetry` is offered when that
+ * program cannot be drawn.
  */
 export const AssistantMessage = ({
   reply,
   streaming,
+  onRetry,
 }: {
   readonly reply: AssistantReply
   readonly streaming: boolean
+  readonly onRetry?: (() => void) | undefined
 }) => {
   const prose = paragraphs(reply.content)
   const empty = prose.length === 0 && reply.uiText === null
@@ -61,6 +64,11 @@ export const AssistantMessage = ({
           <Caret />
         </p>
       ) : null}
+      {reply.uiText === null ? null : (
+        <div className={prose.length === 0 ? undefined : "mt-3"}>
+          <GeneratedUi program={reply.uiText} streaming={streaming} onRetry={onRetry} />
+        </div>
+      )}
       {!streaming && empty ? <p className="text-sm text-text-muted">No reply.</p> : null}
     </article>
   )

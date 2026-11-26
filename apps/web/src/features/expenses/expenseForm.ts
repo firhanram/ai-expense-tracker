@@ -1,5 +1,6 @@
 import {
   type CreateExpense,
+  ExpenseNotFound,
   IsoDate,
   Unauthorized,
   UnknownCategory,
@@ -74,8 +75,10 @@ export const parseExpenseForm = (
   }
 }
 
-/** Where a rejected `POST /expenses` should show its message. */
+/** Where a rejected `POST` or `PATCH /expenses` should show its message. */
 export const errorsFromApi = (error: unknown): ExpenseFormErrors => {
+  if (error instanceof ExpenseNotFound)
+    return { form: "This expense no longer exists. It may have been deleted elsewhere." }
   if (error instanceof UnknownCategory)
     return { categoryId: "That Category no longer exists. Choose another." }
   if (error instanceof ValidationFailed) {
@@ -90,5 +93,5 @@ export const errorsFromApi = (error: unknown): ExpenseFormErrors => {
   if (error instanceof Unauthorized) return { form: "Not authorised. Check the API token." }
   if (HttpClientError.isHttpClientError(error))
     return { form: "Couldn't reach the server. Check the connection and try again." }
-  return { form: "Couldn't add the expense. Try again." }
+  return { form: "Couldn't save the expense. Try again." }
 }

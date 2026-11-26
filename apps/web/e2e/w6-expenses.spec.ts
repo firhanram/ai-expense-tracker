@@ -91,7 +91,9 @@ test("asks for this month on the user's clock and shows rows in the API's order"
   await showAs(page, "desktop", "light")
   const { calls } = await openAt(page, november)
 
-  expect(calls[0]?.url).toBe("/api/expenses?from=2026-11-01&to=2026-11-30")
+  expect(calls.find((call) => call.url.startsWith("/api/expenses"))?.url).toBe(
+    "/api/expenses?from=2026-11-01&to=2026-11-30",
+  )
   const rows = page.getByRole("list", { name: "Expenses" }).getByRole("listitem")
   await expect(rows.first()).toContainText("24 Nov")
   await expect(rows.last()).toContainText("17 Nov")
@@ -115,6 +117,13 @@ test("adds an Expense by hand and lists it", async ({ page }) => {
   let stored: ReadonlyArray<Expense> = november.slice(1)
   const { calls } = await mockApi(page, {
     "GET /api/expenses": () => ok(stored),
+    "GET /api/reports": ok({
+      from: "2026-11-01",
+      to: "2026-11-30",
+      groupBy: "category",
+      total: 0,
+      totals: [],
+    }),
     "POST /api/expenses": () => {
       stored = november
       return ok(november[0], 201)

@@ -14,7 +14,10 @@ export interface FakeResponse {
   readonly body: unknown
 }
 
-export type FakeHandler = FakeResponse | ((call: FakeApiCall) => FakeResponse)
+/** A response, or a function of the call; return a promise to hold the answer back. */
+export type FakeHandler =
+  | FakeResponse
+  | ((call: FakeApiCall) => FakeResponse | Promise<FakeResponse>)
 
 /** `{ success: true, data }`. */
 export const ok = (data: unknown, status = 200): FakeResponse => ({
@@ -64,7 +67,7 @@ export const fakeApi = (
       handler === undefined
         ? fail("NOT_FOUND")
         : typeof handler === "function"
-          ? handler(call)
+          ? await handler(call)
           : handler
     return new Response(JSON.stringify(response.body), {
       status: response.status,
