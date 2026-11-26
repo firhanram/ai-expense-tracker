@@ -11,6 +11,7 @@ import { ModelProviderLive } from "./features/chat/ModelProvider.ts"
 import { SystemPrompt } from "./features/chat/SystemPrompt.ts"
 import { ExpensesLive } from "./features/expenses/ExpensesLive.ts"
 import { HealthLive } from "./features/health/HealthLive.ts"
+import { ReportsLive } from "./features/reports/ReportsLive.ts"
 
 /**
  * Workers run each request's fibers in that request's async context, so the
@@ -25,7 +26,7 @@ export interface AppOverrides {
 
 export const makeApp = (env: Cloudflare.Env, overrides: AppOverrides = {}) =>
   Layer.mergeAll(HttpApiBuilder.layer(Api), BearerAuth(env.API_TOKEN)).pipe(
-    Layer.provide([HealthLive, ExpensesLive, ChatLive]),
+    Layer.provide([HealthLive, ExpensesLive, ChatLive, ReportsLive]),
     // The model is told what the component library lets it render (ADR-0006).
     Layer.provide(Layer.succeed(SystemPrompt, systemPrompt)),
     Layer.provide(

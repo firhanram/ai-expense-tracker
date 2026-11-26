@@ -2,7 +2,6 @@ import { Api, ChatHistoryPageSize } from "@expense/contract"
 import { Effect, Stream } from "effect"
 import { LanguageModel } from "effect/ai"
 import { HttpApiBuilder } from "effect/http-api"
-import { SqlClient } from "effect/sql"
 import { makeChatHistory } from "./ChatHistory.ts"
 import { makeChatToolkit } from "./ChatToolkit.ts"
 import { runChatTurn } from "./ChatTurn.ts"
@@ -12,10 +11,10 @@ export const ChatLive = HttpApiBuilder.group(Api, "chat", (handlers) =>
   Effect.gen(function* () {
     const history = yield* makeChatHistory
     const model = yield* LanguageModel.LanguageModel
-    const sql = yield* SqlClient.SqlClient
+    const toolkitFor = yield* makeChatToolkit
     return handlers
       .handle("send", ({ payload }) =>
-        makeChatToolkit(sql, payload.clientDate).pipe(
+        toolkitFor(payload.clientDate).pipe(
           Effect.flatMap((toolkit) => runChatTurn({ model, history, toolkit }, payload)),
           Effect.map(Stream.encodeText),
         ),

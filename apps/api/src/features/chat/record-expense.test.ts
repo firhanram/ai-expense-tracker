@@ -101,6 +101,7 @@ describe("recording an Expense by chatting", () => {
         "update_draft",
         "discard_draft",
         "get_expense",
+        "query_spending",
       ]),
     )
     expect(names.filter((name) => /confirm/i.test(name))).toEqual([])
