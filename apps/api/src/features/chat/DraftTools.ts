@@ -20,7 +20,7 @@ type ToolFailure = typeof ToolFailure.Type
 const Category = Schema.Struct({ id: Schema.Int, name: Schema.String })
 
 /** An Expense as the model reads it: with its Category's name, so it never maps ids itself. */
-const ExpenseView = Schema.Struct({
+export const ExpenseView = Schema.Struct({
   id: Schema.String,
   status: Schema.String,
   amount: Schema.Int,
@@ -30,6 +30,7 @@ const ExpenseView = Schema.Struct({
   occurredAt: Schema.String,
   needsReview: Schema.Boolean,
 })
+export type ExpenseView = typeof ExpenseView.Type
 
 const categoryName = Schema.String.annotate({
   description: "One of the names search_categories returns",
