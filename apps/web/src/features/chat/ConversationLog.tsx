@@ -1,6 +1,6 @@
 import type { ChatMessage } from "@expense/contract"
 import { splitReply } from "@expense/ui/server"
-import { useEffect, useLayoutEffect, useRef } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { AssistantMessage } from "./AssistantMessage.tsx"
 import { SystemLine } from "./SystemLine.tsx"
 import type { ReplyFailure, Turn } from "./useChatSession.ts"
@@ -13,11 +13,21 @@ const distanceFromBottom = () =>
 
 const TurnView = ({ turn, onRetry }: { readonly turn: Turn; readonly onRetry: () => void }) => {
   const { reply } = turn
+  // A program that cannot be drawn gets one retry (ADR-0006); the second failure stays text.
+  const [programRetried, setProgramRetried] = useState(false)
+  const retryProgram = () => {
+    setProgramRetried(true)
+    onRetry()
+  }
   return (
     <>
       <UserMessage content={turn.request.message} />
       {reply.state === "streaming" || reply.state === "done" ? (
-        <AssistantMessage reply={splitReply(reply.text)} streaming={reply.state === "streaming"} />
+        <AssistantMessage
+          reply={splitReply(reply.text)}
+          streaming={reply.state === "streaming"}
+          onRetry={programRetried ? undefined : retryProgram}
+        />
       ) : null}
       {reply.state === "failed" ? (
         <>

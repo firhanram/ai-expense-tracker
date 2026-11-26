@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test"
 
-const port = 4173
+// Override when several checkouts run Playwright at once.
+const port = Number(process.env["E2E_PORT"] ?? 4173)
 
 // Runs against the built bundle served by `vite preview`, never a dev server.
 // The API is mocked per test with `mockApi` (e2e/support/api.ts).
