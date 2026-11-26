@@ -13,7 +13,7 @@ export default defineConfig({
           cloudflareTest({
             main: "./src/index.ts",
             miniflare: {
-              compatibilityDate: "2026-11-20",
+              compatibilityDate: "2026-11-02",
               compatibilityFlags: ["nodejs_compat"],
               d1Databases: ["DB"],
               r2Buckets: ["RECEIPTS"],

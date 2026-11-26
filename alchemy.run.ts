@@ -23,7 +23,7 @@ export default Alchemy.Stack(
 
     const worker = yield* Cloudflare.Worker("Api", {
       main: "./apps/api/src/index.ts",
-      compatibility: { date: "2026-11-20", flags: ["nodejs_compat"] },
+      compatibility: { date: "2026-11-02", flags: ["nodejs_compat"] },
       // Daily at 03:00 UTC: the orphan Receipt sweep (apps/api/src/features/receipts/OrphanSweep.ts).
       crons: ["0 3 * * *"],
       env: {
