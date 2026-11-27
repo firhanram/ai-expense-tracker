@@ -74,6 +74,10 @@ Messages fill the width; the user bubble is capped at `85%`. Cards always fill t
 
 A single column of rows, not a table. A table fights the mobile layout and buys nothing for four fields. Month stepper left at `--text-lg`, Category filter right, month total right-aligned under the filter at `--text-lg` tabular. Rows are `56px`, separated by `--line`, with the date in a fixed `72px` gutter so amounts align down the page.
 
+**Header controls.** On desktop the controls sit right of the month stepper, in one row above the total: a **Confirmed | Drafts** segmented switch (same track and active-tab look as the top bar's), the Category filter, and an **Add expense** button (`+`, `--surface`, `1px` `--line`, radius `6px`, `28px` tall). On mobile the switch drops to a full-width line of its own under the filter and Add expense. Drafts swaps the list for Draft rows and the total for a count ("3 drafts").
+
+**Add and edit form.** Add expense opens a form card (`--surface`, `1px` `--line`, radius `12px`, `16px` padding) under the header; Edit opens the same form in place of the row. Two columns on desktop (Amount with the hint "Whole Rupiah. Negative for a refund.", Date, Category, Merchant, then Note full width), one on mobile. Labels `--text-sm` weight 500, inputs `36px` with `--line` borders; a field's error is a `--text-sm` `--danger` line under it. Cancel (secondary) and Save (primary) sit bottom-right.
+
 The `⋯` opens a small menu with Edit and Delete (Delete in `--danger`). On mobile, the whole row is tappable and opens the same actions as a bottom sheet headed by the row's merchant, date, Category and amount. On mobile the month label shortens to "Nov 2026", the total moves beside it, the filter drops to its own line, and rows omit the Category chip.
 
 ## Colour
@@ -116,7 +120,7 @@ System stack; no webfont. A personal tool should not wait on a font download, an
 
 ```
 --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif
---font-num:  ui-monospace, "SF Mono", monospace   /* amounts, dates in the calendar, empty-state headline */
+--font-num:  ui-monospace, "SF Mono", Menlo, Consolas, monospace   /* amounts, dates in the calendar, empty-state headline */
 ```
 
 | Token | Size / line-height | Weight | Used for |
@@ -191,6 +195,7 @@ Streaming: text appears token by token with a `1px` caret block that disappears 
 - If `needs_review`, a `--warn-bg` badge reading "Check amount" sits above the amount. This is the receipt the model wasn't sure about.
 - Thumbnail appears only when there is a Receipt; tapping it opens the image full-screen.
 - **Editable fields**: amount, Category, merchant, note, date. Tapping the amount or merchant turns it into an input in place. This is the "agent was wrong, fix it without retyping" path.
+- **Add note**: a Draft with no note shows "Add note" at `--text-sm` `--text-muted` at the right end of the button row. On a pointer device it appears only while the card is hovered or focused; tapping it is the note's inline input.
 
 **States**, all designed:
 
@@ -200,14 +205,14 @@ Streaming: text appears token by token with a `1px` caret block that disappears 
 | needs review | as above, plus the warning badge |
 | confirming | Confirm button shows a label change to "Confirming…", both buttons disabled, card at `opacity: 0.7` |
 | confirmed | buttons removed; a `Confirmed ✓` line replaces them at `--text-sm`; the card fades to `--surface-2` over `200ms` |
-| discarded | card collapses to one line, `--text-sm` `--text-muted`: "Discarded · Rp70.000 · Uniqlo", with an Undo that appears for 10 seconds |
+| discarded | card collapses to one line, `--text-sm` `--text-muted`: "Discarded · Rp70.000 · Uniqlo" |
 | not found | dereferenced draft already deleted: one line, `--text-muted`: "This draft no longer exists" |
 
-The discarded state collapsing rather than vanishing is deliberate: the user asked to discard, so the row should acknowledge it happened, and Undo covers the misclick.
+The discarded state collapsing rather than vanishing is deliberate: the user asked to discard, so the row should acknowledge it happened. Discard is one-way, with no Undo: discarding a Draft is a status change the server does not reverse (ADR-0002), and a misclick costs re-telling the agent.
 
 ### Expense card
 
-Same geometry as the Draft card, minus the thumbnail, with the Category chip followed by a status chip. No Confirm button — it is already confirmed. Edit opens the same inline fields. Used when the user asks about an existing Expense; the default for a rendered card is the list.
+Same geometry as the Draft card, minus the thumbnail, with the Category chip followed by a status chip. No Confirm button — it is already confirmed. Edit opens the same inline fields. The status chip (`1px` `--line`, `--text-muted`) reads "Confirmed ✓", "Draft" or "Discarded", since the card fetches by id and shows whatever state the Expense is in; a discarded one is shown, not editable. Used when the user asks about an existing Expense; the default for a rendered card is the list.
 
 ### Spending chart
 
@@ -272,11 +277,11 @@ While focused, the border becomes `--ring` and the shadow `--shadow-focus`. No c
 
 **Toolbar chips** are fully rounded, `--text-sm`, `6px 12px` padding:
 
-- **Receipt** (`📎`, `--surface`, `1px` `--line`): opens the file picker. Drag-drop anywhere over the conversation targets the composer; paste from clipboard works.
+- **Receipt** (`📎`, `--surface`, `1px` `--line`): opens the file picker. Drag-drop anywhere over the conversation targets the composer; paste from clipboard works. While a file is dragged over the page, an overlay of `--bg` at `80%` covers it with one centred card (`--surface`, dashed `--ring` border, radius `16px`, `--shadow-pop`): "Drop the receipt to attach it".
 - **Attachment** (`--surface-2`): appears when a Receipt is pending, showing the file name and an `×` to remove it. It is sent with the next message, not immediately — the user may want to add words.
 - **Date** (`📅 Today ▾`, `--surface`, `1px` `--line`): sets the date sent with the message, for back-dating an expense. It defaults to Today and resets to Today after each send.
 
-**Send** is a `32×32` circle in `--accent` with an up-arrow in `--accent-fg`, at `40%` opacity and disabled until there is text or an attachment.
+**Send** is a `32×32` circle in `--accent` with an up-arrow in `--accent-fg`, at `40%` opacity and disabled until there is text or an attachment. A Receipt sent with no words is stored as the message "Here's a receipt.". This visit, the user's turn shows the Receipt as a rounded `--surface-2` chip with its file name above any text (just the chip for a photo-only send); after a reload the bubble reads "Here's a receipt.".
 
 While a reply streams, the composer stays enabled and a second send queues. The composer never locks.
 
@@ -323,15 +328,17 @@ The headline, intro line, composer and suggestions are centred vertically in the
 
 The third is there specifically so the user discovers Reports exist without reading anything.
 
-The page behind the empty state carries a faint radial wash of `--line` from the top centre, fading to `--bg`. It is the only background treatment in the app and disappears once the conversation starts.
+The page behind the empty state carries a faint radial wash of `--line` from the top centre, fading to `--bg`. It is the only background treatment in the app and disappears once the conversation starts. While it shows, the top bar is transparent, so the wash runs up to the top edge.
 
 ### Error states
 
 | Failure | Presentation |
 |---|---|
 | Model unreachable | A system line, not a card: `--text-sm`, `--danger`, "Couldn't reach the model. Retry." with Retry as a text button. |
-| UI parse failed | The stored prose renders as text, plus a `--text-sm` line "Showing text only" and Retry. Never a blank area. |
-| API 401 | No screen of its own: the token is set at deployment, not typed by the user. A system line in `--danger`: "Not authorised. Check the API token." |
+| UI parse failed | The stored prose renders as text, plus a `--text-sm` line "Showing text only" and Retry. Never a blank area. Retry redraws that reply in place, live or reloaded; it never sends the message again. One Retry per reply: if the redraw fails too, the text stays. |
+| API 401 | No screen of its own: Cloudflare Access signs the owner in, there is no token to type (ADR-0011). A system line in `--danger`: "Not signed in. Reload to sign in again.", with Reload as a text button where the line has room (the Chat); form and card errors carry the same words as plain text. |
+| Other failed sends | The same system line, one sentence each. With Retry: rate limited ("The model is busy. Wait a moment, then retry."), the server unreachable ("Couldn't reach the server."), a reply cut off mid-stream ("The reply stopped early."), anything else ("Something went wrong."). Without Retry, since sending again cannot help: receipt not found ("That receipt is gone. Attach it again."), receipt the server refused ("Couldn't read that photo. Attach a JPEG, PNG or WebP."). |
+| Wrong file type | Caught before upload: a `--text-sm` `--danger` line above the composer, "Attach a JPEG, PNG or WebP photo." Nothing is attached. |
 | Network offline | A `--warn-bg` bar above the composer: "Offline. Messages will send when reconnected." The top bar's dot turns grey with an "offline" label. No modal. |
 
 A parse failure is the most likely error in this system (ADR-0006 assumes ~7% first-pass failure), so its presentation is part of the design rather than a fallback: the user still gets their answer as text, and the failure is stated in one small line rather than apologised for in a paragraph.

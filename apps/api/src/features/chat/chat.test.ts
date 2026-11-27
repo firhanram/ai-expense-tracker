@@ -4,6 +4,7 @@ import { systemPrompt } from "@expense/ui/server"
 import { type Layer, Schema } from "effect"
 import type { LanguageModel, Prompt } from "effect/ai"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { testIssuer } from "../../testing/access.ts"
 import { callApiWithModel, sendChat } from "../../testing/callWithModel.ts"
 import { anError, readData, readError } from "../../testing/envelope.ts"
 import {
@@ -51,6 +52,15 @@ describe("POST /api/chat", () => {
     expect(response.status).toBe(200)
     expect(response.headers.get("content-type")).toBe("text/plain; charset=utf-8")
     expect(response.body).toBe("Hello there")
+  })
+
+  it("names the message the reply is stored as, so the client can redraw it", async () => {
+    const model = scriptedLanguageModel(textReply("Hello"))
+
+    const response = await sendChat(model.layer, { message: "hi", clientDate })
+
+    const [stored] = (await history(model.layer)).messages
+    expect(response.headers.get("x-chat-message-id")).toBe(stored!.id)
   })
 
   it("gives the model the recent Chat, the client's date, and the new message", async () => {
@@ -130,11 +140,15 @@ describe("POST /api/chat", () => {
     })
 
     it("answers 429 TOO_MANY_REQUESTS when the provider rate limits, keeping the message", async () => {
-      vi.stubGlobal("fetch", async () =>
-        Response.json(
-          { error: { message: "Rate limit reached", type: "rate_limit_error" } },
-          { status: 429 },
-        ),
+      // Only the provider rate limits; the Access team's keys stay reachable.
+      const unstubbed = globalThis.fetch
+      vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) =>
+        new Request(input).url.startsWith(testIssuer)
+          ? unstubbed(input, init)
+          : Response.json(
+              { error: { message: "Rate limit reached", type: "rate_limit_error" } },
+              { status: 429 },
+            ),
       )
       const provider = ModelProviderLive({ apiKey: "sk-test" })
 

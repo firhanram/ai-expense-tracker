@@ -6,6 +6,7 @@
     { "path": "./packages/ui/scripts" },
     { "path": "./apps/api" },
     { "path": "./apps/api/scripts" },
+    { "path": "./apps/web" },
     { "path": "./tsconfig.infra.json" }
   ]
 }

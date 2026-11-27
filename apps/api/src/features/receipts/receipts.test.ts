@@ -22,10 +22,14 @@ describe("POST /api/receipts and GET /api/receipts/:key", () => {
     expect(first.receiptKey).not.toEqual(second.receiptKey)
   })
 
-  it("requires the bearer token to upload and to serve", async () => {
+  it("requires the Access token to upload and to serve", async () => {
     const { receiptKey } = await uploadReceipt(jpeg)
 
-    const upload = await callWorker("/api/receipts", { method: "POST", body: receiptForm(jpeg) })
+    const upload = await callWorker("/api/receipts", {
+      method: "POST",
+      headers: { "sec-fetch-site": "same-origin" },
+      body: receiptForm(jpeg),
+    })
     const serve = await callWorker(`/api/receipts/${receiptKey}`)
 
     expect(upload.status).toBe(401)

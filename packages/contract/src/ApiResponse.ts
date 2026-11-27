@@ -14,6 +14,7 @@ import { HttpApiSchema } from "effect/http-api"
 /** The closed set of `errorCode`s. A code is part of the contract: rename one and the client breaks. */
 export const errorCodes = [
   "UNAUTHORIZED",
+  "CROSS_SITE_REQUEST",
   "VALIDATION_FAILED",
   "NOT_FOUND",
   "EXPENSE_NOT_FOUND",
@@ -22,7 +23,9 @@ export const errorCodes = [
   "EXPENSE_CONFIRMED",
   "RECEIPT_NOT_FOUND",
   "INVALID_RECEIPT",
+  "MESSAGE_NOT_FOUND",
   "MODEL_UNREACHABLE",
+  "RERENDER_FAILED",
   "TOO_MANY_REQUESTS",
   "INTERNAL_ERROR",
 ] as const
@@ -33,8 +36,10 @@ export const ErrorCode = Schema.Literals(errorCodes)
 
 /** The HTTP status each code is sent with: the one place it is decided. */
 export const errorCatalog: { readonly [Code in ErrorCode]: number } = {
-  /** The bearer token is missing or wrong. Sent for every path but health, known or not. */
+  /** The Cloudflare Access token is missing or invalid. Sent for every path but health, known or not. */
   UNAUTHORIZED: 401,
+  /** An unsafe method (POST, PATCH, PUT, DELETE) not sent by the app's own pages: a CSRF guard (ADR-0011). */
+  CROSS_SITE_REQUEST: 403,
   /** The params, query or body did not match the endpoint's schema. `details.issues` names each field. */
   VALIDATION_FAILED: 400,
   /** No route has this method and path. */
@@ -51,8 +56,12 @@ export const errorCatalog: { readonly [Code in ErrorCode]: number } = {
   RECEIPT_NOT_FOUND: 404,
   /** The upload is not one image of an accepted type and size; `message` says which. */
   INVALID_RECEIPT: 400,
+  /** No assistant message in the Chat has this id. `details.id`. */
+  MESSAGE_NOT_FOUND: 404,
   /** The model could not be reached before it wrote anything. `details.reason`. */
   MODEL_UNREACHABLE: 503,
+  /** A re-render's rewrite still does not draw, or names an id the reply did not; the message is unchanged. `details.problems`. */
+  RERENDER_FAILED: 502,
   /** The model provider is rate limiting us (it answered 429). Sending again later retries. */
   TOO_MANY_REQUESTS: 429,
   /** Anything unexpected. The body says nothing more; the log has the cause under the errorId. */

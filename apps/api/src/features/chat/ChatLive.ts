@@ -1,6 +1,7 @@
-import { Api, ChatHistoryPageSize, type ReceiptKey } from "@expense/contract"
+import { Api, ChatHistoryPageSize, chatMessageIdHeader, type ReceiptKey } from "@expense/contract"
 import { Effect, Stream } from "effect"
 import { LanguageModel } from "effect/ai"
+import { HttpServerResponse } from "effect/http"
 import { HttpApiBuilder } from "effect/http-api"
 import { SqlClient } from "effect/sql"
 import { captureServices } from "../../captureServices.ts"
@@ -9,8 +10,12 @@ import { draftForUnreadReceipt, loadTurnReceipt } from "../receipts/TurnReceipt.
 import { makeChatHistory } from "./ChatHistory.ts"
 import { makeChatToolkit } from "./ChatToolkit.ts"
 import { runChatTurn } from "./ChatTurn.ts"
+import { rerenderMessage } from "./Rerender.ts"
 
-/** `POST /api/chat` streams a reply; `GET /api/chat` pages the Chat, newest first. */
+/**
+ * `POST /api/chat` streams a reply; `GET /api/chat` pages the Chat, newest
+ * first; `POST /api/chat/:messageId/rerender` redraws a reply's program.
+ */
 export const ChatLive = HttpApiBuilder.group(Api, "chat", (handlers) =>
   Effect.gen(function* () {
     const history = yield* makeChatHistory
@@ -32,11 +37,15 @@ export const ChatLive = HttpApiBuilder.group(Api, "chat", (handlers) =>
               : (reply: string) =>
                   withStores(draftForUnreadReceipt(receipt.key, payload.clientDate, reply))
           const turn = yield* runChatTurn({ model, history, toolkit, afterModel }, payload, receipt)
-          return Stream.encodeText(turn)
+          return HttpServerResponse.stream(Stream.encodeText(turn.reply), {
+            contentType: "text/plain; charset=utf-8",
+            headers: { [chatMessageIdHeader]: turn.messageId },
+          })
         }),
       )
       .handle("history", ({ query }) =>
         history.page({ before: query.before, limit: query.limit ?? ChatHistoryPageSize.default }),
       )
+      .handle("rerender", ({ params }) => rerenderMessage({ model, history }, params.messageId))
   }),
 )

@@ -92,21 +92,23 @@ The 11 seeded categories: Groceries, Dining, Transport, Housing, Utilities, Heal
 
 ## API
 
-All routes require `Authorization: Bearer $API_TOKEN`, except under loopback in development.
+Cloudflare Access covers the whole hostname. Every route but `/api/health` requires a valid Access token in `Cf-Access-Jwt-Assertion`, verified by the Worker; a request whose host is `localhost`/`127.0.0.1` (only `alchemy dev`) is exempt (ADR-0011).
 
 | Route | Purpose |
 |---|---|
-| `POST /chat` | Streams a response. Body: `{ message, clientDate, receiptKey? }`. Returns a text stream: prose interleaved with OpenUI Lang. |
+| `POST /chat` | Streams a response. Body: `{ message, clientDate, receiptKey? }`. Returns a text stream: prose interleaved with OpenUI Lang. The `X-Chat-Message-Id` header names the assistant message the reply is stored as. |
 | `GET /chat` | The conversation, newest page first. |
+| `POST /chat/:messageId/rerender` | Redraws a stored assistant reply whose program cannot be drawn. No tools, nothing re-sent; replaces `ui_text`, keeps `content`. Returns the updated message. See "Failure path". |
 | `GET /expenses` | `?status=&from=&to=&categoryId=`. Confirmed by default. |
 | `POST /expenses` | Manual create, bypassing the agent. |
+| `GET /expenses/:id` | One Expense, any status. What a rendered card fetches (ADR-0001). |
 | `PATCH /expenses/:id` | Edit amount, category, merchant, note, date, `needsReview`. Works on drafts and confirmed. |
 | `POST /expenses/:id/confirm` | Draft → confirmed. Idempotent. |
 | `POST /expenses/:id/discard` | Draft → discarded. Keeps the row. |
 | `DELETE /expenses/:id` | Hard delete, and deletes the R2 object if present. |
 | `GET /reports` | `?from=&to=&groupBy=category|month`. Both dates required; the client computes the range. Aggregated in SQL. |
 | `POST /receipts` | Multipart upload → R2, returns `receiptKey`. |
-| `GET /receipts/:key` | The Receipt image, behind the bearer token. |
+| `GET /receipts/:key` | The Receipt image, behind Access. |
 
 `POST /reports` is absent deliberately — Reports are reads.
 
@@ -125,7 +127,8 @@ Two successes are not JSON and have no envelope: `POST /chat` streams text, and 
 
 | `errorCode` | Status | When | `details` |
 |---|---|---|---|
-| `UNAUTHORIZED` | 401 | The bearer token is missing or wrong, on any path but health, known or not. | — |
+| `UNAUTHORIZED` | 401 | The Access token is missing or invalid, on any path but health, known or not. | — |
+| `CROSS_SITE_REQUEST` | 403 | A POST, PATCH, PUT or DELETE not sent from the app's own origin: `Sec-Fetch-Site` is not `same-origin`, or, when it is absent, `Origin` is missing or another origin. Checked before the token, on loopback too (ADR-0011). | — |
 | `VALIDATION_FAILED` | 400 | Params, query or body do not match the endpoint's schema, or the body is not JSON. | `{ issues: [{ path, message }] }`, `path` starting with the slot: `["payload", "amount"]`. |
 | `NOT_FOUND` | 404 | No route has this method and path. | — |
 | `EXPENSE_NOT_FOUND` | 404 | No Expense the route can act on has this id. | `{ id }` |
@@ -134,7 +137,9 @@ Two successes are not JSON and have no envelope: `POST /chat` streams text, and 
 | `EXPENSE_CONFIRMED` | 409 | Discarding a confirmed Expense. | `{ id }` |
 | `RECEIPT_NOT_FOUND` | 404 | No stored Receipt has this key (`GET /receipts/:key`, or `receiptKey` on `POST /chat`). | `{ receiptKey }` |
 | `INVALID_RECEIPT` | 400 | The upload is not one accepted image within the size cap; `message` says which. | — |
-| `MODEL_UNREACHABLE` | 503 | The model failed before the first word of a reply. | `{ reason }`, the AI error kind. |
+| `MESSAGE_NOT_FOUND` | 404 | No assistant message has this id (`POST /chat/:messageId/rerender`): unknown, or the user's own. | `{ id }` |
+| `MODEL_UNREACHABLE` | 503 | The model failed before the first word of a reply, or of a re-render. | `{ reason }`, the AI error kind. |
+| `RERENDER_FAILED` | 502 | A re-render's rewrite still does not pass the library's check, or names an id the reply did not. The message is unchanged. | `{ problems }` |
 | `TOO_MANY_REQUESTS` | 429 | The model provider answered 429 (rate limited) before the first word. The app has no rate limiter of its own. | — |
 | `INTERNAL_ERROR` | 500 | Anything unexpected: a defect, D1 down, a response that fails its own schema. | — |
 
@@ -169,11 +174,11 @@ Four components in `packages/ui`, each a `defineComponent` with Zod 4 props:
 
 Each fetches its own data with TanStack Query. `SpendingChart` renders Recharts; it computes nothing.
 
-There is no `openuiLibrary` outside `@openuidev/react-ui`, so `packages/ui` builds its own with `createLibrary`, including a `Stack` root container. The components are defined React-free (`@openuidev/lang-core`, `component: null`); the web app pairs the same definitions with React components and creates its library at module scope, or the Renderer re-parses on every render. The Worker imports only `@expense/ui/server`: the system prompt as a checked-in generated string (`pnpm --filter @expense/ui generate`; a test fails on drift) and the prose/program split, so it never loads OpenUI or Zod.
+There is no `openuiLibrary` outside `@openuidev/react-ui`, so `packages/ui` builds its own with `createLibrary`, including a `Stack` root container. The components are defined React-free (`@openuidev/lang-core`, `component: null`); the web app pairs the same definitions with React components and creates its library at module scope, or the Renderer re-parses on every render. The Worker imports only `@expense/ui/server`: the system prompt as a checked-in generated string (`pnpm --filter @expense/ui generate`; a test fails on drift) and the prose/program split, and `checkRedraw`, so it never loads OpenUI or Zod (they crash the workerd test pool even unexecuted, and cost cold-start CPU).
 
 Streaming: accumulate text chunks into `response`, pass to `<Renderer response={response} isStreaming={isStreaming} library={lib} onAction={...} onError={...} />`.
 
-**Failure path, part of the feature:** if `onError` reports a failed program or `root` is null, render the prose as plain text and offer one retry. `inlineMode: true` in the prompt options so questions with no UI answer ("how much did I spend last month?") come back as text rather than a forced chart.
+**Failure path, part of the feature:** if `onError` reports a failed program or `root` is null, render the prose as plain text and offer one retry, on a live reply and a reloaded one alike. Retry is a re-render, not a re-send: `POST /chat/:messageId/rerender` gives the model the stored prose and broken program, with no tools, and asks for a valid program using only the ids already in it. The rewrite must pass `checkRedraw` before it replaces the message's `ui_text`; the user's message is never sent again, so history does not grow and no second Draft can be proposed. The client swaps the message in place; a second failure stays text. Any failure leaves the row as it was. `checkRedraw` (`@expense/ui/server`) is the library's check without OpenUI: it reads the program for this library's shapes (a `Stack` root with at least one component, every reference defined, each component's argument count) and refuses an id the reply did not already have; its tests hold it to `checkProgram`. `inlineMode: true` in the prompt options so questions with no UI answer ("how much did I spend last month?") come back as text rather than a forced chart.
 
 **Actions:** `defineAction` for `ConfirmExpense` and `DiscardExpense`, handled in `onAction` by calling the API directly. They are added only to the web app's library: a library action is listed in the generated prompt, and the model must never be told it can confirm (ADR-0007). `@ToAssistant` is not used for these — it would put the model in the confirmation path.
 
@@ -188,7 +193,7 @@ Negative amounts (refunds) fall out of `SUM` correctly. The agent receives the t
 
 ## Receipts
 
-Client downscales before upload — DeepSeek caps images at 1,024 tokens regardless of resolution, so uploading a 12MP photo wastes bytes and loses nothing. Upload returns a key; the chat request carries it; the API fetches the bytes and sends them inline to the model. Serving is proxied through `GET /receipts/:key` behind the bearer token, not presigned.
+Client downscales before upload — DeepSeek caps images at 1,024 tokens regardless of resolution, so uploading a 12MP photo wastes bytes and loses nothing. Upload returns a key; the chat request carries it; the API fetches the bytes and sends them inline to the model. Serving is proxied through `GET /receipts/:key` behind Access, not presigned.
 
 - **Upload.** One `file` field, JPEG, PNG or WebP, at most 5 MiB (the client downscales well below that). The form is read from the web `Request`: Effect's buffered multipart needs a temp directory a Worker does not have. The key is a random UUID.
 - **One Receipt, one Draft.** A Draft proposed in a turn that carries a Receipt holds its key. A unique index on `receipt_key` and an upsert in `propose_expense` mean proposing again from the same Receipt, in the same turn or a later one, overwrites that Draft rather than adding a second. The model is also told, per turn, which Draft the Receipt already became. A Receipt whose Expense is confirmed is refused back to the model.

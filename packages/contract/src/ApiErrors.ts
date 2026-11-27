@@ -2,8 +2,13 @@ import { Schema } from "effect"
 import { HttpApiMiddleware } from "effect/http-api"
 import { apiError, errorIdField } from "./ApiResponse.ts"
 
-/** The bearer token is missing or wrong. Sent by the Worker before any route runs. */
+/** The Cloudflare Access token is missing or invalid. Sent by the Worker before any route runs. */
 export class Unauthorized extends Schema.TaggedError<Unauthorized>()("Unauthorized", {
+  ...errorIdField,
+}) {}
+
+/** An unsafe method from a page other than the app's own. Sent by the Worker before any route runs. */
+export class CrossSiteRequest extends Schema.TaggedError<CrossSiteRequest>()("CrossSiteRequest", {
   ...errorIdField,
 }) {}
 
@@ -36,7 +41,12 @@ export const internalErrorMessage =
  */
 export class ApiErrors extends HttpApiMiddleware.Service<ApiErrors>()("expense/ApiErrors", {
   error: [
-    apiError(Unauthorized, "UNAUTHORIZED", () => "A valid bearer token is required."),
+    apiError(Unauthorized, "UNAUTHORIZED", () => "A valid Cloudflare Access token is required."),
+    apiError(
+      CrossSiteRequest,
+      "CROSS_SITE_REQUEST",
+      () => "This request must come from the app's own pages.",
+    ),
     apiError(ValidationFailed, "VALIDATION_FAILED", () => "The request is not valid."),
     apiError(InternalError, "INTERNAL_ERROR", () => internalErrorMessage),
   ],

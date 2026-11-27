@@ -83,7 +83,7 @@ Asking a question gets an answer in kind: a Report question returns a chart of s
 
 **Operation**
 
-43. As the operator, I want one bearer token protecting the API, so that a deployed instance isn't public.
+43. As the operator, I want the deployed app behind Cloudflare Access, with the API verifying the Access token itself, so that a deployed instance isn't public (ADR-0011).
 44. As the operator, I want the app runnable locally with no Docker and no cloud account, so that cloning the repo is enough.
 45. As the operator, I want the model provider swappable by configuration, so that a provider failure isn't a rewrite.
 
@@ -107,7 +107,7 @@ Asking a question gets an answer in kind: a Report question returns a chart of s
 
 **Agent loop.** `LanguageModel.streamText` resolves tool calls and returns; it does not re-call the model. The loop is ours, capped at five steps, terminating once a Draft has been proposed and rendered.
 
-**API surface.** `POST /chat` (streaming), `GET /chat`, `GET|POST /expenses`, `PATCH /expenses/:id`, `POST /expenses/:id/confirm`, `POST /expenses/:id/discard`, `DELETE /expenses/:id`, `GET /reports`, `POST /receipts`, `GET /receipts/:key`. Reports are reads with explicit `from`/`to`.
+**API surface.** `POST /chat` (streaming), `GET /chat`, `GET|POST /expenses`, `GET|PATCH /expenses/:id`, `POST /expenses/:id/confirm`, `POST /expenses/:id/discard`, `DELETE /expenses/:id`, `GET /reports`, `POST /receipts`, `GET /receipts/:key`. Reports are reads with explicit `from`/`to`.
 
 **Chat persistence.** Each assistant message stores prose and the raw OpenUI Lang text. Reload re-parses locally; a parse failure falls back to the stored prose. This is the same path as a live parse failure, so it is one implementation.
 
@@ -121,7 +121,7 @@ A good test asserts externally observable behaviour: a route's response, a row's
 
 Three seams, all chosen high:
 
-**S1 — the HTTP boundary.** The Effect `HttpApp` is called in workerd through `@cloudflare/vitest-pool-workers`, against a local D1 with migrations applied. There is no socket and no deploy. This is where nearly all server behaviour is tested: request validation, bearer auth, status codes, the draft→confirmed transition, idempotency of confirm, hard delete removing the row, and Report aggregation sums. Because it is one seam, a change to any repository or handler is covered by tests that never mention them.
+**S1 — the HTTP boundary.** The Effect `HttpApp` is called in workerd through `@cloudflare/vitest-pool-workers`, against a local D1 with migrations applied. There is no socket and no deploy. This is where nearly all server behaviour is tested: request validation, Access token verification, status codes, the draft→confirmed transition, idempotency of confirm, hard delete removing the row, and Report aggregation sums. Because it is one seam, a change to any repository or handler is covered by tests that never mention them.
 
 **S2 — the `LanguageModel` service.** Effect exposes the model as a `Context.Tag`, so a hand-written fake drives the entire chat turn with no network and no API key. This is where agent behaviour is tested: does "buy cloth 70rb" produce a `propose_expense` call with a Category from the seeded set; does the loop terminate after a draft rather than looping; does a five-step cap hold; is the confirm tool absent from the toolkit. Deterministic, because the model is a value the test supplies.
 
@@ -133,7 +133,7 @@ Three seams, all chosen high:
 
 ## Out of Scope
 
-- Multiple users, accounts, sessions or sharing. One implicit owner, one bearer token.
+- Multiple users, accounts, sessions or sharing. One implicit owner, signed in by Cloudflare Access (ADR-0011).
 - Budgets, alerts, recurring expenses, scheduled imports.
 - Bank or card integration.
 - Multi-currency and FX. One currency, no conversion.

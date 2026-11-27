@@ -21,7 +21,6 @@ describe("GET /api/health with D1 down", () => {
       DB: unreachableDb,
       // Health reads only D1.
       RECEIPTS: env.RECEIPTS,
-      API_TOKEN: "unused-health-is-public",
       API_PROVIDER_KEY: "unused-no-model-call",
     })
     try {

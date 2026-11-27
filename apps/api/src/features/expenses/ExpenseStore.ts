@@ -72,6 +72,17 @@ export const findExpense = (id: ExpenseId) =>
     return Option.map(Option.fromUndefinedOr(row), toExpense)
   })
 
+/** `GET /expenses/:id`: the Expense with this id whatever its status, or ExpenseNotFound. */
+export const getExpense = (id: ExpenseId) =>
+  findExpense(id).pipe(
+    Effect.flatMap(
+      Option.match({
+        onNone: () => Effect.fail(new ExpenseNotFound({ id })),
+        onSome: Effect.succeed,
+      }),
+    ),
+  )
+
 const decodeHolders = Schema.decodeUnknownEffect(
   Schema.Array(ExpenseRow.mapFields((fields) => ({ id: fields.id, status: fields.status }))),
 )
