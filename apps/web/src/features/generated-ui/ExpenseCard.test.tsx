@@ -5,6 +5,9 @@ import { render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it } from "vitest"
 import { fail, fakeApi, ok } from "../../shared/testing/fakeApi.ts"
+import { addDays } from "../../shared/format/expenseDate.ts"
+import { localToday } from "../../shared/format/localDate.ts"
+import { formatDayMonthYear } from "../../shared/format/shortDate.ts"
 import { useExpenseActions } from "../expenses/index.ts"
 import { ExpenseCard } from "./ExpenseCard.tsx"
 
@@ -79,7 +82,7 @@ describe("the ExpenseCard", () => {
     expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual(["GET /api/expenses/d1"])
   })
 
-  it("puts the note in the merchant's place when there is no merchant", async () => {
+  it("shows a missing merchant as an empty slot beside the note", async () => {
     fakeApi({
       "GET /api/expenses/d1": ok({
         ...draft,
@@ -99,10 +102,12 @@ describe("the ExpenseCard", () => {
       "Makanan kucing",
     )
     expect(within(card).getAllByText("Makanan kucing")).toHaveLength(1)
-    expect(within(card).queryByRole("button", { name: "Edit merchant" })).toBeNull()
+    expect(within(card).getByRole("button", { name: "Edit merchant" })).toHaveTextContent(
+      "Merchant",
+    )
   })
 
-  it("corrects the Category from the chip's ✎", async () => {
+  it("corrects the Category from its chip", async () => {
     const confirmed = { ...draft, status: "confirmed" as const }
     let stored: Expense = confirmed
     const { calls } = fakeApi({
@@ -132,7 +137,7 @@ describe("the ExpenseCard", () => {
     ])
   })
 
-  it("edits the amount, merchant and date in place, like the Draft card", async () => {
+  it("edits the amount and merchant from their editors, like the Draft card", async () => {
     let stored: Expense = { ...draft, status: "confirmed" }
     const { calls } = fakeApi({
       "GET /api/expenses/d1": () => ok(stored),
@@ -167,6 +172,36 @@ describe("the ExpenseCard", () => {
     expect(within(card).getByRole("button", { name: "Edit date" })).toBeInTheDocument()
   })
 
+  it("re-dates the Expense from the date chip's quick picks in one tap", async () => {
+    let stored: Expense = { ...draft, status: "confirmed" }
+    const { calls } = fakeApi({
+      "GET /api/expenses/d1": () => ok(stored),
+      "PATCH /api/expenses/d1": (call) => {
+        stored = applyEdit(stored, call.body)
+        return ok(stored)
+      },
+    })
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <ExpenseCard id="d1" />
+      </QueryClientProvider>,
+    )
+    const card = await screen.findByRole("article", { name: "Expense Rp32.000" })
+
+    await userEvent.click(within(card).getByRole("button", { name: "Edit date" }))
+    await userEvent.click(await screen.findByRole("button", { name: /^Yesterday/ }))
+
+    const yesterday = addDays(localToday(), -1)
+    await waitFor(() =>
+      expect(within(card).getByRole("button", { name: "Edit date" })).toHaveTextContent(
+        formatDayMonthYear(yesterday),
+      ),
+    )
+    expect(calls.filter((call) => call.method === "PATCH").map((call) => call.body)).toEqual([
+      { occurredAt: yesterday },
+    ])
+  })
+
   it("does not edit a discarded Expense", async () => {
     fakeApi({ "GET /api/expenses/d1": ok({ ...draft, status: "discarded" }) })
     render(
@@ -176,7 +211,8 @@ describe("the ExpenseCard", () => {
     )
     await screen.findByRole("article", { name: "Expense Rp32.000" })
 
-    expect(screen.queryByRole("button", { name: "Edit amount" })).toBeNull()
+    expect(screen.queryByRole("button", { name: /^Edit/ })).toBeNull()
+    expect(screen.queryByRole("combobox")).toBeNull()
     expect(screen.getByText("Kopi Kenangan")).toBeInTheDocument()
   })
 

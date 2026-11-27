@@ -125,7 +125,8 @@ describe("generated UI in a stored Chat", () => {
     await renderApp("/")
 
     const card = await within(log()).findByRole("article", { name: "Expense Rp146.500" })
-    expect(card).toHaveTextContent("Indomaret · 22 Nov 2026")
+    expect(card).toHaveTextContent("Indomaret")
+    expect(card).toHaveTextContent("22 Nov 2026")
     expect(within(card).getByText("weekly shop")).toBeInTheDocument()
     expect(within(card).getByText("Groceries")).toBeInTheDocument()
     expect(within(card).getByText("Confirmed")).toBeInTheDocument()

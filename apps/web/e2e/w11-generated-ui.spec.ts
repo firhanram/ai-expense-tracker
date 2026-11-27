@@ -108,7 +108,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
 
       const storedCard = log(page).getByRole("article", { name: "Expense Rp146.500" })
       await expect(storedCard).toBeVisible()
-      await expect(storedCard).toContainText("Indomaret · 22 Nov 2026")
+      await expect(storedCard.getByRole("button", { name: "Edit merchant" })).toHaveText(
+        "Indomaret",
+      )
+      await expect(storedCard.getByRole("button", { name: "Edit date" })).toHaveText("22 Nov 2026")
       await expect(storedCard).toContainText("weekly shop")
       await expect(storedCard.getByText("Confirmed")).toBeVisible()
       const list = log(page).getByRole("region", { name: "Expenses" })

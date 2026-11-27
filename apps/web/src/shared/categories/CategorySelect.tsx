@@ -27,7 +27,8 @@ export const CategorySelect = ({
   disabled = false,
   triggerLabel,
   triggerClassName,
-  icon,
+  icon = null,
+  leadingIcon = null,
   contentClassName = "w-48",
 }: {
   readonly value: string | null
@@ -37,7 +38,8 @@ export const CategorySelect = ({
   /** The trigger's name when no visible label names it, e.g. "Edit category". */
   readonly triggerLabel?: string
   readonly triggerClassName: string
-  readonly icon: ReactNode
+  readonly icon?: ReactNode
+  readonly leadingIcon?: ReactNode
   readonly contentClassName?: string
 }) => (
   <Select
@@ -51,6 +53,7 @@ export const CategorySelect = ({
       {...(triggerLabel === undefined ? {} : { "aria-label": triggerLabel })}
       className={triggerClassName}
     >
+      {leadingIcon}
       <SelectValue />
       {icon}
     </SelectTrigger>

@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useRef, useState } from "react"
 import { interpolate } from "remotion"
 import { c, mono, sans, shadowXs, windowShadow } from "../theme"
-import { Icon } from "./Icon"
+import { Icon, type IconName } from "./Icon"
 
 /* ---------- Window and top bar ---------- */
 
@@ -253,30 +253,6 @@ const btn = (primary: boolean, pressed = false): React.CSSProperties => ({
   scale: pressed ? "0.96" : "1",
 })
 
-export const CategoryChip: React.FC<{ label: string; editable?: boolean }> = ({
-  label,
-  editable = true,
-}) => (
-  <div
-    style={{
-      display: "flex",
-      alignItems: "center",
-      gap: 6,
-      height: 26,
-      padding: "0 10px",
-      borderRadius: 999,
-      border: `1px solid ${c.line}`,
-      background: c.surface,
-      fontSize: 13,
-      fontWeight: 500,
-      whiteSpace: "nowrap",
-    }}
-  >
-    {label}
-    {editable ? <Icon name="pencil" size={12} color={c.muted} /> : null}
-  </div>
-)
-
 export const NeedsReview: React.FC = () => (
   <div
     style={{
@@ -298,79 +274,121 @@ export const NeedsReview: React.FC = () => (
   </div>
 )
 
+/** One of the card's field chips (DESIGN, "Expense card fields"); dashed when empty. */
+export const FieldChip: React.FC<{
+  icon: IconName
+  label: string
+  empty?: boolean
+  onCard?: string
+}> = ({ icon, label, empty = false, onCard = c.surface }) => (
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      height: 28,
+      padding: "0 8px",
+      borderRadius: 6,
+      background: empty ? "transparent" : onCard === c.surface ? c.surface2 : c.surface,
+      border: empty ? `1px dashed ${c.ring}` : "1px solid transparent",
+      color: empty ? c.muted : c.text,
+      fontSize: 13,
+      fontWeight: 500,
+      whiteSpace: "nowrap",
+    }}
+  >
+    <Icon name={empty ? "plus" : icon} size={13} color={c.muted} />
+    {label}
+  </div>
+)
+
 export const DraftCard: React.FC<{
   amount: string
-  meta: string
+  merchant: string
+  date: string
   category: string
+  note?: string
   needsReview?: boolean
   receipt?: boolean
   pressed?: boolean
   confirmed: number // 0 → 1
-}> = ({ amount, meta, category, needsReview, receipt, pressed, confirmed }) => (
-  <div
-    style={{
-      background: interpolate(confirmed, [0, 1], [0, 1]) > 0.5 ? c.surface2 : c.surface,
-      border: `1px solid ${c.line}`,
-      borderRadius: 12,
-      padding: 16,
-      display: "flex",
-      gap: 16,
-      alignItems: "flex-start",
-    }}
-  >
-    {receipt ? <ReceiptPhoto width={64} height={80} rotate={0} /> : null}
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-      {needsReview ? (
-        <div style={{ marginBottom: 8, display: "flex" }}>
-          <NeedsReview />
-        </div>
-      ) : null}
-      <div
-        style={{
-          fontFamily: mono,
-          fontSize: 28,
-          lineHeight: "34px",
-          fontWeight: 600,
-          fontVariantNumeric: "tabular-nums",
-        }}
-      >
-        {amount}
-      </div>
-      <div style={{ fontSize: 13, lineHeight: "20px", color: c.muted }}>{meta}</div>
-      <div style={{ position: "relative", height: 32, marginTop: 14 }}>
+}> = ({ amount, merchant, date, category, note, needsReview, receipt, pressed, confirmed }) => {
+  const background = interpolate(confirmed, [0, 1], [0, 1]) > 0.5 ? c.surface2 : c.surface
+  return (
+    <div
+      style={{
+        background,
+        border: `1px solid ${c.line}`,
+        borderRadius: 12,
+        padding: 16,
+        display: "flex",
+        gap: 16,
+        alignItems: "flex-start",
+      }}
+    >
+      {receipt ? <ReceiptPhoto width={64} height={80} rotate={0} /> : null}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+        {needsReview ? (
+          <div style={{ marginBottom: 8, display: "flex" }}>
+            <NeedsReview />
+          </div>
+        ) : null}
         <div
           style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            gap: 8,
-            opacity: 1 - confirmed,
+            fontFamily: mono,
+            fontSize: 28,
+            lineHeight: "34px",
+            fontWeight: 600,
+            fontVariantNumeric: "tabular-nums",
           }}
         >
-          <div style={btn(true, pressed)}>Confirm</div>
-          <div style={btn(false)}>Discard</div>
+          {amount}
         </div>
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            fontSize: 13,
-            fontWeight: 500,
-            color: c.muted,
-            opacity: confirmed,
-          }}
-        >
-          Confirmed
-          <Icon name="check" size={14} color={c.online} strokeWidth={2.5} />
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
+          <FieldChip icon="store" label={merchant} onCard={background} />
+          <FieldChip icon="calendar" label={date} onCard={background} />
+          <FieldChip icon="tag" label={category} onCard={background} />
+          <FieldChip
+            icon="note"
+            label={note ?? "Note"}
+            empty={note === undefined}
+            onCard={background}
+          />
+        </div>
+        <div style={{ position: "relative", height: 32, marginTop: 14 }}>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              gap: 8,
+              opacity: 1 - confirmed,
+            }}
+          >
+            <div style={btn(true, pressed)}>Confirm</div>
+            <div style={btn(false)}>Discard</div>
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 13,
+              fontWeight: 500,
+              color: c.muted,
+              opacity: confirmed,
+            }}
+          >
+            Confirmed
+            <Icon name="check" size={14} color={c.online} strokeWidth={2.5} />
+          </div>
         </div>
       </div>
     </div>
-    <CategoryChip label={category} />
-  </div>
-)
+  )
+}
 
 /* ---------- Receipt photo (drawn, not an asset) ---------- */
 

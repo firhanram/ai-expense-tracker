@@ -203,23 +203,21 @@ There is no Stop: the server finishes and stores a turn even when the client lea
 ### Draft Expense card
 
 ```
-┌────────────────────────────────────────────────────┐
-│┌────────┐   Rp70.000                  Shopping  ✎  │
-││ photo  │   Uniqlo · 24 Nov 2026                   │
-││ 56×56  │   [ Confirm ] [ Discard ]                │
-│└────────┘                                          │
-└────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────┐
+│┌────────┐  Rp70.000                                        │
+││ photo  │  [▣ Uniqlo] [▦ 24 Nov 2026] [◇ Shopping] [+ Note] │
+││ 56×56  │  [ Confirm ] [ Discard ]                          │
+│└────────┘                                                  │
+└────────────────────────────────────────────────────────────┘
 ```
 
 - Background `--surface`, `1px` `--line`, radius `12px`.
 - Amount at `--text-2xl`, `--font-num`, tabular numerals, top-left after the optional thumbnail.
-- Category is a chip, `--surface-2`, with a `✎` that opens an inline `<select>` — the correction path for a wrong Category (ADR-0004). Changing it is a `PATCH` on the draft.
-- Merchant and date on one line at `--text-sm` `--text-muted`, separated by `·`. With no merchant, the note takes the merchant's place (as in the Expense list) and has no line of its own.
+- Below it, the **field chips** (see "Expense card fields"): merchant, date, Category, note.
 - **Confirm** is the only primary button in the app. **Discard** is secondary.
 - If `needs_review`, a `--warn-bg` badge reading "Check amount" sits above the amount. This is the receipt the model wasn't sure about.
 - Thumbnail appears only when there is a Receipt; tapping it opens the image full-screen.
-- **Editable fields**: amount, Category, merchant, note, date. Tapping the amount or merchant turns it into an input in place. This is the "agent was wrong, fix it without retyping" path.
-- **Add note**: a Draft with no note shows "Add note" at `--text-sm` `--text-muted` at the right end of the button row. On a pointer device it appears only while the card is hovered or focused; tapping it is the note's inline input.
+- **Editable fields**: amount, merchant, date, Category, note — every one through its chip (or, for the amount, the number itself). This is the "agent was wrong, fix it without retyping" path.
 
 **States**, all designed:
 
@@ -228,7 +226,7 @@ There is no Stop: the server finishes and stores a turn even when the client lea
 | loading | `--surface` card at `88px` tall with two `--surface-2` skeleton bars; no spinner |
 | needs review | as above, plus the warning badge |
 | confirming | Confirm button shows a label change to "Confirming…", both buttons disabled, card at `opacity: 0.7` |
-| confirmed | buttons removed; a `Confirmed ✓` line replaces them at `--text-sm`; the card fades to `--surface-2` over `200ms` |
+| confirmed | buttons removed; a `Confirmed ✓` line replaces them at `--text-sm`; the card fades to `--surface-2` over `200ms`, and its chips switch to `--surface` so they stay visible |
 | discarded | card collapses to one line, `--text-sm` `--text-muted`: "Discarded · Rp70.000 · Uniqlo" |
 | not found | dereferenced draft already deleted: one line, `--text-muted`: "This draft no longer exists" |
 
@@ -236,7 +234,23 @@ The discarded state collapsing rather than vanishing is deliberate: the user ask
 
 ### Expense card
 
-Same geometry as the Draft card, minus the thumbnail, with the Category chip followed by a status chip. No Confirm button — it is already confirmed. Edit opens the same inline fields. The status chip (`1px` `--line`, `--text-muted`) reads "Confirmed ✓", "Draft" or "Discarded", since the card fetches by id and shows whatever state the Expense is in; a discarded one is shown, not editable. Used when the user asks about an existing Expense; the default for a rendered card is the list.
+Same geometry as the Draft card, minus the thumbnail, with a status chip beside the amount. No Confirm button — it is already confirmed. The same field chips edit it. The status chip (`1px` `--line`, `--text-muted`) reads "Confirmed ✓", "Draft" or "Discarded", since the card fetches by id and shows whatever state the Expense is in; a discarded one is shown, not editable: its chips are plain, with no empty slots.
+
+### Expense card fields
+
+Every editable field says so at rest, on any device, without hover (design: *Editable Fields — Explorations*, option C).
+
+- **Chips**: a wrapping row below the amount — merchant, date, Category, note — each `--surface-2`, radius `6px`, `28px` tall, `--text-sm` weight 500, with a `13px` `--text-muted` icon naming the field (store, calendar, tag, sticky note). Hover and open: `--line`. A long note truncates at `320px`; the full text is in its editor.
+- **Empty slot**: a missing merchant or note is a dashed `--ring` chip reading "+ Merchant" / "+ Note" in `--text-muted`.
+- **Amount**: stays the headline; it opens its editor like a chip, with a `--surface-2` fill on hover and while open.
+- **Editors** open as a popover (`--surface`, `1px` `--line`, radius `12px`, `--shadow-pop`, `256px` wide) below the field, and as a bottom sheet on small touch screens, with the field's name as its title and a full-width Save:
+  - merchant and note: an input, "Remove merchant" / "Remove note" in `--danger` when there is one, and for the merchant up to three recent merchants (last 90 days) to pick with one tap;
+  - amount: an input with a muted `Rp` prefix and a decimal keypad, reading `70000`, `70.000` and shorthand `70rb`, `70k`, `1,5jt`;
+  - date: the Date picker below, where a pick saves and closes;
+  - Category: the Category select.
+- **Commit**: Enter (or Save) saves with a `PATCH` and closes; Escape or a press outside closes **without** saving. A refused edit keeps the editor open with the message under the input in `--danger`.
+- **Saved**: the edited chip's icon becomes a `✓` for `1.5s`, then returns.
+- Each chip is named for what it edits: "Edit merchant", "Edit date", "Edit category", "Edit note", "Edit amount".
 
 ### Spending chart
 
@@ -311,7 +325,7 @@ While a reply streams, the composer stays enabled and a second send queues. The 
 
 ### Date picker
 
-Opens from the Date chip as a popover (`--surface`, `1px` `--line`, radius `12px`, `--shadow-pop`, `288px` wide). It opens **upward**, because the composer sits low on the screen. While open, the chip turns `--surface-2` with a `--ring` border and its chevron points up.
+Opens from the Date chip as a popover (`--surface`, `1px` `--line`, radius `12px`, `--shadow-pop`, `288px` wide). In the composer it opens **upward**, because the composer sits low on the screen; from a card's date chip it opens below, and as a bottom sheet on small touch screens. While open, the chip turns `--surface-2` with a `--ring` border and its chevron points up.
 
 - **Quick picks**: Today, Yesterday, "2 days ago", each with its weekday and date right-aligned in `--text-muted`. The selected one has a `--surface-2` fill and a check. These cover nearly every back-dated expense.
 - A `--line` divider.
@@ -385,7 +399,7 @@ Three durations, no more: `120ms` for colour and opacity, `200ms` for layout cha
 Non-negotiable, and cheap if done now:
 
 - Text contrast ≥ `4.5:1`; control edges, focus rings and state fills ≥ `3:1`. The token table above is chosen to satisfy this in both themes, including `--ring` against `--surface`.
-- Every control has a name: the Category chip's edit is "Edit category", not an unlabelled icon. Row actions are named per row. The icon-only Receipt button on mobile is "Attach receipt"; the Date chip is "Expense date: Today".
+- Every control has a name: the Category chip is "Edit category", not an unlabelled icon. Row actions are named per row. The icon-only Receipt button on mobile is "Attach receipt"; the Date chip is "Expense date: Today".
 - Focus is always visible: `2px` `--focus` ring, `2px` offset. Never `outline: none`. The composer's `--ring` border is a focus *style*, not a replacement for the keyboard ring on its controls.
 - The Chat | Expenses switch is navigation, not tabs: two links with `aria-current="page"` on the active one.
 - The conversation is a `role="log"` with `aria-live="polite"`. Streaming announcements are throttled so a screen reader is not spammed per token.

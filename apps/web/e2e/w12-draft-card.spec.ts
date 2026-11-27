@@ -212,7 +212,7 @@ test("Discard collapses the card to one line", async ({ page }) => {
   expect(posts(calls)).toEqual([`POST /api/expenses/${uniqlo.id}/discard`])
 })
 
-test("amount, merchant, note, date and Category edit in place", async ({ page }) => {
+test("amount, merchant, note, date and Category edit from their chips", async ({ page }) => {
   const { calls } = await backend(page, {
     rows: [uniqlo],
     history: [message("m1", "assistant", "", card(uniqlo.id))],
@@ -229,7 +229,7 @@ test("amount, merchant, note, date and Category edit in place", async ({ page })
   await edited.getByRole("button", { name: "Edit merchant" }).click()
   await page.getByRole("textbox", { name: "merchant" }).fill("Uniqlo GI")
   await page.getByRole("textbox", { name: "merchant" }).press("Enter")
-  await expect(edited).toContainText("Uniqlo GI · 24 Nov 2026")
+  await expect(edited.getByRole("button", { name: "Edit merchant" })).toHaveText("Uniqlo GI")
 
   await edited.getByRole("button", { name: "Edit note" }).click()
   await page.getByRole("textbox", { name: "note" }).fill("jacket")
@@ -237,9 +237,8 @@ test("amount, merchant, note, date and Category edit in place", async ({ page })
   await expect(edited.getByRole("button", { name: "Edit note" })).toHaveText("jacket")
 
   await edited.getByRole("button", { name: "Edit date" }).click()
-  await page.getByLabel("date", { exact: true }).fill("2026-11-23")
-  await page.getByLabel("date", { exact: true }).press("Enter")
-  await expect(edited).toContainText("Uniqlo GI · 23 Nov 2026")
+  await page.getByRole("button", { name: /^2 days ago/ }).click()
+  await expect(edited.getByRole("button", { name: "Edit date" })).toHaveText("23 Nov 2026")
 
   await edited.getByRole("combobox", { name: "Edit category" }).click()
   await page.getByRole("option", { name: "Groceries" }).click()
