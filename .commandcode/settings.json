@@ -15,7 +15,12 @@
       "Shell(cd /private/tmp/aichk && npm i @effect/ai-openai-compat@4.1.5 --silent >/dev/null 2>&1; node -e \" const m=require('@effect/ai-openai-compat'); console.log('openai-compat exports:', Object.keys(m).sort().join(', ')); \" 2>&1 | head -10; echo; node -e \" const {Toolkit, Tool}=require('effect/ai'); console.log('Toolkit statics:', Object.keys(Toolkit).sort().join(', ')); console.log('Tool statics:', Object.keys(Tool).sort().join(', ')); \" 2>&1 | head -10)",
       "Shell(cd /private/tmp/aichk && node -e \" const {LanguageModel} = require('effect/ai'); console.log('LanguageModel statics:', Object.keys(LanguageModel).sort().join(', ')); \" 2>&1; echo; echo \"=== d.ts for generateText/streamText ===\"; grep -o \"export declare const \\(generateText\\|streamText\\|generateObject\\|streamObject\\|generateTextWithTools\\|streamTextWithTools\\)[^:]*\" node_modules/effect/dist/dts/ai/LanguageModel.d.ts 2>/dev/null | head -20)",
       "Shell(ssh -T git@github.com 2 >& 1)",
-      "Shell(gh:*)"
+      "Shell(gh pr view:*)",
+      "Shell(gh pr list:*)",
+      "Shell(gh pr checks:*)",
+      "Shell(gh pr diff:*)",
+      "Shell(gh issue view:*)",
+      "Shell(gh issue list:*)"
     ],
     "deny": [],
     "defaultMode": "default"
