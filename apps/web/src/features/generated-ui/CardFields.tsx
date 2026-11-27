@@ -80,7 +80,10 @@ export const InlineEdit = ({
     if (typed === initial) return close()
     const payload = toPayload(typed)
     if (typeof payload === "string") return setError(payload)
-    edit.mutate(payload, { onSuccess: close, onError: (failure) => setError(editError(failure)) })
+    edit.mutate(payload, {
+      onSuccess: close,
+      onError: (failure) => setError(editError(failure)),
+    })
   }
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
@@ -135,7 +138,9 @@ export const InlineEdit = ({
 /**
  * An Expense card's fields, shared by the Draft and Expense cards (DESIGN,
  * "Expense card": the same inline fields): the amount with `chips` beside
- * it, merchant · date, and the note. Each edits in place unless `readOnly`.
+ * it, merchant · date, and the note. With no merchant, the note takes the
+ * merchant's place, as it does in the Expense list. Each edits in place
+ * unless `readOnly`.
  */
 export const ExpenseFields = ({
   expense,
@@ -147,61 +152,69 @@ export const ExpenseFields = ({
   readonly chips: ReactNode
   readonly disabled?: boolean
   readonly readOnly?: boolean
-}) => (
-  <>
-    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-      <InlineEdit
-        expense={expense}
-        label="amount"
-        shown={formatRupiah(expense.amount)}
-        initial={String(expense.amount)}
-        toPayload={edits.amount}
-        disabled={disabled}
-        readOnly={readOnly}
-        className={`shrink-0 font-num text-2xl tabular ${expense.amount < 0 ? "text-danger" : ""}`}
-        inputClassName="w-44 font-num text-2xl tabular"
-      />
-      <div className="flex shrink-0 flex-wrap items-center gap-2">{chips}</div>
-    </div>
-    <p className="flex min-w-0 flex-wrap items-center text-sm text-text-muted">
-      <InlineEdit
-        expense={expense}
-        label="merchant"
-        shown={expense.merchant ?? "Add merchant"}
-        initial={expense.merchant ?? ""}
-        toPayload={edits.merchant}
-        disabled={disabled}
-        readOnly={readOnly}
-        inputClassName="w-40 text-sm text-text"
-      />
-      <span aria-hidden="true" className="whitespace-pre">
-        {" · "}
-      </span>
-      <InlineEdit
-        expense={expense}
-        label="date"
-        type="date"
-        shown={formatDayMonthYear(expense.occurredAt)}
-        initial={expense.occurredAt}
-        toPayload={edits.occurredAt}
-        disabled={disabled}
-        readOnly={readOnly}
-        inputClassName="text-sm text-text"
-      />
-    </p>
-    {expense.note === null ? null : (
-      <p className="flex min-w-0 text-sm text-text-muted">
+}) => {
+  const noteAsTitle = expense.merchant === null && expense.note !== null
+  const note = (
+    <InlineEdit
+      expense={expense}
+      label="note"
+      shown={expense.note ?? ""}
+      initial={expense.note ?? ""}
+      toPayload={edits.note}
+      disabled={disabled}
+      readOnly={readOnly}
+      inputClassName={noteAsTitle ? "w-40 text-sm text-text" : "w-full text-sm text-text"}
+    />
+  )
+  return (
+    <>
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <InlineEdit
           expense={expense}
-          label="note"
-          shown={expense.note}
-          initial={expense.note}
-          toPayload={edits.note}
+          label="amount"
+          shown={formatRupiah(expense.amount)}
+          initial={String(expense.amount)}
+          toPayload={edits.amount}
           disabled={disabled}
           readOnly={readOnly}
-          inputClassName="w-full text-sm text-text"
+          className={`shrink-0 font-num text-2xl tabular ${expense.amount < 0 ? "text-danger" : ""}`}
+          inputClassName="w-44 font-num text-2xl tabular"
+        />
+        <div className="flex shrink-0 flex-wrap items-center gap-2">{chips}</div>
+      </div>
+      <p className="flex min-w-0 flex-wrap items-center text-sm text-text-muted">
+        {noteAsTitle ? (
+          note
+        ) : (
+          <InlineEdit
+            expense={expense}
+            label="merchant"
+            shown={expense.merchant ?? "Add merchant"}
+            initial={expense.merchant ?? ""}
+            toPayload={edits.merchant}
+            disabled={disabled}
+            readOnly={readOnly}
+            inputClassName="w-40 text-sm text-text"
+          />
+        )}
+        <span aria-hidden="true" className="whitespace-pre">
+          {" · "}
+        </span>
+        <InlineEdit
+          expense={expense}
+          label="date"
+          type="date"
+          shown={formatDayMonthYear(expense.occurredAt)}
+          initial={expense.occurredAt}
+          toPayload={edits.occurredAt}
+          disabled={disabled}
+          readOnly={readOnly}
+          inputClassName="text-sm text-text"
         />
       </p>
-    )}
-  </>
-)
+      {expense.note === null || noteAsTitle ? null : (
+        <p className="flex min-w-0 text-sm text-text-muted">{note}</p>
+      )}
+    </>
+  )
+}

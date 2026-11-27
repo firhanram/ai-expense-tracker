@@ -44,6 +44,24 @@ export const ExpenseView = Schema.Struct({
 })
 export type ExpenseView = typeof ExpenseView.Type
 
+/**
+ * Optional free text the model fills in. Models sometimes write the word
+ * "null" (or blank text) instead of a JSON null; both mean "none", so a
+ * card never shows "null" as a merchant.
+ */
+const OptionalText = Schema.NullOr(Schema.String).annotate({
+  description: 'JSON null when unknown; never the string "null" or an empty string',
+})
+
+const absentWords = new Set(["", "null", "none", "undefined", "n/a", "-"])
+
+/** The text, trimmed, or null when the model meant "none". */
+const textOrNull = (text: string | null): string | null => {
+  if (text === null) return null
+  const trimmed = text.trim()
+  return absentWords.has(trimmed.toLowerCase()) ? null : trimmed
+}
+
 const categoryName = Schema.String.annotate({
   description: "One of the names search_categories returns",
 })
@@ -60,12 +78,12 @@ export const ProposeExpense = Tool.make("propose_expense", {
     amount: Rupiah.annotate({
       description: "Whole Rupiah, e.g. 70rb is 70000. Negative for a refund.",
     }),
-    merchant: Schema.NullOr(Schema.String),
+    merchant: OptionalText,
     occurredAt: Schema.optional(IsoDate).annotate({
       description: "YYYY-MM-DD. Omit for the user's local date today.",
     }),
     categoryName,
-    note: Schema.NullOr(Schema.String),
+    note: OptionalText,
     needsReview: Schema.Boolean.annotate({
       description:
         "True when you guessed the amount, date or Category, or could not read part of a Receipt",
@@ -82,10 +100,10 @@ export const UpdateDraft = Tool.make("update_draft", {
   parameters: Schema.Struct({
     id: ExpenseId,
     amount: Schema.optional(Rupiah),
-    merchant: Schema.optional(Schema.NullOr(Schema.String)),
+    merchant: Schema.optional(OptionalText),
     occurredAt: Schema.optional(IsoDate),
     categoryName: Schema.optional(categoryName),
-    note: Schema.optional(Schema.NullOr(Schema.String)),
+    note: Schema.optional(OptionalText),
     needsReview: Schema.optional(Schema.Boolean).annotate({
       description:
         "False once the user has told you the fields you were unsure of; true if you are now unsure",
@@ -181,8 +199,8 @@ export const draftToolHandlers = (
         const input = {
           amount: params.amount,
           categoryId: yield* categoryId(params.categoryName),
-          merchant: params.merchant,
-          note: params.note,
+          merchant: textOrNull(params.merchant),
+          note: textOrNull(params.note),
           occurredAt: params.occurredAt ?? clientDate,
         }
         const draft = yield* withStores(
@@ -202,10 +220,12 @@ export const draftToolHandlers = (
         return yield* view(draft)
       }),
 
-    update_draft: ({ id, categoryName: name, ...fields }) =>
+    update_draft: ({ id, categoryName: name, merchant, note, ...fields }) =>
       Effect.gen(function* () {
         const edit: EditExpense = {
           ...fields,
+          ...(merchant !== undefined && { merchant: textOrNull(merchant) }),
+          ...(note !== undefined && { note: textOrNull(note) }),
           ...(name !== undefined && { categoryId: yield* categoryId(name) }),
         }
         const draft = yield* withStores(editExpense(id, edit, ["draft"])).pipe(
