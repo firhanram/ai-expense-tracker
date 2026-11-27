@@ -59,6 +59,11 @@ describe("the component library (S3)", () => {
     expect(prose.meta.statementCount).toBe(0)
   })
 
+  it("keeps the assistant to expenses and personal finance", () => {
+    expect(systemPrompt).toContain("You only help with the user's expenses, spending and personal finance.")
+    expect(systemPrompt).toContain("do not answer it, not even in part")
+  })
+
   it("never tells the model it can confirm or discard (ADR-0007)", () => {
     expect(systemPrompt).not.toContain("ConfirmExpense")
     expect(systemPrompt).not.toContain("DiscardExpense")
