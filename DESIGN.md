@@ -248,7 +248,7 @@ Same geometry as the Draft card, minus the thumbnail, with the Category chip fol
 - Default for `groupBy=category` is a **horizontal bar chart**: category names are long, and horizontal bars read them without rotated labels. Vertical bars are used only for `groupBy=month`.
 - Values are labelled on the bar itself, right-aligned inside it, `--text-xs` `--font-num`. Use `--accent-fg` on `--chart-1`–`--chart-3` and `--text` on `--chart-4`–`--chart-5`. A chart the user has to hover to read is not a chart, it is a puzzle.
 - Bars are sorted by amount, largest first. Categories with no spending in the range are omitted.
-- Each Category's colour is the chart ramp cycled over the seeded order in ADR-0004, so it is fixed per Category, not per position. With eleven Categories and five colours, two Categories in one chart can share a colour; the label beside each bar is what identifies it.
+- Each Category's colour is the chart ramp cycled over the seeded order in ADR-0004, so it is fixed per Category, not per position. With twelve Categories and five colours, two Categories in one chart can share a colour; the label beside each bar is what identifies it.
 - Negative amounts (refunds) render below the axis in `--danger` at `--text-sm`.
 - Zero results: a single line, "No expenses in this range", at `--text-muted`. Never an empty axis.
 - Recharts is wrapped, never exposed: the component takes `from`, `to`, `groupBy`, `chartType` and does the rest.

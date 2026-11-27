@@ -201,6 +201,7 @@ describe("filtering by Category", () => {
       "Entertainment—",
       "Education—",
       "Giving & family—",
+      "Pets—",
       "Other—",
     ])
     expect(options[0]).toHaveAttribute("aria-selected", "true")
