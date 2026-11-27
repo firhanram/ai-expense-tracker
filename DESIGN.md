@@ -176,6 +176,20 @@ Right-aligned bubble, `--surface-2`, radius `16px` with the bottom-right corner 
 
 Streaming: text appears token by token with a `1px` caret block that disappears when the stream ends. No spinner — the text arriving *is* the progress.
 
+Before the first words arrive, and while a program streams, a **thinking indicator** stands in (design: *Assistant Pending — Motion*): three `6px` `--text` dots rippling left to right, and a `--text-sm` weight 500 phase label with a light sweeping across it. It fades in after `150ms`, so a reply that starts at once never flashes it. The label names only what the stream has shown, never a guess on a timer:
+
+| Stream so far | Label | Placeholder |
+|---|---|---|
+| nothing yet | "Reading your message" ("Reading your receipt" with a Receipt) | — |
+| a program, no component yet | "Preparing the answer" | — |
+| `DraftExpenseCard(` | "Drafting your expense" | Draft card shape |
+| `SpendingChart(` | "Building the chart" | chart shape |
+| `ExpenseList(` / `ExpenseCard(` | "Pulling up your expenses" | three list rows |
+
+While prose streams the indicator steps aside for the caret. A streaming program is not drawn piecemeal: its placeholder (`--surface`, `1px` `--line`, radius `12px`, `--surface-2` bars with the same sweep) holds the space it will take, and the real block fades in there once the stream ends. After `3s` an elapsed count (`· 4s`, `--font-num` `--text-xs` `--text-muted`, hidden from screen readers) joins the label; after `8s` a `--text-sm` `--text-muted` line reads "Taking longer than usual." — slow is not an error, so no `--danger`.
+
+There is no Stop: the server finishes and stores a turn even when the client leaves (`ChatTurn`), so stopping could not honestly promise nothing was saved.
+
 ### Draft Expense card
 
 ```
@@ -349,6 +363,7 @@ Three durations, no more: `120ms` for colour and opacity, `200ms` for layout cha
 
 - New messages fade and rise `4px` over `200ms`.
 - Streaming text does not animate per token; it simply appears.
+- The thinking indicator's two loops are the only ambient motion: dots ripple over `1200ms` (`160ms` stagger), the label's sweep runs `1600ms` linear. Phase labels change with the message fade. Under reduced motion both loops stop, and the dots stand still at stepped opacities.
 - Card confirm fades to `--surface-2` over `200ms` and buttons are removed after a `120ms` fade.
 - Popovers fade and move `4px` toward their trigger's opposite side over `120ms`.
 - Charts animate once on mount and never re-animate on refetch.

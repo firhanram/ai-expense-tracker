@@ -151,6 +151,74 @@
       translate: 0 var(--motion-shift);
     }
   }
+
+  /* Waits 150ms, so a reply that starts at once never flashes the indicator. */
+  --animate-thinking-in: message-in var(--motion-layout) ease-out 150ms both;
+}
+
+/* The two ambient loops of a pending reply: dots ripple, a light sweeps the label and placeholders. */
+@keyframes thinking-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+    translate: 0 0;
+  }
+  20% {
+    opacity: 1;
+    translate: 0 -3px;
+  }
+  40% {
+    opacity: 0.55;
+    translate: 0 0;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+@layer components {
+  .thinking-dot {
+    opacity: 0.25;
+    animation: thinking-dot 1200ms ease-in-out infinite;
+  }
+  .thinking-dot:nth-child(2) {
+    animation-delay: 160ms;
+  }
+  .thinking-dot:nth-child(3) {
+    animation-delay: 320ms;
+  }
+
+  .shimmer-text {
+    background: linear-gradient(
+        90deg,
+        var(--text-muted) 35%,
+        var(--text) 50%,
+        var(--text-muted) 65%
+      )
+      0 0 / 300% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: shimmer 1600ms linear infinite;
+  }
+
+  .shimmer-block {
+    background: linear-gradient(
+        90deg,
+        var(--surface-2) 35%,
+        color-mix(in srgb, var(--surface-2), var(--text) 7%) 50%,
+        var(--surface-2) 65%
+      )
+      0 0 / 300% 100%;
+    animation: shimmer 1600ms linear infinite;
+  }
 }
 
 @layer base {
@@ -192,5 +260,18 @@
     animation-duration: 1ms !important;
     transition-duration: 1ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* A 1ms infinite loop would flicker: the loops stop instead, the dots stand still and stepped. */
+  .thinking-dot,
+  .shimmer-text,
+  .shimmer-block {
+    animation: none !important;
+  }
+  .thinking-dot:nth-child(1) {
+    opacity: 1;
+  }
+  .thinking-dot:nth-child(2) {
+    opacity: 0.55;
   }
 }

@@ -173,6 +173,39 @@ describe("sending", () => {
     stream.end()
   })
 
+  it("says what the reply is doing until its first words arrive", async () => {
+    const stream = openReply()
+    serve({ send: () => stream.response })
+    await renderApp("/")
+
+    await userEvent.type(composer(), "buy cloth 70rb{Enter}")
+
+    expect(await within(log()).findByText("Reading your message")).toBeInTheDocument()
+    stream.write("Logged ")
+    expect(await within(log()).findByText("Logged")).toBeInTheDocument()
+    expect(within(log()).queryByText("Reading your message")).toBeNull()
+    stream.end()
+  })
+
+  it("holds a placeholder where a streaming card will land, then draws it", async () => {
+    const stream = openReply()
+    serve({ send: () => stream.response })
+    await renderApp("/")
+
+    await userEvent.type(composer(), "show{Enter}")
+    stream.write("```openui-lang\nroot = Stack([list])\nlist = ExpenseList(")
+
+    expect(await within(log()).findByText("Pulling up your expenses")).toBeInTheDocument()
+    expect(log().querySelector('[data-skeleton="list"]')).not.toBeNull()
+
+    stream.write('"confirmed", "2026-11-01", "2026-11-30")\n```')
+    stream.end()
+
+    expect(await within(log()).findByText("Couldn't load these expenses")).toBeInTheDocument()
+    expect(within(log()).queryByText("Pulling up your expenses")).toBeNull()
+    expect(log().querySelector("[data-skeleton]")).toBeNull()
+  })
+
   it("adds a line on Shift+Enter instead of sending", async () => {
     serve({})
     await renderApp("/")
