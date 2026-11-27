@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "infisical run --env=dev -- alchemy dev",
-    "deploy": "infisical run --env=prod -- alchemy deploy",
+    "plan": "infisical run --env=prod -- alchemy plan --stage prod",
+    "deploy": "infisical run --env=prod -- alchemy deploy --stage prod",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
     "format": "oxfmt",

@@ -15,7 +15,7 @@ pnpm install
 cp .env.example .env
 ```
 
-The placeholder Access values in `.env` are fine locally: requests to `localhost` skip the Access check. Without `.env`, `pnpm dev` fails with `ConfigError: Expected string at ["ACCESS_TEAM_DOMAIN"]`.
+`alchemy dev` reads nothing Access-related from `.env`: requests to `localhost` skip the Access check. `.env` still turns OpenUI telemetry off, and `pnpm run deploy` reads the owner's email from it.
 
 ### Run it
 
@@ -40,48 +40,51 @@ Port 5173 must be free: Vite does not fall back to another port.
 | `pnpm test:e2e`  | Playwright against the built SPA, with the API mocked; needs no backend     |
 | `pnpm check`     | Format check, lint, typecheck and tests                                     |
 
+## Deploy
+
+Production is one Cloudflare Worker on its `workers.dev` URL, behind Cloudflare Access. `pnpm run deploy` creates everything: the Worker and its static assets, the D1 database (and applies the migrations), the R2 bucket, the `API_PROVIDER_KEY` secret and the Access application.
+
+### Once per machine
+
+1. **Node 24.11.1 or newer** on your `PATH` (`nvm use`). Alchemy refuses older versions.
+2. **Connect Alchemy to Cloudflare.** Alchemy keeps its own login, separate from Wrangler and the `cf` CLI:
+
+   ```sh
+   pnpm exec alchemy profile edit --profile default --add Cloudflare
+   ```
+
+   It opens a browser to authorise the account.
+3. **Enable R2 and Zero Trust once per Cloudflare account**, in the dashboard: **R2 Object Storage** (accept the terms; the free tier needs a payment method on file) and **Zero Trust** (pick the Free plan and a team name). The API refuses both until then.
+4. **Infisical**: `API_PROVIDER_KEY` must exist in the `prod` environment.
+5. **`.env`**: set `ACCESS_OWNER_EMAIL` to the one address allowed to sign in (see `.env.example`). It is not in `alchemy.run.ts` because the repository is public.
+
+### Every deploy
+
+```sh
+pnpm run plan     # what would change, nothing applied
+pnpm run deploy   # apply it; prints the app's URL
+```
+
+Both use the `prod` stage. Alchemy's state is local (`.alchemy/`, gitignored), so deploy from the machine that made the first deploy, or move that folder with you.
+
 ## Cloudflare Access
 
 The deployed app sits behind one Cloudflare Access application. Access signs you in and turns everyone else away at Cloudflare's edge. The Worker also checks the token Access adds to every request, so a route to the Worker that Access does not cover is still closed (ADR-0011). Local `alchemy dev` needs none of this: requests to `localhost` and `127.0.0.1` are exempt.
 
-### 1. Create the Access application
+### What `pnpm run deploy` sets up
 
-1. In the Cloudflare dashboard, open **Zero Trust**. If this is your first time, pick a team name. Your team domain is `<team name>.cloudflareaccess.com`.
-2. Go to **Access** > **Applications** > **Add an application** > **Self-hosted**.
-3. Name it (for example `Expense tracker`) and add the app's hostname, for example `expenses.example.com`. Leave the path empty so the whole hostname is covered: the SPA and `/api/*`.
-4. Set the session duration you want, for example 24 hours or 1 month.
-5. Under **Advanced settings** > **Cookie settings**, set **SameSite attribute** to **Strict** (or **Lax**) and turn on **HTTP Only**. Then other sites can't get the browser to send your Access cookie with their requests, and scripts on the page can't read it. The Worker also refuses writes that don't come from the app's own pages (`403 CROSS_SITE_REQUEST`); the cookie settings are a second layer.
-6. Save. Open the application again and copy its **Application Audience (AUD) Tag** from the **Overview** tab.
+The Zero Trust organization is the one exception: it was enabled in the dashboard, team `hanlabs` (login page `hanlabs.cloudflareaccess.com`), and `alchemy.run.ts` only names its team domain. Rename the team there and change `teamDomain` in `alchemy.run.ts` together. `alchemy.run.ts` declares the rest:
 
-### 2. Add the login policy
+- **One-time PIN login.** Access emails a code to the address that signs in.
+- **The Access application** `Expense tracker`. It covers the Worker's `workers.dev` URL and its version preview URLs, so the SPA and `/api/*` are both behind it. Sessions last 30 days. Its cookie is `SameSite=Lax` and `HttpOnly`, so other sites can't get the browser to send it with a form POST or an embedded request, and page scripts can't read it. Not `Strict`: sign-in ends in a redirect chain that starts on `cloudflareaccess.com`, the browser withholds a Strict cookie from it, and Access redirects in a loop. The Worker also refuses writes that don't come from the app's own pages (`403 CROSS_SITE_REQUEST`); the cookie settings are a second layer.
+- **The `Owner` policy**: allow, if the email equals `ACCESS_OWNER_EMAIL`. Nothing else. Anyone else sees the login page and never reaches the app.
+- **The Worker's `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD`**, taken from the organization and application. If either is missing, every API route except `/api/health` answers `401`. They identify the application; they are not secrets.
 
-1. On the application, add a policy named `Owner`, action **Allow**.
-2. Add one include rule: **Emails** equals your email address. Nothing else.
-3. Under **Login methods**, keep **One-time PIN** (Access emails you a code) or pick an identity provider you have set up.
+### Adding a custom domain later
 
-Anyone who is not you then sees the Access login page and can never reach the app.
+Add the domain to Cloudflare, set `domain` on the `Api` Worker, and set `workersDev: false` so the app has one way in. The Worker's Access enrollment covers every hostname the Worker serves, so the custom domain is behind the same application.
 
-### 3. Give the Worker the team domain and AUD tag
-
-The Worker reads two settings. If either is missing, every API route except `/api/health` answers `401`.
-
-| Variable             | Value                                                     |
-| -------------------- | --------------------------------------------------------- |
-| `ACCESS_TEAM_DOMAIN` | Your team domain, for example `myteam.cloudflareaccess.com` |
-| `ACCESS_AUD`         | The AUD tag from step 1                                   |
-
-Put both in `.env` (copy `.env.example`) or in the environment you run `pnpm deploy` in. `alchemy.run.ts` binds them to the Worker on deploy. They identify the application; they are not secrets.
-
-### 4. Turn off the `workers.dev` address and preview URLs
-
-Access protects a hostname. The Worker is also reachable on `<worker>.<account>.workers.dev` and on per-version preview URLs, which Access does not cover. The Worker refuses requests there without a valid token anyway, but turn them off so the app has one way in:
-
-- **In `alchemy.run.ts`**, on the `Api` Worker, set `workersDev: { enabled: false, previewsEnabled: false }` once the custom domain is attached (issue #5), then deploy.
-- **Or in the dashboard**: **Workers & Pages** > the Worker > **Settings** > **Domains & Routes**. Disable `workers.dev` and **Preview URLs**.
-
-If you ever add another hostname for the Worker, add it to the same Access application first.
-
-### 5. Use a service token for scripts
+### Use a service token for scripts
 
 Scripts and other non-browser callers cannot sign in through a login page. Give them an Access service token:
 
@@ -90,7 +93,7 @@ Scripts and other non-browser callers cannot sign in through a login page. Give 
 3. Send both values as headers on every request:
 
    ```sh
-   curl https://expenses.example.com/api/expenses \
+   curl https://<app-url>/api/expenses \
      -H "CF-Access-Client-Id: $CF_ACCESS_CLIENT_ID" \
      -H "CF-Access-Client-Secret: $CF_ACCESS_CLIENT_SECRET"
    ```
@@ -98,8 +101,8 @@ Scripts and other non-browser callers cannot sign in through a login page. Give 
 Access checks the pair and passes the request on with the same signed `Cf-Access-Jwt-Assertion` header a browser gets, so the Worker needs nothing extra. A script that writes (POST, PATCH, PUT or DELETE) must also send the app's own origin, or the Worker answers `403 CROSS_SITE_REQUEST`:
 
 ```sh
-curl -X POST https://expenses.example.com/api/expenses/<id>/confirm \
-  -H "Origin: https://expenses.example.com" \
+curl -X POST https://<app-url>/api/expenses/<id>/confirm \
+  -H "Origin: https://<app-url>" \
   -H "CF-Access-Client-Id: $CF_ACCESS_CLIENT_ID" \
   -H "CF-Access-Client-Secret: $CF_ACCESS_CLIENT_SECRET"
 ```
