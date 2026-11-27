@@ -52,7 +52,7 @@ const peek = (tokens: ReadonlyArray<string>): string | undefined => tokens[0]
 const parseExpr = (tokens: Array<string>): Expr => {
   const next = tokens.shift()
   if (next === undefined) throw new Error("the program is incomplete")
-  if (next.startsWith('"')) return { kind: "string", value: JSON.parse(next) as string }
+  if (next.startsWith('"')) return { kind: "string", value: String(JSON.parse(next)) }
   if (/^-?\d/.test(next)) return { kind: "number", value: Number(next) }
   if (next === "[") {
     const items: Array<Expr> = []
