@@ -1,5 +1,5 @@
 import { type ChatMessage, MessageNotFound, RerenderFailed } from "@expense/contract"
-import { joinReply, splitReply } from "@expense/ui/server"
+import { checkRedraw, joinReply, splitReply } from "@expense/ui/server"
 import { Effect, Option, Stream } from "effect"
 import { LanguageModel, type Prompt } from "effect/ai"
 import { toUnreachable } from "./ChatTurn.ts"
@@ -21,36 +21,6 @@ const rerenderPrompt = (
   { role: "user", content: [{ type: "text", text: instruction }] },
 ]
 
-/** Props that name an Expense or a Category, the ids a rewrite must not invent (ADR-0001). */
-const idProps = new Set(["id", "categoryId"])
-
-/**
- * Whether `rewrite` draws: the library's check passes and the root has a
- * component to show. The library is imported here, lazily, so a Chat turn
- * never loads OpenUI or Zod into the Worker; only a re-render does.
- */
-const problemsWith = async (rewrite: string, original: string) => {
-  const { checkProgram, isElementNode, parseProgram } = await import("@expense/ui")
-  const check = checkProgram(rewrite)
-  if (check.outcome !== "ok") return check.problems.length > 0 ? check.problems : [check.outcome]
-  const ids: Array<unknown> = []
-  const walk = (node: unknown): void => {
-    if (Array.isArray(node)) return node.forEach(walk)
-    if (!isElementNode(node)) return
-    for (const [name, value] of Object.entries(node.props)) {
-      if (idProps.has(name)) ids.push(value)
-      else walk(value)
-    }
-  }
-  const { root } = parseProgram(rewrite)
-  walk(root)
-  const children = root?.props["children"]
-  if (!Array.isArray(children) || !children.some(isElementNode)) return ["nothing to draw"]
-  return ids
-    .filter((id) => !original.includes(typeof id === "string" ? JSON.stringify(id) : String(id)))
-    .map((id) => `invented id: ${String(id)}`)
-}
-
 export interface RerenderDeps {
   readonly model: LanguageModel.LanguageModel
   readonly history: {
@@ -63,8 +33,8 @@ export interface RerenderDeps {
  * Redraws a stored assistant reply whose program cannot be drawn (PLAN,
  * "Failure path"): the model, offered no tools, rewrites the reply's prose
  * and program as a program using only the ids already in it. A rewrite that
- * passes the library's check replaces the message's `uiText`; its `content`
- * stays. The user's message is never sent again, so no Draft is proposed.
+ * passes `checkRedraw` (the library's check, without OpenUI, which cannot
+ * load in the Worker) replaces the message's `uiText`; its `content` stays. The user's message is never sent again, so no Draft is proposed.
  */
 export const rerenderMessage = (deps: RerenderDeps, id: string) =>
   Effect.gen(function* () {
@@ -86,10 +56,7 @@ export const rerenderMessage = (deps: RerenderDeps, id: string) =>
     )
 
     const uiText = splitReply(text).uiText
-    const problems =
-      uiText === null
-        ? ["no program"]
-        : yield* Effect.promise(() => problemsWith(uiText, joinReply(message)))
+    const problems = uiText === null ? ["no program"] : checkRedraw(uiText, joinReply(message))
     if (uiText === null || problems.length > 0) {
       yield* Effect.logWarning("Re-render rejected", { id, problems })
       return yield* new RerenderFailed({ problems })
