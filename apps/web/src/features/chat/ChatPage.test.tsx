@@ -140,8 +140,9 @@ describe("history", () => {
   })
 
   it("says the owner is not signed in when the Chat cannot load, and offers a reload", async () => {
-    const reload = vi.fn()
-    vi.stubGlobal("location", { ...window.location, reload })
+    const reload = vi.fn<() => void>()
+    const { href, origin, pathname, search, hash } = window.location
+    vi.stubGlobal("location", { href, origin, pathname, search, hash, reload })
     serve({ history: () => failure(401, "UNAUTHORIZED") })
     await renderApp("/")
 
