@@ -4,7 +4,7 @@ import { type InputController, Textarea } from "@ui-sdk/react/textarea"
 import { ArrowUp, CircleAlert } from "lucide-react"
 import { useRef, useState } from "react"
 import { localToday } from "../../shared/format/localDate.ts"
-import { AttachmentChip, ReceiptButton, ReceiptInput } from "../receipts/ReceiptAttachment.tsx"
+import { AttachmentChip, ReceiptButton, ReceiptInput } from "../receipts/index.ts"
 import { DateChip } from "./DateChip.tsx"
 
 /**

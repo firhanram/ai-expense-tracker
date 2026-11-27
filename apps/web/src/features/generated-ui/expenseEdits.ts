@@ -1,6 +1,6 @@
 import { type EditExpense, IsoDate } from "@expense/contract"
 import { Schema } from "effect"
-import { parseAmount } from "../expenses/expenseForm.ts"
+import { parseAmount } from "../../shared/format/amount.ts"
 
 const isIsoDate = Schema.is(IsoDate)
 

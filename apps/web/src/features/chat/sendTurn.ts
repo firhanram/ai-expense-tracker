@@ -1,5 +1,5 @@
 import type { ReceiptKey } from "@expense/contract"
-import { ReceiptUploadFailure, type UploadReceipt } from "../receipts/uploadReceipt.ts"
+import { ReceiptUploadFailure, type UploadReceipt } from "../receipts/index.ts"
 import { type SendChat, SendChatFailure, type SendChatFailureReason } from "./sendChat.ts"
 import type { SendTurn } from "./useChatSession.ts"
 

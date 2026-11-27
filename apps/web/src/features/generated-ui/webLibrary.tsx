@@ -11,7 +11,7 @@ import {
 import { type ComponentRenderer, createLibrary } from "@openuidev/react-lang"
 import { DraftExpenseCard as DraftExpenseCardView } from "./DraftExpenseCard.tsx"
 import { ExpenseCard as ExpenseCardView } from "./ExpenseCard.tsx"
-import { SpendingChartView } from "../reports/SpendingChart.tsx"
+import { SpendingChartView } from "../reports/index.ts"
 import { ExpenseList as ExpenseListView } from "./ExpenseList.tsx"
 
 /** The props a shared definition's schema parses to. */

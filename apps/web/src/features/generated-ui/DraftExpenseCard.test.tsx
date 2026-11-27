@@ -5,7 +5,7 @@ import { render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it } from "vitest"
 import { fail, fakeApi, type FakeHandler, ok } from "../../shared/testing/fakeApi.ts"
-import { expensesKey } from "../expenses/useExpenses.ts"
+import { expensesKey } from "../../shared/api/queryKeys.ts"
 import { GeneratedUi } from "./GeneratedUi.tsx"
 
 const readEdit = Schema.decodeUnknownSync(EditExpense)

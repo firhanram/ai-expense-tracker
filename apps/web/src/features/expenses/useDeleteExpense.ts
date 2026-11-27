@@ -1,7 +1,7 @@
 import { type Expense, type ExpenseId, ExpenseNotFound } from "@expense/contract"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "../../shared/api/api.ts"
-import { expensesKey } from "./useExpenses.ts"
+import { expensesKey } from "../../shared/api/queryKeys.ts"
 
 /**
  * `DELETE /expenses/:id`, a hard delete. An Expense that is already gone

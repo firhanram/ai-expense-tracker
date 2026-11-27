@@ -1,23 +1,9 @@
 import type { EditExpense, Expense } from "@expense/contract"
 import { Input } from "@ui-sdk/react/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectItemIndicator,
-  SelectTrigger,
-  SelectValue,
-} from "@ui-sdk/react/select"
-import { Check, Pencil } from "lucide-react"
+import { Pencil } from "lucide-react"
 import { type KeyboardEvent, useState } from "react"
-import { categories } from "../../shared/categories/categories.ts"
-import { errorsFromApi } from "../expenses/expenseForm.ts"
-import { useEditExpense } from "../expenses/useEditExpense.ts"
-
-const categoryItems = categories.map((category) => ({
-  value: String(category.id),
-  label: category.name,
-}))
+import { CategorySelect } from "../../shared/categories/CategorySelect.tsx"
+import { errorsFromApi, useEditExpense } from "../expenses/index.ts"
 
 /** What a refused edit says, as one line. */
 const editError = (error: unknown) => Object.values(errorsFromApi(error))[0] ?? "Couldn't save."
@@ -35,37 +21,17 @@ export const CategoryEdit = ({
 }) => {
   const edit = useEditExpense(expense.id)
   return (
-    <Select
-      items={categoryItems}
+    <CategorySelect
       value={String(expense.categoryId)}
       disabled={disabled || edit.isPending}
       onValueChange={(value) => {
         if (value !== null && Number(value) !== expense.categoryId)
           edit.mutate({ categoryId: Number(value) })
       }}
-    >
-      <SelectTrigger
-        aria-label="Edit category"
-        className="inline-flex shrink-0 items-center gap-1.5 rounded-sm bg-surface-2 px-2 py-[3px] text-sm transition-colors duration-(--motion-color) hover:bg-line data-open:bg-line"
-      >
-        <SelectValue />
-        <Pencil aria-hidden="true" size={12} className="text-text-muted" />
-      </SelectTrigger>
-      <SelectContent className="max-h-(--available-height) w-48 overflow-auto rounded-lg border border-line bg-surface p-1 shadow-pop">
-        {categoryItems.map((item) => (
-          <SelectItem
-            key={item.value}
-            value={item.value}
-            className="flex cursor-default items-center justify-between rounded-sm px-2 py-1.5 text-sm data-highlighted:bg-surface-2"
-          >
-            {item.label}
-            <SelectItemIndicator>
-              <Check aria-hidden="true" size={14} />
-            </SelectItemIndicator>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+      triggerLabel="Edit category"
+      triggerClassName="inline-flex shrink-0 items-center gap-1.5 rounded-sm bg-surface-2 px-2 py-[3px] text-sm transition-colors duration-(--motion-color) hover:bg-line data-open:bg-line"
+      icon={<Pencil aria-hidden="true" size={12} className="text-text-muted" />}
+    />
   )
 }
 

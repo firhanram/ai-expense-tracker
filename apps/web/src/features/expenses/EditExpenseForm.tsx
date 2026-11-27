@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { ExpenseForm, valuesOf } from "./ExpenseFormView.tsx"
 import { useEditExpense } from "./useEditExpense.ts"
-import { expensesKey } from "./useExpenses.ts"
+import { expensesKey } from "../../shared/api/queryKeys.ts"
 
 /**
  * Edits amount, Category, merchant, note and date of a Draft or confirmed

@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from "react"
-import { GeneratedUi } from "../generated-ui/GeneratedUi.tsx"
+import { GeneratedUi } from "../generated-ui/index.ts"
 
 /** An assistant reply as stored, or as split from the stream so far (`splitReply`). */
 export interface AssistantReply {

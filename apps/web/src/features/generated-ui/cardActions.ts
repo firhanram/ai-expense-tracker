@@ -1,8 +1,8 @@
 import type { Expense } from "@expense/contract"
 import type { LibraryActionEvent } from "@openuidev/react-lang"
 import { useQueryClient } from "@tanstack/react-query"
-import { useExpenseActions } from "../expenses/useExpenseActions.ts"
-import { expenseKey } from "../expenses/useExpenses.ts"
+import { useExpenseActions } from "../expenses/index.ts"
+import { expenseKey } from "../../shared/api/queryKeys.ts"
 import type { webLibrary } from "./webLibrary.tsx"
 
 /** What a generated component asked for: `ConfirmExpense` or `DiscardExpense` with `{ id }`, or a built-in. */

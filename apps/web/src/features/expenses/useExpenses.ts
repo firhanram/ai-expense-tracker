@@ -1,13 +1,8 @@
-import type { Expense, ExpenseId, ListExpensesQuery } from "@expense/contract"
+import type { Expense, ListExpensesQuery } from "@expense/contract"
 import { useMutationState, useQuery } from "@tanstack/react-query"
 import { api } from "../../shared/api/api.ts"
+import { expensesKey } from "../../shared/api/queryKeys.ts"
 import { isExpense, isExpenseAction, placeExpense, statusAfter } from "./expenseLists.ts"
-
-/** Every cached Expense list starts with this key, so one invalidation refreshes them all. */
-export const expensesKey = ["expenses"] as const
-
-/** One Expense by id (`GET /expenses/:id`), under `expensesKey` so the same invalidation reaches it. */
-export const expenseKey = (id: ExpenseId) => [...expensesKey, "one", id] as const
 
 /**
  * Confirms and discards still in flight, each as the Expense will read once it

@@ -1,7 +1,7 @@
 import type { IsoDate } from "@expense/contract"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "../../shared/api/api.ts"
-import { expensesKey } from "./useExpenses.ts"
+import { expensesKey } from "../../shared/api/queryKeys.ts"
 
 /**
  * `GET /reports?groupBy=category`: the range's confirmed net spending, in total

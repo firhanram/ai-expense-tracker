@@ -1,7 +1,7 @@
 import type { IsoDate, Report, ReportGroupBy } from "@expense/contract"
 import { useId } from "react"
 import { formatRupiah } from "../../shared/format/rupiah.ts"
-import { CardLine, CardSkeleton } from "../generated-ui/CardSkeleton.tsx"
+import { CardLine, CardSkeleton } from "../../shared/ui/CardSkeleton.tsx"
 import { CategoryBars } from "./CategoryBars.tsx"
 import { MonthChart } from "./MonthChart.tsx"
 import { monthLabel, rangeTitle } from "./rangeTitle.ts"

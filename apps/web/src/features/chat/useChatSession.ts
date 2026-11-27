@@ -2,7 +2,7 @@ import type { IsoDate } from "@expense/contract"
 import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useReducer } from "react"
 import { useOnline } from "../../shared/shell/useOnline.ts"
-import { expensesKey } from "../expenses/useExpenses.ts"
+import { expensesKey } from "../../shared/api/queryKeys.ts"
 import { type ChatReply, SendChatFailure, type SendChatFailureReason } from "./sendChat.ts"
 
 /**

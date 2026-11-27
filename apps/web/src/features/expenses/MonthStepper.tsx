@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { addMonths, formatMonth, formatMonthShort, type Month } from "./month.ts"
+import { addMonths, formatMonth, formatMonthShort, type Month } from "../../shared/format/month.ts"
 
 const stepButton =
   "flex size-6 items-center justify-center rounded-sm text-text-muted transition-colors duration-(--motion-color) hover:bg-surface-2 hover:text-text"

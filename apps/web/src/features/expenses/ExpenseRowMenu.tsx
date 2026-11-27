@@ -14,7 +14,7 @@ import { categoryName } from "../../shared/categories/categories.ts"
 import { formatRupiah } from "../../shared/format/rupiah.ts"
 import { formatDayMonthYear } from "../../shared/format/shortDate.ts"
 import { useMediaQuery } from "../../shared/media/useMediaQuery.ts"
-import { ReceiptMarker } from "../receipts/ReceiptMarker.tsx"
+import { ReceiptMarker } from "../receipts/index.ts"
 
 export type RowAction = "edit" | "delete"
 

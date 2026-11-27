@@ -11,7 +11,7 @@ import {
 } from "recharts"
 import { useLayoutEffect, useRef, useState } from "react"
 import { formatRupiahDigits } from "../../shared/format/rupiah.ts"
-import { monthOf } from "../expenses/month.ts"
+import { monthOf } from "../../shared/format/month.ts"
 import {
   labelFont,
   labelInset,

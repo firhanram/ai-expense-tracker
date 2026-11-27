@@ -1,5 +1,5 @@
 import type { IsoDate } from "@expense/contract"
-import { formatMonth, formatMonthShort, monthOf, monthRange } from "../expenses/month.ts"
+import { formatMonth, formatMonthShort, monthOf, monthRange } from "../../shared/format/month.ts"
 
 const monthName = new Intl.DateTimeFormat("en-GB", { month: "long", timeZone: "UTC" })
 const dayMonth = new Intl.DateTimeFormat("en-GB", {

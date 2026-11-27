@@ -2,17 +2,9 @@ import type { CreateExpense, Expense } from "@expense/contract"
 import { Button } from "@ui-sdk/react/button"
 import { Field, FieldDescription, FieldError, FieldLabel } from "@ui-sdk/react/field"
 import { Input } from "@ui-sdk/react/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectItemIndicator,
-  SelectTrigger,
-  SelectValue,
-} from "@ui-sdk/react/select"
-import { Check, ChevronDown } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 import { type FormEvent, type ReactNode, useState } from "react"
-import { categories } from "../../shared/categories/categories.ts"
+import { CategorySelect } from "../../shared/categories/CategorySelect.tsx"
 import { localToday } from "../../shared/format/localDate.ts"
 import {
   type ExpenseField,
@@ -24,11 +16,6 @@ import {
 
 const control =
   "h-9 w-full rounded-sm border border-line bg-surface px-3 text-md transition-colors duration-(--motion-color) placeholder:text-text-muted hover:border-ring data-invalid:border-danger"
-
-const categoryItems = categories.map((category) => ({
-  value: String(category.id),
-  label: category.name,
-}))
 
 const FormField = ({
   label,
@@ -162,33 +149,14 @@ export const ExpenseForm = ({
         />
       </FormField>
       <FormField label="Category" error={errors.categoryId}>
-        <Select
-          items={categoryItems}
+        <CategorySelect
           placeholder="Pick one"
           value={values.categoryId}
           onValueChange={(value) => edit("categoryId", value)}
-        >
-          <SelectTrigger
-            className={`${control} flex items-center justify-between text-left data-open:border-ring data-open:bg-surface-2 data-placeholder:text-text-muted`}
-          >
-            <SelectValue />
-            <ChevronDown aria-hidden="true" size={14} className="text-text-muted" />
-          </SelectTrigger>
-          <SelectContent className="max-h-(--available-height) w-(--anchor-width) overflow-auto rounded-lg border border-line bg-surface p-1 shadow-pop">
-            {categoryItems.map((item) => (
-              <SelectItem
-                key={item.value}
-                value={item.value}
-                className="flex cursor-default items-center justify-between rounded-sm px-2 py-1.5 text-sm data-highlighted:bg-surface-2"
-              >
-                {item.label}
-                <SelectItemIndicator>
-                  <Check aria-hidden="true" size={14} />
-                </SelectItemIndicator>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          triggerClassName={`${control} flex items-center justify-between text-left data-open:border-ring data-open:bg-surface-2 data-placeholder:text-text-muted`}
+          icon={<ChevronDown aria-hidden="true" size={14} className="text-text-muted" />}
+          contentClassName="w-(--anchor-width)"
+        />
       </FormField>
       <FormField label="Merchant" error={errors.merchant}>
         <Input

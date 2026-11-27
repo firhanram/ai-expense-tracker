@@ -1,7 +1,8 @@
 import { type Expense, type ExpenseId, ExpenseNotFound } from "@expense/contract"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "../../shared/api/api.ts"
-import { expenseKey, useMovingExpenses } from "../expenses/useExpenses.ts"
+import { expenseKey } from "../../shared/api/queryKeys.ts"
+import { useMovingExpenses } from "../expenses/index.ts"
 
 export type ExpenseLookup =
   | { readonly state: "loading" }

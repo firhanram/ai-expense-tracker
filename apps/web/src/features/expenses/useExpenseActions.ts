@@ -22,7 +22,7 @@ import {
   isListQuery,
   placeExpense,
 } from "./expenseLists.ts"
-import { expenseKey, expensesKey } from "./useExpenses.ts"
+import { expenseKey, expensesKey } from "../../shared/api/queryKeys.ts"
 
 /** How a message or a button names an Expense: the merchant, else the note, else its date. */
 export const expenseLabel = (expense: Expense) =>

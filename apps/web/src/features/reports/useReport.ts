@@ -1,7 +1,7 @@
 import type { ReportQuery } from "@expense/contract"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "../../shared/api/api.ts"
-import { expensesKey } from "../expenses/useExpenses.ts"
+import { expensesKey } from "../../shared/api/queryKeys.ts"
 
 /**
  * `GET /reports`: the range's confirmed net spending, totalled by the server.

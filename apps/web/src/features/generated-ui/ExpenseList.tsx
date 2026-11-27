@@ -1,7 +1,6 @@
 import type { ListExpensesQuery } from "@expense/contract"
-import { ExpenseRow } from "../expenses/ExpenseRow.tsx"
-import { useExpenses } from "../expenses/useExpenses.ts"
-import { CardLine, CardSkeleton } from "./CardSkeleton.tsx"
+import { ExpenseRow, useExpenses } from "../expenses/index.ts"
+import { CardLine, CardSkeleton } from "../../shared/ui/CardSkeleton.tsx"
 
 /** Expenses the app fetches for a status, range and Category, as rows of the Expenses page. */
 export const ExpenseList = ({ query }: { readonly query: ListExpensesQuery }) => {

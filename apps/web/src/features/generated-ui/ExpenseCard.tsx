@@ -4,7 +4,7 @@ import { categoryName } from "../../shared/categories/categories.ts"
 import { formatRupiah } from "../../shared/format/rupiah.ts"
 import { formatDayMonthYear } from "../../shared/format/shortDate.ts"
 import { CategoryEdit } from "./CardFields.tsx"
-import { CardLine, CardSkeleton } from "./CardSkeleton.tsx"
+import { CardLine, CardSkeleton } from "../../shared/ui/CardSkeleton.tsx"
 import { useExpense } from "./useExpense.ts"
 
 const statusLabel: Readonly<Record<ExpenseStatus, string>> = {

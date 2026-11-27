@@ -4,7 +4,7 @@ import { CircleDashed } from "lucide-react"
 import { categoryName } from "../../shared/categories/categories.ts"
 import { formatRupiah } from "../../shared/format/rupiah.ts"
 import { formatDayMonth } from "../../shared/format/shortDate.ts"
-import { ReceiptMarker } from "../receipts/ReceiptMarker.tsx"
+import { ReceiptMarker } from "../receipts/index.ts"
 import { expenseLabel } from "./useExpenseActions.ts"
 
 /** The outlined status chip, as on the Expense card ("✓ Confirmed"), reading "Draft". */
