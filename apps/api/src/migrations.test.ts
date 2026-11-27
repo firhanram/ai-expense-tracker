@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 
 // No route reads categories yet, so the migrated database is the seam here.
 describe("D1 migrations", () => {
-  it("seed the eleven Categories in ADR-0004 order", async () => {
+  it("seed the twelve Categories in ADR-0004 order", async () => {
     const { results } = await env.DB.prepare(
       "SELECT id, name FROM category ORDER BY sort_order",
     ).all()
@@ -19,6 +19,7 @@ describe("D1 migrations", () => {
       { id: 8, name: "Entertainment" },
       { id: 9, name: "Education" },
       { id: 10, name: "Giving & family" },
+      { id: 12, name: "Pets" },
       { id: 11, name: "Other" },
     ])
   })

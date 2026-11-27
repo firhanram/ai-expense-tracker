@@ -6,7 +6,7 @@ export interface Category {
 }
 
 /**
- * The seeded Categories (ADR-0004, migration 0002), in seeded order. The set
+ * The seeded Categories (ADR-0004, migrations 0002 and 0004), in seeded order. The set
  * is closed and changes only with a migration, so the client carries a copy
  * rather than fetching it; the order is also the chart colour order.
  */
@@ -21,6 +21,7 @@ export const categories: ReadonlyArray<Category> = [
   { id: 8, name: "Entertainment" },
   { id: 9, name: "Education" },
   { id: 10, name: "Giving & family" },
+  { id: 12, name: "Pets" },
   { id: 11, name: "Other" },
 ]
 

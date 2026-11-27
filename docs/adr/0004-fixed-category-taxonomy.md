@@ -12,7 +12,7 @@ Letting the model name categories produces `Clothing`, `clothes`, `Cloths`, and 
 
 ## The seeded set
 
-Eleven rows, in this order. The order is also the chart colour order, so it is part of the seed, not incidental.
+Twelve rows, in this order. The order is also the chart colour order, so it is part of the seed, not incidental. The # is the row id: Pets came later (migration 0004), so it is 12 but sorts before Other, which stays last.
 
 | # | Category | Indonesian | Covers |
 |---|---|---|---|
@@ -26,13 +26,15 @@ Eleven rows, in this order. The order is also the chart colour order, so it is p
 | 8 | Entertainment | Hiburan | streaming subscriptions, cinema, games, hobbies |
 | 9 | Education | Pendidikan | courses, books, school fees |
 | 10 | Giving & family | Sosial & keluarga | kondangan, zakat / sedekah, money sent to family, gifts |
+| 12 | Pets | Hewan peliharaan | pet food, litter, vet, grooming, pet supplies |
 | 11 | Other | Lainnya | classification failures only |
 
 Boundaries the agent is told explicitly, because they are where it will hesitate:
 
 - **Utilities vs Entertainment.** Utilities holds what you cannot easily cut: power, water, internet, phone credit. Streaming subscriptions are Entertainment even though they arrive as a monthly charge.
 - **Transport vs Dining.** A ride-hailing *ride* is Transport; a food *order* through the same app is Dining.
-- **Personal care is Shopping**, not a twelfth Category.
+- **Personal care is Shopping**, not a Category of its own.
+- **Anything for a pet is Pets**, wherever it was bought: pet food from Indomaret is not Groceries, and the vet is not Health.
 - The category is named **Utilities**, not "Bills", because the glossary reserves "bill" as a word to avoid (it is too close to Receipt).
 
 Open: whether instalment and paylater repayments (*cicilan*) are Expenses at all. Recording the purchase and every repayment double-counts it. Until decided, the agent records the purchase and not the repayments.

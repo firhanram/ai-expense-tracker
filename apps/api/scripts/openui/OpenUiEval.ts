@@ -83,18 +83,19 @@ export const evalClientDate = "2026-11-25"
 
 /** The seeded Categories, in order (ADR-0004, `migrations/0002_seed_categories.sql`). */
 const categories = [
-  "Groceries",
-  "Dining",
-  "Transport",
-  "Utilities",
-  "Housing",
-  "Shopping",
-  "Health",
-  "Entertainment",
-  "Education",
-  "Giving & family",
-  "Other",
-].map((name, index) => ({ id: index + 1, name }))
+  { id: 1, name: "Groceries" },
+  { id: 2, name: "Dining" },
+  { id: 3, name: "Transport" },
+  { id: 4, name: "Utilities" },
+  { id: 5, name: "Housing" },
+  { id: 6, name: "Shopping" },
+  { id: 7, name: "Health" },
+  { id: 8, name: "Entertainment" },
+  { id: 9, name: "Education" },
+  { id: 10, name: "Giving & family" },
+  { id: 12, name: "Pets" },
+  { id: 11, name: "Other" },
+]
 
 const expense = (
   fields: Pick<ExpenseView, "id" | "status" | "amount" | "categoryName" | "merchant"> &

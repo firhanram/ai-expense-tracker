@@ -93,7 +93,7 @@ Asking a question gets an answer in kind: a Report question returns a chart of s
 
 **Money.** Integer whole Rupiah, no minor unit, no currency column. Format with `Intl.NumberFormat('id-ID')` (ADR-0003).
 
-**Categories.** Eleven seeded rows referenced by FK. The agent assigns from the closed set and cannot create; unmatched spending lands in `Other` (ADR-0004).
+**Categories.** Twelve seeded rows referenced by FK. The agent assigns from the closed set and cannot create; unmatched spending lands in `Other` (ADR-0004).
 
 **Generated UI.** The agent writes OpenUI Lang; the frontend renders it with OpenUI's `Renderer`. The library supplies the parser, prompt generator and component registry — not the components. Five components are ours: `DraftExpenseCard`, `ExpenseCard`, `ExpenseList`, `SpendingChart` (ADR-0006).
 
