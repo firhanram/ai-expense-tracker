@@ -1,9 +1,12 @@
 import type { EditExpense, Expense } from "@expense/contract"
 import { Input } from "@ui-sdk/react/input"
 import { Pencil } from "lucide-react"
-import { type KeyboardEvent, useState } from "react"
+import { formatRupiah } from "../../shared/format/rupiah.ts"
+import { formatDayMonthYear } from "../../shared/format/shortDate.ts"
+import { type KeyboardEvent, type ReactNode, useState } from "react"
 import { CategorySelect } from "../../shared/categories/CategorySelect.tsx"
 import { errorsFromApi, useEditExpense } from "../expenses/index.ts"
+import { edits } from "./expenseEdits.ts"
 
 /** What a refused edit says, as one line. */
 const editError = (error: unknown) => Object.values(errorsFromApi(error))[0] ?? "Couldn't save."
@@ -48,6 +51,7 @@ export const InlineEdit = ({
   toPayload,
   type = "text",
   disabled = false,
+  readOnly = false,
   className = "",
   inputClassName = "",
 }: {
@@ -58,6 +62,8 @@ export const InlineEdit = ({
   readonly toPayload: (typed: string) => EditExpense | string
   readonly type?: "text" | "date"
   readonly disabled?: boolean
+  /** Shown as plain text, with nothing to tap: a discarded Expense. */
+  readonly readOnly?: boolean
   readonly className?: string
   readonly inputClassName?: string
 }) => {
@@ -86,6 +92,7 @@ export const InlineEdit = ({
     }
   }
 
+  if (readOnly) return <span className={`min-w-0 truncate ${className}`}>{shown}</span>
   if (typed === null)
     return (
       <button
@@ -124,3 +131,77 @@ export const InlineEdit = ({
     </span>
   )
 }
+
+/**
+ * An Expense card's fields, shared by the Draft and Expense cards (DESIGN,
+ * "Expense card": the same inline fields): the amount with `chips` beside
+ * it, merchant · date, and the note. Each edits in place unless `readOnly`.
+ */
+export const ExpenseFields = ({
+  expense,
+  chips,
+  disabled = false,
+  readOnly = false,
+}: {
+  readonly expense: Expense
+  readonly chips: ReactNode
+  readonly disabled?: boolean
+  readonly readOnly?: boolean
+}) => (
+  <>
+    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+      <InlineEdit
+        expense={expense}
+        label="amount"
+        shown={formatRupiah(expense.amount)}
+        initial={String(expense.amount)}
+        toPayload={edits.amount}
+        disabled={disabled}
+        readOnly={readOnly}
+        className={`shrink-0 font-num text-2xl tabular ${expense.amount < 0 ? "text-danger" : ""}`}
+        inputClassName="w-44 font-num text-2xl tabular"
+      />
+      <div className="flex shrink-0 flex-wrap items-center gap-2">{chips}</div>
+    </div>
+    <p className="flex min-w-0 flex-wrap items-center text-sm text-text-muted">
+      <InlineEdit
+        expense={expense}
+        label="merchant"
+        shown={expense.merchant ?? "Add merchant"}
+        initial={expense.merchant ?? ""}
+        toPayload={edits.merchant}
+        disabled={disabled}
+        readOnly={readOnly}
+        inputClassName="w-40 text-sm text-text"
+      />
+      <span aria-hidden="true" className="whitespace-pre">
+        {" · "}
+      </span>
+      <InlineEdit
+        expense={expense}
+        label="date"
+        type="date"
+        shown={formatDayMonthYear(expense.occurredAt)}
+        initial={expense.occurredAt}
+        toPayload={edits.occurredAt}
+        disabled={disabled}
+        readOnly={readOnly}
+        inputClassName="text-sm text-text"
+      />
+    </p>
+    {expense.note === null ? null : (
+      <p className="flex min-w-0 text-sm text-text-muted">
+        <InlineEdit
+          expense={expense}
+          label="note"
+          shown={expense.note}
+          initial={expense.note}
+          toPayload={edits.note}
+          disabled={disabled}
+          readOnly={readOnly}
+          inputClassName="w-full text-sm text-text"
+        />
+      </p>
+    )}
+  </>
+)

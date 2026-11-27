@@ -3,11 +3,10 @@ import { useTriggerAction } from "@openuidev/react-lang"
 import { Button } from "@ui-sdk/react/button"
 import { Check, TriangleAlert } from "lucide-react"
 import { formatRupiah } from "../../shared/format/rupiah.ts"
-import { formatDayMonthYear } from "../../shared/format/shortDate.ts"
 import { useExpenseActivity } from "../expenses/index.ts"
 import { ReceiptPhoto } from "../receipts/index.ts"
 import { CardLine, CardSkeleton } from "../../shared/ui/CardSkeleton.tsx"
-import { CategoryEdit, InlineEdit } from "./CardFields.tsx"
+import { CategoryEdit, ExpenseFields, InlineEdit } from "./CardFields.tsx"
 import { edits } from "./expenseEdits.ts"
 import { useExpense } from "./useExpense.ts"
 
@@ -21,68 +20,6 @@ const CheckAmount = () => (
     <TriangleAlert aria-hidden="true" size={12} />
     Check amount
   </span>
-)
-
-/** The fields every non-collapsed state shows; each one edits in place. */
-const Fields = ({
-  expense,
-  disabled,
-}: {
-  readonly expense: Expense
-  readonly disabled: boolean
-}) => (
-  <>
-    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-      <InlineEdit
-        expense={expense}
-        label="amount"
-        shown={formatRupiah(expense.amount)}
-        initial={String(expense.amount)}
-        toPayload={edits.amount}
-        disabled={disabled}
-        className={`shrink-0 font-num text-2xl tabular ${expense.amount < 0 ? "text-danger" : ""}`}
-        inputClassName="w-44 font-num text-2xl tabular"
-      />
-      <CategoryEdit expense={expense} disabled={disabled} />
-    </div>
-    <p className="flex min-w-0 flex-wrap items-center text-sm text-text-muted">
-      <InlineEdit
-        expense={expense}
-        label="merchant"
-        shown={expense.merchant ?? "Add merchant"}
-        initial={expense.merchant ?? ""}
-        toPayload={edits.merchant}
-        disabled={disabled}
-        inputClassName="w-40 text-sm text-text"
-      />
-      <span aria-hidden="true" className="whitespace-pre">
-        {" · "}
-      </span>
-      <InlineEdit
-        expense={expense}
-        label="date"
-        type="date"
-        shown={formatDayMonthYear(expense.occurredAt)}
-        initial={expense.occurredAt}
-        toPayload={edits.occurredAt}
-        disabled={disabled}
-        inputClassName="text-sm text-text"
-      />
-    </p>
-    {expense.note === null ? null : (
-      <p className="flex min-w-0 text-sm text-text-muted">
-        <InlineEdit
-          expense={expense}
-          label="note"
-          shown={expense.note}
-          initial={expense.note}
-          toPayload={edits.note}
-          disabled={disabled}
-          inputClassName="w-full text-sm text-text"
-        />
-      </p>
-    )}
-  </>
 )
 
 const Actions = ({
@@ -175,7 +112,11 @@ const DraftCardBody = ({ expense }: { readonly expense: Expense }) => {
       {expense.receiptKey === null ? null : <ReceiptPhoto receiptKey={expense.receiptKey} />}
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         {expense.needsReview && state !== "confirmed" ? <CheckAmount /> : null}
-        <Fields expense={expense} disabled={state === "confirming"} />
+        <ExpenseFields
+          expense={expense}
+          disabled={state === "confirming"}
+          chips={<CategoryEdit expense={expense} disabled={state === "confirming"} />}
+        />
         <Actions expense={expense} state={state} errorMessage={activity.errorMessage} />
       </div>
     </article>

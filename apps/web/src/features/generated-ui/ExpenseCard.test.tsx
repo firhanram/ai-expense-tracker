@@ -109,6 +109,54 @@ describe("the ExpenseCard", () => {
     ])
   })
 
+  it("edits the amount, merchant and date in place, like the Draft card", async () => {
+    let stored: Expense = { ...draft, status: "confirmed" }
+    const { calls } = fakeApi({
+      "GET /api/expenses/d1": () => ok(stored),
+      "PATCH /api/expenses/d1": (call) => {
+        stored = applyEdit(stored, call.body)
+        return ok(stored)
+      },
+    })
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <ExpenseCard id="d1" />
+      </QueryClientProvider>,
+    )
+    await screen.findByRole("article", { name: "Expense Rp32.000" })
+
+    await userEvent.click(screen.getByRole("button", { name: "Edit amount" }))
+    await userEvent.clear(screen.getByRole("textbox", { name: "amount" }))
+    await userEvent.type(screen.getByRole("textbox", { name: "amount" }), "35.000{Enter}")
+    const card = await screen.findByRole("article", { name: "Expense Rp35.000" })
+
+    await userEvent.click(within(card).getByRole("button", { name: "Edit merchant" }))
+    await userEvent.clear(within(card).getByRole("textbox", { name: "merchant" }))
+    await userEvent.type(within(card).getByRole("textbox", { name: "merchant" }), "Fore{Enter}")
+    expect(await within(card).findByRole("button", { name: "Edit merchant" })).toHaveTextContent(
+      "Fore",
+    )
+
+    expect(calls.filter((call) => call.method === "PATCH").map((call) => call.body)).toEqual([
+      { amount: 35000 },
+      { merchant: "Fore" },
+    ])
+    expect(within(card).getByRole("button", { name: "Edit date" })).toBeInTheDocument()
+  })
+
+  it("does not edit a discarded Expense", async () => {
+    fakeApi({ "GET /api/expenses/d1": ok({ ...draft, status: "discarded" }) })
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <ExpenseCard id="d1" />
+      </QueryClientProvider>,
+    )
+    await screen.findByRole("article", { name: "Expense Rp32.000" })
+
+    expect(screen.queryByRole("button", { name: "Edit amount" })).toBeNull()
+    expect(screen.getByText("Kopi Kenangan")).toBeInTheDocument()
+  })
+
   it("says so when the Expense is gone", async () => {
     fakeApi({ "GET /api/expenses/d1": fail("EXPENSE_NOT_FOUND", { details: { id: "d1" } }) })
     render(
