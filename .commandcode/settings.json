@@ -13,7 +13,9 @@
       "Shell(node -e const m=require('effect/ai'); console.log(Object.keys(m).sort().join(', ')) 2 >& 1)",
       "Shell(cd /private/tmp/aichk && echo \"=== effect/chat ===\" && node -e \"const m=require('effect/chat'); console.log(Object.keys(m).sort().join(', '))\" 2>&1 | head -20; echo; echo \"=== providers available on npm ===\"; for p in @effect/ai-openai-compat @effect/ai-openai @effect/ai-anthropic @effect/ai-google @effect/ai-openrouter @effect/ai-amazon-bedrock @effect/ai-ollama; do v=$(npm view \"$p\" version 2>/dev/null); echo \"$p => ${v:-NOT_FOUND}\"; done)",
       "Shell(cd /private/tmp/aichk && npm i @effect/ai-openai-compat@4.1.5 --silent >/dev/null 2>&1; node -e \" const m=require('@effect/ai-openai-compat'); console.log('openai-compat exports:', Object.keys(m).sort().join(', ')); \" 2>&1 | head -10; echo; node -e \" const {Toolkit, Tool}=require('effect/ai'); console.log('Toolkit statics:', Object.keys(Toolkit).sort().join(', ')); console.log('Tool statics:', Object.keys(Tool).sort().join(', ')); \" 2>&1 | head -10)",
-      "Shell(cd /private/tmp/aichk && node -e \" const {LanguageModel} = require('effect/ai'); console.log('LanguageModel statics:', Object.keys(LanguageModel).sort().join(', ')); \" 2>&1; echo; echo \"=== d.ts for generateText/streamText ===\"; grep -o \"export declare const \\(generateText\\|streamText\\|generateObject\\|streamObject\\|generateTextWithTools\\|streamTextWithTools\\)[^:]*\" node_modules/effect/dist/dts/ai/LanguageModel.d.ts 2>/dev/null | head -20)"
+      "Shell(cd /private/tmp/aichk && node -e \" const {LanguageModel} = require('effect/ai'); console.log('LanguageModel statics:', Object.keys(LanguageModel).sort().join(', ')); \" 2>&1; echo; echo \"=== d.ts for generateText/streamText ===\"; grep -o \"export declare const \\(generateText\\|streamText\\|generateObject\\|streamObject\\|generateTextWithTools\\|streamTextWithTools\\)[^:]*\" node_modules/effect/dist/dts/ai/LanguageModel.d.ts 2>/dev/null | head -20)",
+      "Shell(ssh -T git@github.com 2 >& 1)",
+      "Shell(gh:*)"
     ],
     "deny": [],
     "defaultMode": "default"
