@@ -25,7 +25,7 @@ const DeleteConfirm = ({
   return (
     <span
       data-slot="row-actions"
-      className="relative z-10 flex shrink-0 items-center gap-3 text-sm"
+      className="relative z-10 flex shrink-0 items-center gap-3 pr-2 text-sm"
     >
       {remove.isError ? (
         <span role="alert" className="text-danger">

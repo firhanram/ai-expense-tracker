@@ -26,8 +26,9 @@ const NavLink = ({
 export const TopBar = () => {
   const online = useOnline()
 
+  // Transparent while the Chat's empty-state wash is shown, so the wash runs up behind it.
   return (
-    <header className="sticky top-0 z-10 h-14 bg-bg">
+    <header className="sticky top-0 z-10 h-14 bg-bg transition-colors duration-(--motion-layout) [:root:has([data-wash=shown])_&]:bg-transparent">
       <div className="mx-auto flex h-full max-w-[720px] items-center justify-between px-4 md:px-6">
         <div className="flex items-center gap-2">
           <span

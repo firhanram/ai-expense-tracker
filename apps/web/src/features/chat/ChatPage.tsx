@@ -52,6 +52,7 @@ export const ChatPage = () => {
       <div
         aria-hidden="true"
         data-shown={empty}
+        data-wash={empty ? "shown" : "hidden"}
         className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_70%_55%_at_50%_0%,var(--line),var(--bg))] opacity-0 transition-opacity duration-(--motion-layout) data-[shown=true]:opacity-100"
       />
       <h1 className={empty ? "hidden" : "sr-only"}>Chat</h1>

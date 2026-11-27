@@ -1,8 +1,9 @@
 import { type ChatMessage, EditExpense, Expense } from "@expense/contract"
 import { Schema } from "effect"
 import { expect, type Locator, type Page, test } from "@playwright/test"
-import { type ApiCall, fail, mockApi, ok, stream } from "./support/api.ts"
+import { type ApiCall, bytes, fail, mockApi, ok, stream } from "./support/api.ts"
 import { draft } from "./support/fixtures.ts"
+import { drawReceiptPhoto } from "./support/receiptImage.ts"
 import { screenshot, showAs, themes } from "./support/screenshot.ts"
 
 const now = new Date("2026-11-25T10:00:00+07:00")
@@ -40,6 +41,12 @@ const card = (...ids: ReadonlyArray<string>) =>
 const fenced = (prose: string, program: string) =>
   `${prose}\n\n\`\`\`openui-lang\n${program}\n\`\`\``
 
+let receiptPhoto: Buffer
+
+test.beforeAll(async ({ browser }) => {
+  receiptPhoto = await drawReceiptPhoto(browser, { width: 600, height: 800 })
+})
+
 /**
  * A stateful backend for Drafts by id: confirm, discard and PATCH change what
  * `GET /api/expenses/:id` serves next. Unknown ids are `EXPENSE_NOT_FOUND`.
@@ -73,6 +80,7 @@ const backend = async (
       const row = find(call)
       return row === undefined ? missing(call) : ok(row)
     },
+    "GET /api/receipts/:key": () => bytes(receiptPhoto, "image/jpeg"),
     "POST /api/expenses/:id/confirm": move("confirmed"),
     "POST /api/expenses/:id/discard": move("discarded"),
     "PATCH /api/expenses/:id": (call) => {
