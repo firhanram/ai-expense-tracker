@@ -1,8 +1,7 @@
 # AI expense tracker
 
 
-https://github.com/user-attachments/assets/448ad15e-e6c4-4de0-b9af-9f38c2cc7dc4
-
+https://github.com/user-attachments/assets/e2f99c97-2319-4c8d-b824-eedc1bb02f76
 
 ## Local development
 
