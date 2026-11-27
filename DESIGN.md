@@ -214,7 +214,7 @@ There is no Stop: the server finishes and stores a turn even when the client lea
 - Background `--surface`, `1px` `--line`, radius `12px`.
 - Amount at `--text-2xl`, `--font-num`, tabular numerals, top-left after the optional thumbnail.
 - Category is a chip, `--surface-2`, with a `✎` that opens an inline `<select>` — the correction path for a wrong Category (ADR-0004). Changing it is a `PATCH` on the draft.
-- Merchant and date on one line at `--text-sm` `--text-muted`, separated by `·`.
+- Merchant and date on one line at `--text-sm` `--text-muted`, separated by `·`. With no merchant, the note takes the merchant's place (as in the Expense list) and has no line of its own.
 - **Confirm** is the only primary button in the app. **Discard** is secondary.
 - If `needs_review`, a `--warn-bg` badge reading "Check amount" sits above the amount. This is the receipt the model wasn't sure about.
 - Thumbnail appears only when there is a Receipt; tapping it opens the image full-screen.

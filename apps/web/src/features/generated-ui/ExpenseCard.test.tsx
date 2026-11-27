@@ -79,6 +79,29 @@ describe("the ExpenseCard", () => {
     expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual(["GET /api/expenses/d1"])
   })
 
+  it("puts the note in the merchant's place when there is no merchant", async () => {
+    fakeApi({
+      "GET /api/expenses/d1": ok({
+        ...draft,
+        status: "confirmed",
+        merchant: null,
+        note: "Makanan kucing",
+      }),
+    })
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <ExpenseCard id="d1" />
+      </QueryClientProvider>,
+    )
+    const card = await screen.findByRole("article", { name: "Expense Rp32.000" })
+
+    expect(within(card).getByRole("button", { name: "Edit note" })).toHaveTextContent(
+      "Makanan kucing",
+    )
+    expect(within(card).getAllByText("Makanan kucing")).toHaveLength(1)
+    expect(within(card).queryByRole("button", { name: "Edit merchant" })).toBeNull()
+  })
+
   it("corrects the Category from the chip's ✎", async () => {
     const confirmed = { ...draft, status: "confirmed" as const }
     let stored: Expense = confirmed

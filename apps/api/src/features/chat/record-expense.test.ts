@@ -200,6 +200,23 @@ describe("recording an Expense by chatting", () => {
     expect(JSON.stringify(rejected!.result)).toContain("Shopping")
     expect(await drafts()).toHaveLength(1)
   })
+
+  it('stores no merchant or note when the model writes "null" or blank text for them', async () => {
+    const model = scriptedLanguageModel(
+      toolCallReply("propose_expense", {
+        amount: 16000,
+        merchant: "null",
+        categoryName: "Shopping",
+        note: "  ",
+        needsReview: false,
+      }),
+      showDrafts,
+    )
+
+    await sendChat(model.layer, { message: "Beli makanan kucing 16rb", clientDate })
+
+    expect(await drafts()).toMatchObject([{ amount: 16000, merchant: null, note: null }])
+  })
 })
 
 describe("changing a Draft by chatting", () => {
