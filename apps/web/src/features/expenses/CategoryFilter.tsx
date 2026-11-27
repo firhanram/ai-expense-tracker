@@ -10,8 +10,12 @@ import {
 } from "@ui-sdk/react/select"
 import { Check, ChevronDown } from "lucide-react"
 import { categories } from "../../shared/categories/categories.ts"
-import { categoryColor, otherCategoryId } from "../../shared/categories/categoryColor.ts"
+import { categoryChartStep, otherCategoryId } from "../../shared/categories/categoryColor.ts"
 import { formatRupiahDigits } from "../../shared/format/rupiah.ts"
+
+/** The swatch takes its Category's step of the chart ramp, as the charts do (`categoryChartStep`). */
+const swatch =
+  "data-[chart-step=1]:bg-chart-1 data-[chart-step=2]:bg-chart-2 data-[chart-step=3]:bg-chart-3 data-[chart-step=4]:bg-chart-4 data-[chart-step=5]:bg-chart-5"
 
 const all = "all"
 
@@ -94,14 +98,12 @@ export const CategoryFilter = ({
               <CheckColumn />
               <span
                 aria-hidden="true"
-                className={`size-2 shrink-0 rounded-[2px] ${
+                data-chart-step={
+                  category.id === otherCategoryId ? undefined : categoryChartStep(category.id)
+                }
+                className={`size-2 shrink-0 rounded-[2px] ${swatch} ${
                   category.id === otherCategoryId ? "border border-text-muted" : ""
                 }`}
-                style={
-                  category.id === otherCategoryId
-                    ? undefined
-                    : { background: categoryColor(category.id) }
-                }
               />
               {category.name}
               <Total amount={amount} />

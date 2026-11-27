@@ -11,6 +11,9 @@ export interface AssistantReply {
 
 const emphasis = /(\*\*[^*]+\*\*|\*[^*]+\*)/g
 
+// Paragraphs and emphasis runs are cut from prose and have no id; text can repeat, and
+// a stream only appends, so position plus text is the stable key.
+
 /** Paragraphs and emphasis, nothing more (DESIGN, "What this design does not do"). */
 const inline = (text: string): ReactNode =>
   text.split(emphasis).map((part, index) => {

@@ -23,6 +23,8 @@ import {
 
 /** One month's figure, as the server sent it. */
 interface Row {
+  /** The month as `YYYY-MM`. */
+  readonly month: string
   readonly name: string
   readonly amount: number
 }
@@ -31,7 +33,11 @@ const chartHeight = 200
 const margin = { top: 24, right: 0, bottom: 0, left: 0 }
 
 const isRow = (value: unknown): value is Row =>
-  typeof value === "object" && value !== null && "name" in value && "amount" in value
+  typeof value === "object" &&
+  value !== null &&
+  "month" in value &&
+  "name" in value &&
+  "amount" in value
 
 const shortMonth = new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: "UTC" })
 
@@ -126,7 +132,6 @@ interface DotProps {
   readonly cx?: number
   readonly cy?: number
   readonly payload?: unknown
-  readonly index?: number
 }
 
 /** The element's width, following resizes; a line's points have no box to fit a figure in. */
@@ -170,6 +175,7 @@ export const MonthChart = ({
   const measured = useWidth()
   const labels = axisLabels(totals)
   const rows: Array<Row> = totals.map((total, i) => ({
+    month: total.label,
     name: labels[i] ?? total.label,
     amount: total.amount,
   }))
@@ -187,11 +193,11 @@ export const MonthChart = ({
 
   if (chartType === "line") {
     const room = rows.length > 0 ? (measured.width - 48) / rows.length : 0
-    const Dot = ({ cx = 0, cy = 0, payload, index }: DotProps) => {
-      if (!isRow(payload)) return <g key={index} />
+    const Dot = ({ cx = 0, cy = 0, payload }: DotProps) => {
+      if (!isRow(payload)) return <g />
       const color = payload.amount < 0 ? "var(--danger)" : "var(--chart-1)"
       return (
-        <g key={index}>
+        <g key={payload.month}>
           <circle cx={cx} cy={cy} r={4} fill={color} stroke="var(--surface)" strokeWidth={2} />
           <Figure
             amount={payload.amount}

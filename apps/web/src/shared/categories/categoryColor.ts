@@ -17,8 +17,5 @@ export const categoryChartStep = (id: CategoryId): ChartStep => {
   return steps[position % steps.length] ?? 1
 }
 
-/** The Category's chart colour as a CSS `var()`. */
-export const categoryColor = (id: CategoryId): string => `var(--chart-${categoryChartStep(id)})`
-
 /** Other is a classification failure rather than a real bucket, so it is drawn outlined. */
 export const otherCategoryId: CategoryId = 11
