@@ -1,5 +1,45 @@
 # AI expense tracker
 
+## Local development
+
+### What you need
+
+- **Node 24.11.1 or newer** (`.node-version`). Alchemy refuses to start on older versions, 24.9 included.
+- **pnpm 10.17.0.** `corepack enable` gives you the version `package.json` pins.
+- **The Infisical CLI**, signed in with `infisical login`. `pnpm dev` reads the model provider's key, `API_PROVIDER_KEY`, from the `dev` environment of the Infisical project that `.infisical.yaml` links. Your account needs access to it.
+
+### First run
+
+```sh
+pnpm install
+cp .env.example .env
+```
+
+The placeholder Access values in `.env` are fine locally: requests to `localhost` skip the Access check. Without `.env`, `pnpm dev` fails with `ConfigError: Expected string at ["ACCESS_TEAM_DOMAIN"]`.
+
+### Run it
+
+```sh
+pnpm dev
+```
+
+This runs `alchemy dev` under `infisical run`. It applies the D1 migrations to a local database, creates a local R2 bucket, builds the SPA and starts the Worker. It also starts the Vite dev server. Two URLs come up:
+
+| URL                     | What it is                                                                                                              |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `http://localhost:5173` | Vite with hot reload. `/api/*` is proxied to the local Worker. Use this while working on the SPA.                       |
+| `http://localhost:1337` | The Worker serving the built SPA, set up the way production is. It shows SPA changes only after you restart `pnpm dev`. |
+
+Port 5173 must be free: Vite does not fall back to another port.
+
+### Other commands
+
+| Command          | What it does                                                                |
+| ---------------- | --------------------------------------------------------------------------- |
+| `pnpm test`      | Unit tests in every package                                                 |
+| `pnpm test:e2e`  | Playwright against the built SPA, with the API mocked; needs no backend     |
+| `pnpm check`     | Format check, lint, typecheck and tests                                     |
+
 ## Cloudflare Access
 
 The deployed app sits behind one Cloudflare Access application. Access signs you in and turns everyone else away at Cloudflare's edge. The Worker also checks the token Access adds to every request, so a route to the Worker that Access does not cover is still closed (ADR-0011). Local `alchemy dev` needs none of this: requests to `localhost` and `127.0.0.1` are exempt.
