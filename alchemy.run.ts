@@ -60,6 +60,20 @@ export default Alchemy.Stack(
       },
     })
 
+    // `alchemy dev` only: the Vite dev server with hot reload, proxying `/api/*`
+    // to the local Worker (apps/web/vite.config.ts). The Worker above still
+    // serves the built bundle; open this URL while editing the SPA.
+    const { dev } = yield* Alchemy.AlchemyContext
+    if (dev) {
+      const webDev = yield* Command.Dev("WebDev", {
+        command: "pnpm exec vite",
+        cwd: "./apps/web",
+        port: 5173,
+        env: { API_ORIGIN: worker.url },
+      })
+      return { url: worker.url, webDevUrl: webDev.url }
+    }
+
     return { url: worker.url }
   }),
 )

@@ -7,6 +7,15 @@ process.env.TZ = "Asia/Jakarta"
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // `alchemy dev` runs this dev server (alchemy.run.ts, "WebDev") with
+  // `API_ORIGIN` set to the local Worker, so `/api/*` reaches the real API.
+  server: {
+    port: 5173,
+    strictPort: true,
+    proxy: {
+      "/api": { target: process.env.API_ORIGIN ?? "http://localhost:1337", changeOrigin: true },
+    },
+  },
   preview: { port: 4173, strictPort: true },
   test: {
     environment: "jsdom",
