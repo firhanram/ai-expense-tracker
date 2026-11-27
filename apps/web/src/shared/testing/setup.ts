@@ -22,6 +22,15 @@ document.head.append(
     textContent: "[popover] { display: block !important }",
   }),
 )
+// A `presentation="auto"` popup asks matchMedia whether to open as a sheet; jsdom has no media.
+window.matchMedia ??= (query: string) =>
+  Object.assign(new EventTarget(), {
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener() {},
+    removeListener() {},
+  })
 // jsdom has no layout, so scrolling is a no-op rather than a "not implemented" error.
 window.scrollTo = () => {}
 

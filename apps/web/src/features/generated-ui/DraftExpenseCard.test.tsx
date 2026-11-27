@@ -82,7 +82,8 @@ describe("the Draft Expense card", () => {
     show()
 
     const card = await screen.findByRole("article", { name: "Draft Expense Rp70.000" })
-    expect(card).toHaveTextContent("Uniqlo · 24 Nov 2026")
+    expect(within(card).getByRole("button", { name: "Edit merchant" })).toHaveTextContent("Uniqlo")
+    expect(within(card).getByRole("button", { name: "Edit date" })).toHaveTextContent("24 Nov 2026")
     expect(within(card).getByRole("combobox", { name: "Edit category" })).toHaveTextContent(
       "Shopping",
     )
@@ -175,7 +176,7 @@ describe("the Draft Expense card", () => {
     )
   })
 
-  it("changes the Category from the chip's ✎", async () => {
+  it("changes the Category from its chip", async () => {
     const { calls } = server([draft()])
     show()
     const card = await findCard()
@@ -223,7 +224,7 @@ describe("the Draft Expense card", () => {
     expect(calls.filter((call) => call.method === "PATCH")).toEqual([])
   })
 
-  it("edits the merchant and adds a note in place", async () => {
+  it("edits the merchant from its chip and adds a note from the empty slot", async () => {
     const { calls } = server([draft()])
     show()
     const card = await findCard()
@@ -232,15 +233,92 @@ describe("the Draft Expense card", () => {
     const merchant = screen.getByRole("textbox", { name: "merchant" })
     await userEvent.clear(merchant)
     await userEvent.type(merchant, "Uniqlo Grand Indonesia{Enter}")
-    await waitFor(() => expect(card).toHaveTextContent("Uniqlo Grand Indonesia · 24 Nov 2026"))
+    await waitFor(() =>
+      expect(within(card).getByRole("button", { name: "Edit merchant" })).toHaveTextContent(
+        "Uniqlo Grand Indonesia",
+      ),
+    )
+    expect(screen.queryByRole("textbox", { name: "merchant" })).toBeNull()
 
-    await userEvent.click(within(card).getByRole("button", { name: "Edit note" }))
+    const addNote = within(card).getByRole("button", { name: "Edit note" })
+    expect(addNote).toHaveTextContent("Note")
+    await userEvent.click(addNote)
     await userEvent.type(screen.getByRole("textbox", { name: "note" }), "jacket{Enter}")
-    await waitFor(() => expect(card).toHaveTextContent("jacket"))
+    await waitFor(() =>
+      expect(within(card).getByRole("button", { name: "Edit note" })).toHaveTextContent("jacket"),
+    )
 
     expect(calls.filter((call) => call.method === "PATCH").map((call) => call.body)).toEqual([
       { merchant: "Uniqlo Grand Indonesia" },
       { note: "jacket" },
+    ])
+  })
+
+  it("closes an editor on Escape without saving what was typed", async () => {
+    const { calls } = server([draft()])
+    show()
+    const card = await findCard()
+
+    await userEvent.click(within(card).getByRole("button", { name: "Edit merchant" }))
+    await userEvent.type(screen.getByRole("textbox", { name: "merchant" }), " typo")
+    await userEvent.keyboard("{Escape}")
+
+    await waitFor(() => expect(screen.queryByRole("textbox", { name: "merchant" })).toBeNull())
+    expect(within(card).getByRole("button", { name: "Edit merchant" })).toHaveTextContent("Uniqlo")
+    expect(calls.filter((call) => call.method === "PATCH")).toEqual([])
+  })
+
+  it("removes a merchant, leaving the dashed slot", async () => {
+    const { calls } = server([draft()])
+    show()
+    const card = await findCard()
+
+    await userEvent.click(within(card).getByRole("button", { name: "Edit merchant" }))
+    await userEvent.click(screen.getByRole("button", { name: "Remove merchant" }))
+
+    await waitFor(() =>
+      expect(within(card).getByRole("button", { name: "Edit merchant" })).toHaveTextContent(
+        "Merchant",
+      ),
+    )
+    expect(calls.filter((call) => call.method === "PATCH").map((call) => call.body)).toEqual([
+      { merchant: null },
+    ])
+  })
+
+  it("offers recent merchants as one-tap fixes", async () => {
+    const { calls } = server([draft()], {
+      "GET /api/expenses": ok([draft({ id: "e1", merchant: "Shopee", status: "confirmed" })]),
+    })
+    show()
+    const card = await findCard()
+
+    await userEvent.click(within(card).getByRole("button", { name: "Edit merchant" }))
+    await userEvent.click(await screen.findByRole("button", { name: "Shopee" }))
+
+    await waitFor(() =>
+      expect(within(card).getByRole("button", { name: "Edit merchant" })).toHaveTextContent(
+        "Shopee",
+      ),
+    )
+    expect(calls.filter((call) => call.method === "PATCH").map((call) => call.body)).toEqual([
+      { merchant: "Shopee" },
+    ])
+  })
+
+  it("reads shorthand amounts like 56rb", async () => {
+    const { calls } = server([draft()])
+    show()
+
+    await userEvent.click(within(await findCard()).getByRole("button", { name: "Edit amount" }))
+    const input = screen.getByRole("textbox", { name: "amount" })
+    expect(input).toHaveValue("70.000")
+    await userEvent.clear(input)
+    await userEvent.type(input, "56rb{Enter}")
+
+    expect(await findCard("Rp56.000")).toBeInTheDocument()
+    expect(calls.filter((call) => call.method === "PATCH").map((call) => call.body)).toEqual([
+      { amount: 56000 },
     ])
   })
 

@@ -1,9 +1,8 @@
 import type { Expense, ExpenseId, ExpenseStatus } from "@expense/contract"
 import { Check } from "lucide-react"
-import { categoryName } from "../../shared/categories/categories.ts"
 import { formatRupiah } from "../../shared/format/rupiah.ts"
 import { CardLine, CardSkeleton } from "../../shared/ui/CardSkeleton.tsx"
-import { CategoryEdit, ExpenseFields } from "./CardFields.tsx"
+import { ExpenseFields } from "./CardFields.tsx"
 import { useExpense } from "./useExpense.ts"
 
 const statusLabel: Readonly<Record<ExpenseStatus, string>> = {
@@ -20,35 +19,21 @@ const StatusChip = ({ status }: { readonly status: ExpenseStatus }) => (
 )
 
 /**
- * Draft card geometry, minus the thumbnail: the same inline fields, with the
- * Category chip followed by a status chip. A discarded Expense is shown, not edited.
+ * Draft card geometry, minus the thumbnail: the same field chips, with a
+ * status chip beside the amount. A discarded Expense is shown, not edited.
  */
-const ExpenseCardBody = ({ expense }: { readonly expense: Expense }) => {
-  const discarded = expense.status === "discarded"
-  return (
-    <article
-      aria-label={`Expense ${formatRupiah(expense.amount)}`}
-      className="flex flex-col gap-1 rounded-lg border border-line bg-surface p-4"
-    >
-      <ExpenseFields
-        expense={expense}
-        readOnly={discarded}
-        chips={
-          <>
-            {discarded ? (
-              <span className="rounded-sm bg-surface-2 px-2 py-[3px] text-sm">
-                {categoryName(expense.categoryId)}
-              </span>
-            ) : (
-              <CategoryEdit expense={expense} />
-            )}
-            <StatusChip status={expense.status} />
-          </>
-        }
-      />
-    </article>
-  )
-}
+const ExpenseCardBody = ({ expense }: { readonly expense: Expense }) => (
+  <article
+    aria-label={`Expense ${formatRupiah(expense.amount)}`}
+    className="flex flex-col gap-2 rounded-lg border border-line bg-surface p-4"
+  >
+    <ExpenseFields
+      expense={expense}
+      readOnly={expense.status === "discarded"}
+      trailing={<StatusChip status={expense.status} />}
+    />
+  </article>
+)
 
 /** One recorded Expense, fetched by id (ADR-0001). */
 export const ExpenseCard = ({ id }: { readonly id: ExpenseId }) => {

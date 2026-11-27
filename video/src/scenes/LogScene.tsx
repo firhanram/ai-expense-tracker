@@ -49,7 +49,8 @@ const LogWindow: React.FC = () => {
           <Reveal p={prog(frame, 104, 14)}>
             <DraftCard
               amount="Rp70.000"
-              meta="Uniqlo · 24 Nov 2026"
+              merchant="Uniqlo"
+              date="24 Nov 2026"
               category="Shopping"
               pressed={down}
               confirmed={prog(frame, CLICK_AT + 6, 10)}

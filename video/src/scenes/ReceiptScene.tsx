@@ -35,7 +35,8 @@ const ReceiptWindow: React.FC = () => {
           <Reveal p={1}>
             <DraftCard
               amount="Rp70.000"
-              meta="Uniqlo · 24 Nov 2026"
+              merchant="Uniqlo"
+              date="24 Nov 2026"
               category="Shopping"
               confirmed={1}
             />
@@ -49,7 +50,8 @@ const ReceiptWindow: React.FC = () => {
           <Reveal p={prog(frame, DRAFT_AT, 14)}>
             <DraftCard
               amount="Rp146.500"
-              meta="Indomaret · 22 Nov 2026"
+              merchant="Indomaret"
+              date="22 Nov 2026"
               category="Groceries"
               needsReview
               receipt

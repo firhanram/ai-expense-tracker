@@ -1,5 +1,5 @@
 import type { IsoDate } from "@expense/contract"
-import { toLocalIsoDate } from "../../shared/format/localDate.ts"
+import { toLocalIsoDate } from "./localDate.ts"
 
 const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const
 const months = [

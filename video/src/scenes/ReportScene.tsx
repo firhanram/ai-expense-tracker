@@ -34,7 +34,8 @@ const ReportWindow: React.FC = () => {
         <Reveal p={1}>
           <DraftCard
             amount="Rp146.500"
-            meta="Indomaret · 22 Nov 2026"
+            merchant="Indomaret"
+            date="22 Nov 2026"
             category="Groceries"
             receipt
             confirmed={1}

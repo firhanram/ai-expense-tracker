@@ -6,8 +6,7 @@ import { formatRupiah } from "../../shared/format/rupiah.ts"
 import { useExpenseActivity } from "../expenses/index.ts"
 import { ReceiptPhoto } from "../receipts/index.ts"
 import { CardLine, CardSkeleton } from "../../shared/ui/CardSkeleton.tsx"
-import { CategoryEdit, ExpenseFields, InlineEdit } from "./CardFields.tsx"
-import { edits } from "./expenseEdits.ts"
+import { ExpenseFields } from "./CardFields.tsx"
 import { useExpense } from "./useExpense.ts"
 
 type CardState = "draft" | "confirming" | "confirmed"
@@ -39,13 +38,13 @@ const Actions = ({
 
   if (state === "confirmed")
     return (
-      <p className="mt-1 flex items-center gap-1 text-sm text-text-muted">
+      <p className="flex items-center gap-1 text-sm text-text-muted">
         Confirmed <Check aria-hidden="true" size={14} />
       </p>
     )
   const busy = state === "confirming"
   return (
-    <div className="mt-2 flex flex-col gap-2">
+    <div className="mt-1 flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-2">
         <Button
           disabled={busy}
@@ -61,17 +60,6 @@ const Actions = ({
         >
           Discard
         </Button>
-        {expense.note === null && !busy ? (
-          <InlineEdit
-            expense={expense}
-            label="note"
-            shown="Add note"
-            initial=""
-            toPayload={edits.note}
-            className="ml-auto text-sm text-text-muted transition-opacity duration-(--motion-color) pointer-fine:opacity-0 pointer-fine:group-focus-within:opacity-100 pointer-fine:group-hover:opacity-100"
-            inputClassName="w-48 text-sm"
-          />
-        ) : null}
       </div>
       {errorMessage === null ? null : (
         <p role="alert" className="text-sm text-danger">
@@ -110,13 +98,9 @@ const DraftCardBody = ({ expense }: { readonly expense: Expense }) => {
       className="group flex gap-3 rounded-lg border border-line bg-surface p-4 transition-[background-color,opacity] duration-(--motion-layout) data-[state=confirmed]:bg-surface-2 data-[state=confirming]:opacity-70"
     >
       {expense.receiptKey === null ? null : <ReceiptPhoto receiptKey={expense.receiptKey} />}
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
         {expense.needsReview && state !== "confirmed" ? <CheckAmount /> : null}
-        <ExpenseFields
-          expense={expense}
-          disabled={state === "confirming"}
-          chips={<CategoryEdit expense={expense} disabled={state === "confirming"} />}
-        />
+        <ExpenseFields expense={expense} disabled={state === "confirming"} />
         <Actions expense={expense} state={state} errorMessage={activity.errorMessage} />
       </div>
     </article>
