@@ -29,6 +29,7 @@ const TurnView = ({
         <AssistantMessage
           reply={redraw.replyFor(reply.messageId, splitReply(reply.text))}
           streaming={reply.state === "streaming"}
+          withReceipt={turn.request.receipt !== null}
           onRetry={redraw.retryFor(reply.messageId)}
         />
       ) : null}
