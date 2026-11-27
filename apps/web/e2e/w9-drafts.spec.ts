@@ -85,7 +85,7 @@ const openWithServer = async (
 const rows = (page: Page) => page.getByRole("list", { name: "Expenses" }).getByRole("listitem")
 
 const showDrafts = async (page: Page) => {
-  await page.getByRole("radio", { name: "Drafts" }).click()
+  await page.getByRole("tab", { name: "Drafts" }).click()
   await expect(rows(page)).toHaveCount(drafts.length)
 }
 
@@ -97,7 +97,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
     test(`the Drafts view, ${viewport}, ${theme}`, async ({ page }) => {
       await showAs(page, viewport, theme)
       await openWithServer(page)
-      await expect(page.getByRole("radio", { name: "Confirmed" })).toBeChecked()
+      await expect(page.getByRole("tab", { name: "Confirmed" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      )
       await screenshot(page, "w9", `confirmed-${viewport}-${theme}`)
 
       await showDrafts(page)
@@ -118,7 +121,7 @@ test("a double-clicked Confirm sends one request and moves the row to Confirmed"
 
   await expect(rows(page)).toHaveCount(drafts.length - 1)
   await expect(page.getByText("Uniqlo")).toHaveCount(0)
-  await page.getByRole("radio", { name: "Confirmed" }).click()
+  await page.getByRole("tab", { name: "Confirmed" }).click()
   await expect(rows(page).first()).toContainText("Uniqlo")
   await expect(page.getByText("Rp234.500")).toBeVisible()
   expect(posts(calls)).toEqual(["/api/expenses/d1/confirm"])
@@ -133,7 +136,7 @@ test("Discard drops the Draft and it never counts as spent", async ({ page }) =>
 
   await expect(page.getByText("Kopi Kenangan")).toHaveCount(0)
   await expect.poll(() => posts(calls)).toEqual(["/api/expenses/d2/discard"])
-  await page.getByRole("radio", { name: "Confirmed" }).click()
+  await page.getByRole("tab", { name: "Confirmed" }).click()
   await expect(rows(page)).toHaveCount(confirmed.length)
   await expect(page.getByText("Kopi Kenangan")).toHaveCount(0)
 })

@@ -32,7 +32,7 @@ const list = () => screen.getByRole("list", { name: "Expenses" })
 
 const showDrafts = async () => {
   const user = userEvent.setup()
-  await user.click(await screen.findByRole("radio", { name: "Drafts" }))
+  await user.click(await screen.findByRole("tab", { name: "Drafts" }))
   return user
 }
 
@@ -47,7 +47,7 @@ describe("the Drafts view", () => {
     await renderApp("/expenses")
 
     expect(await screen.findByText("Uniqlo")).toBeInTheDocument()
-    expect(screen.getByRole("radio", { name: "Confirmed" })).toBeChecked()
+    expect(screen.getByRole("tab", { name: "Confirmed" })).toHaveAttribute("aria-selected", "true")
 
     await showDrafts()
 
@@ -59,11 +59,26 @@ describe("the Drafts view", () => {
     expect(screen.queryByText("Rp70.000", { selector: "header *" })).not.toBeInTheDocument()
     expect(within(row).getByRole("button", { name: "Confirm Kopi Kenangan" })).toBeInTheDocument()
     expect(within(row).getByRole("button", { name: "Discard Kopi Kenangan" })).toBeInTheDocument()
-    expect(Object.fromEntries(calls.at(-1)?.query ?? [])).toEqual({
+    const draftCalls = calls.filter((call) => call.query.get("status") === "draft")
+    expect(Object.fromEntries(draftCalls.at(-1)?.query ?? [])).toEqual({
       from: "2026-11-01",
       to: "2026-11-30",
       status: "draft",
     })
+  })
+
+  it("counts the month's Drafts on their tab while Confirmed is showing", async () => {
+    fakeApi({
+      "GET /api/expenses": (call) =>
+        call.query.get("status") === "draft"
+          ? ok([draft({ id: "d1" }), draft({ id: "d2" })])
+          : ok([expense({ id: "c1" })]),
+    })
+    await renderApp("/expenses")
+
+    const tab = screen.getByRole("tab", { name: "Drafts" })
+    expect(await within(tab).findByText("2")).toBeInTheDocument()
+    expect(screen.getByRole("tab", { name: "Confirmed" })).toHaveAttribute("aria-selected", "true")
   })
 
   it("marks a Draft that came from a Receipt", async () => {
@@ -132,7 +147,7 @@ describe("confirming a Draft", () => {
 
     expect(screen.queryByText("Kopi Kenangan")).not.toBeInTheDocument()
     expect(screen.getByText("No drafts in November 2026")).toBeInTheDocument()
-    await user.click(screen.getByRole("radio", { name: "Confirmed" }))
+    await user.click(screen.getByRole("tab", { name: "Confirmed" }))
     expect(
       within(list())
         .getAllByRole("listitem")
@@ -201,7 +216,7 @@ describe("discarding a Draft", () => {
     expect(screen.queryByText("Kopi Kenangan")).not.toBeInTheDocument()
     server.release()
     await vi.waitFor(() => expect(posts(calls)).toEqual(["/api/expenses/d1/discard"]))
-    await user.click(screen.getByRole("radio", { name: "Confirmed" }))
+    await user.click(screen.getByRole("tab", { name: "Confirmed" }))
     expect(await screen.findByText("No expenses in November 2026")).toBeInTheDocument()
   })
 

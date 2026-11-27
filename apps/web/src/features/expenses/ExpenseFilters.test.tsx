@@ -36,8 +36,11 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
+/** The queries sent to `path`, leaving out the Drafts tab's count (`status=draft`), which follows the same filters. */
 const queriesTo = (calls: ReadonlyArray<FakeApiCall>, path: string) =>
-  calls.filter((call) => call.path === path).map((call) => Object.fromEntries(call.query))
+  calls
+    .filter((call) => call.path === path && call.query.get("status") !== "draft")
+    .map((call) => Object.fromEntries(call.query))
 
 const step = async (
   user: ReturnType<typeof userEvent.setup>,
