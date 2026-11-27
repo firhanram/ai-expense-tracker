@@ -5,7 +5,7 @@
       "type": "frame",
       "id": "xoYyn",
       "x": 0,
-      "y": 0,
+      "y": -146,
       "name": "Components",
       "width": 1640,
       "fill": "$bg",
@@ -524,7 +524,8 @@
                           "width": "fill_container",
                           "content": "Log a purchase or ask about your spending…",
                           "fontFamily": "$font-sans",
-                          "fontSize": 15
+                          "fontSize": 15,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -1846,7 +1847,8 @@
                   "content": "You've spent Rp2.480.000 so far in November. Groceries is the largest share, at about 40%.",
                   "lineHeight": 1.53,
                   "fontFamily": "$font-sans",
-                  "fontSize": 15
+                  "fontSize": 15,
+                  "fontWeight": "normal"
                 },
                 {
                   "id": "xnHck",
@@ -2541,7 +2543,8 @@
               "content": "Updated. Check it and confirm when it looks right.",
               "lineHeight": 1.53,
               "fontFamily": "$font-sans",
-              "fontSize": 15
+              "fontSize": 15,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -3958,7 +3961,8 @@
                   "content": "You've spent Rp2.480.000 so far in November. Groceries is the largest share, at about 40%.",
                   "lineHeight": 1.53,
                   "fontFamily": "$font-sans",
-                  "fontSize": 15
+                  "fontSize": 15,
+                  "fontWeight": "normal"
                 },
                 {
                   "id": "OxNVl",
