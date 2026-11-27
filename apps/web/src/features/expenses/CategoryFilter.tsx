@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@ui-sdk/react/select"
-import { Check, ChevronDown } from "lucide-react"
+import { Check, ChevronDown, ListFilter } from "lucide-react"
 import { categories } from "../../shared/categories/categories.ts"
 import { categoryChartStep, otherCategoryId } from "../../shared/categories/categoryColor.ts"
 import { formatRupiahDigits } from "../../shared/format/rupiah.ts"
@@ -65,14 +65,27 @@ export const CategoryFilter = ({
     >
       <SelectTrigger
         aria-label="Category filter"
-        className="group flex h-7 items-center gap-1.5 rounded-sm border border-line bg-surface px-2.5 text-sm transition-colors duration-(--motion-color) hover:bg-surface-2 data-open:border-ring data-open:bg-surface-2"
+        className="group relative flex size-8 items-center justify-center gap-1.5 rounded-sm text-sm font-medium transition-colors duration-(--motion-color) hover:bg-surface-2 data-open:bg-surface-2 md:h-7 md:w-auto md:px-2.5"
       >
-        <SelectValue />
+        <ListFilter
+          aria-hidden="true"
+          size={14}
+          className="text-text-muted max-md:size-4 max-md:text-text"
+        />
+        <span className="max-md:sr-only">
+          <SelectValue />
+        </span>
         <ChevronDown
           aria-hidden="true"
           size={14}
-          className="text-text-muted group-data-open:rotate-180"
+          className="text-text-muted group-data-open:rotate-180 max-md:hidden"
         />
+        {value === null ? null : (
+          <span
+            aria-hidden="true"
+            className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-text md:hidden"
+          />
+        )}
       </SelectTrigger>
       <SelectContent
         side="bottom"

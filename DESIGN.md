@@ -63,8 +63,10 @@ Messages fill the width; the user bubble is capped at `85%`. Cards always fill t
 ┌────────────────────────────────────────────────────────────┐
 │       ▣ expense ●                    [ Chat | Expenses ]   │
 │                                                            │
-│  ◀ November 2026 ▶                      [All categories ▾] │
-│                                                Rp2.480.000 │
+│  ◀ November 2026 ▶                        [+ Add expense]  │
+│    Rp2.480.000  spent · 9 expenses                         │
+│                                                            │
+│  Confirmed   Drafts (3)                   All categories ▾ │
 ├────────────────────────────────────────────────────────────┤
 │  24 Nov   Uniqlo           Shopping            Rp70.000  ⋯ │
 │  24 Nov   Warung Bu Tini   Dining              Rp25.000  ⋯ │
@@ -72,13 +74,21 @@ Messages fill the width; the user bubble is capped at `85%`. Cards always fill t
 └────────────────────────────────────────────────────────────┘
 ```
 
-A single column of rows, not a table. A table fights the mobile layout and buys nothing for four fields. Month stepper left at `--text-lg`, Category filter right, month total right-aligned under the filter at `--text-lg` tabular. Rows are `56px`, separated by `--line`, with the date in a fixed `72px` gutter so amounts align down the page.
+A single column of rows, not a table. A table fights the mobile layout and buys nothing for four fields. Rows are `56px`, separated by `--line`, with the date in a fixed `72px` gutter so amounts align down the page.
 
-**Header controls.** On desktop the controls sit right of the month stepper, in one row above the total: a **Confirmed | Drafts** segmented switch (same track and active-tab look as the top bar's), the Category filter, and an **Add expense** button (`+`, `--surface`, `1px` `--line`, radius `6px`, `28px` tall). On mobile the switch drops to a full-width line of its own under the filter and Add expense. Drafts swaps the list for Draft rows and the total for a count ("3 drafts").
+**Header.** Three tiers, each with one job, read top to bottom:
+
+1. **Where** — the month stepper left at `--text-lg`, and **Add expense** opposite it: the page's only filled button (`--accent` with `--accent-fg`, a `16px` `+` icon, radius `6px`, `13px` weight 600).
+2. **How much** — the month total on its own line under the month label (indented to the label, not the chevron) at `--text-2xl` `--font-num` tabular, followed by "spent · 9 expenses" in `--text-sm` `--text-muted`.
+3. **Which slice** — a toolbar sitting on the list's top `--line` rule: **Confirmed | Drafts** as underline tabs on the left (active tab weight 600 with a `2px` `--text` underline, inactive `--text-muted`), and the Category filter on the right. The Drafts tab carries a count badge (`--warn-bg` / `--warn-fg`, pill, `--font-num` `11px`) whenever drafts exist, so pending work is visible without leaving Confirmed.
+
+The tabs are a real tablist (from ui-sdk). Drafts swaps the list for Draft rows and the total line for a count ("3 drafts"). `N` opens Add expense on desktop; the shortcut is named in the button's tooltip.
+
+On mobile the month label shortens to "Nov 2026", Add expense shrinks to a `36px` square icon button (labelled "Add expense" for assistive tech), the total drops to `24px`, and the Category filter becomes a `32px` icon button at the end of the tab row.
 
 **Add and edit form.** Add expense opens a form card (`--surface`, `1px` `--line`, radius `12px`, `16px` padding) under the header; Edit opens the same form in place of the row. Two columns on desktop (Amount with the hint "Whole Rupiah. Negative for a refund.", Date, Category, Merchant, then Note full width), one on mobile. Labels `--text-sm` weight 500, inputs `36px` with `--line` borders; a field's error is a `--text-sm` `--danger` line under it. Cancel (secondary) and Save (primary) sit bottom-right.
 
-The `⋯` opens a small menu with Edit and Delete (Delete in `--danger`). On mobile, the whole row is tappable and opens the same actions as a bottom sheet headed by the row's merchant, date, Category and amount. On mobile the month label shortens to "Nov 2026", the total moves beside it, the filter drops to its own line, and rows omit the Category chip.
+The `⋯` opens a small menu with Edit and Delete (Delete in `--danger`). On mobile, the whole row is tappable and opens the same actions as a bottom sheet headed by the row's merchant, date, Category and amount. On mobile, rows omit the Category chip.
 
 ## Colour
 
@@ -261,7 +271,7 @@ Deleting asks for confirmation in the row itself — "Delete? **Yes** / **No**" 
 
 ### Category filter
 
-A button — `--surface`, `1px` `--line`, radius `6px` — reading the current filter ("All categories") with a chevron. While open it turns `--surface-2` with a `--ring` border and the chevron points up.
+A borderless toolbar button — a `14px` filter icon, the current filter ("All categories") and a chevron, radius `6px`, `--surface-2` on hover. While open it turns `--surface-2` and the chevron points up. On mobile it is icon-only; a filtered state shows a `6px` `--text` dot on the icon.
 
 The dropdown is a popover (`--surface`, `1px` `--line`, radius `12px`, `--shadow-pop`, `264px` wide), right-aligned to the button and `6px` below it:
 

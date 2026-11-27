@@ -38,12 +38,13 @@ describe("the Expense list", () => {
     await renderApp("/expenses")
     await screen.findByText("No expenses in November 2026")
 
-    const lists = calls.filter((call) => call.path === "/api/expenses")
-    expect(lists).toHaveLength(1)
-    expect(Object.fromEntries(lists[0]?.query ?? [])).toEqual({
-      from: "2026-11-01",
-      to: "2026-11-30",
-    })
+    const lists = calls
+      .filter((call) => call.path === "/api/expenses")
+      .map((call) => Object.fromEntries(call.query))
+    // The confirmed list, and the month's Drafts for the Drafts tab's count.
+    expect(lists).toHaveLength(2)
+    expect(lists).toContainEqual({ from: "2026-11-01", to: "2026-11-30" })
+    expect(lists).toContainEqual({ from: "2026-11-01", to: "2026-11-30", status: "draft" })
   })
 
   it("shows each Expense as a row, in the order the API sends (newest date first)", async () => {
@@ -151,6 +152,18 @@ describe("adding an Expense by hand", () => {
       occurredAt: "2026-11-25",
     })
     expect(screen.queryByRole("form", { name: "Add expense" })).not.toBeInTheDocument()
+  })
+
+  it("opens the form on N, but not while the user is typing somewhere", async () => {
+    fakeApi({ "GET /api/expenses": ok([]) })
+    await renderApp("/expenses")
+    await screen.findByText("No expenses in November 2026")
+    const user = userEvent.setup()
+
+    await user.keyboard("n")
+    const form = screen.getByRole("form", { name: "Add expense" })
+    await user.type(within(form).getByLabelText("Merchant"), "n")
+    expect(within(form).getByLabelText("Merchant")).toHaveValue("n")
   })
 
   it("refuses an amount that is not whole Rupiah, and a missing Category, without posting", async () => {

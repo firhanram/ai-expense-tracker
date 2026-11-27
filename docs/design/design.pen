@@ -3627,37 +3627,36 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "f4Gvz",
+                  "id": "jbNrD",
                   "name": "Filter Bar",
                   "width": "fill_container",
-                  "stroke": "$line",
-                  "strokeWidth": {
-                    "bottom": 1
-                  },
                   "layout": "vertical",
+                  "gap": 4,
                   "padding": [
                     16,
+                    0,
+                    0,
                     0
                   ],
                   "children": [
                     {
                       "type": "frame",
-                      "id": "w5ZCao",
-                      "name": "Row",
+                      "id": "uquC2",
+                      "name": "Title Row",
                       "width": "fill_container",
                       "justifyContent": "space_between",
                       "alignItems": "center",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "E3Fwl6",
+                          "id": "yaWbk",
                           "name": "Month Stepper",
                           "gap": 8,
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "P0h5R",
+                              "id": "xGNre",
                               "name": "Prev",
                               "width": 18,
                               "height": 18,
@@ -3667,7 +3666,7 @@
                             },
                             {
                               "type": "text",
-                              "id": "t4FIl",
+                              "id": "mOVMX",
                               "name": "Month",
                               "fill": "$text",
                               "content": "November 2026",
@@ -3677,7 +3676,7 @@
                             },
                             {
                               "type": "icon",
-                              "id": "bycIg",
+                              "id": "YB7uo",
                               "name": "Next",
                               "width": 18,
                               "height": 18,
@@ -3689,58 +3688,213 @@
                         },
                         {
                           "type": "frame",
-                          "id": "A50Hp",
-                          "name": "Filter Group",
-                          "layout": "vertical",
-                          "gap": 4,
+                          "id": "wSons",
+                          "name": "Add Expense",
+                          "fill": "$accent",
+                          "cornerRadius": 6,
+                          "gap": 6,
+                          "padding": [
+                            7,
+                            12,
+                            7,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "g3rAqm",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "plus",
+                              "library": "lucide",
+                              "fill": "$accent-fg"
+                            },
+                            {
+                              "type": "text",
+                              "id": "BMatk",
+                              "name": "Label",
+                              "fill": "$accent-fg",
+                              "content": "Add expense",
+                              "fontFamily": "$font-sans",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Runky",
+                      "name": "Total",
+                      "gap": 10,
+                      "padding": [
+                        8,
+                        0,
+                        4,
+                        26
+                      ],
+                      "alignItems": "end",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "SgOOW",
+                          "name": "Amount",
+                          "fill": "$text",
+                          "content": "Rp2.480.000",
+                          "fontFamily": "$font-num",
+                          "fontSize": 28,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "PEZuw",
+                          "name": "Meta",
+                          "fill": "$text-muted",
+                          "content": "spent · 9 expenses",
+                          "lineHeight": 2,
+                          "fontFamily": "$font-sans",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BQSVf",
+                      "name": "Toolbar",
+                      "width": "fill_container",
+                      "stroke": "$line",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "qZtnv",
+                          "name": "View Tabs",
+                          "gap": 20,
                           "alignItems": "end",
                           "children": [
                             {
                               "type": "frame",
-                              "id": "j6nC1",
-                              "name": "Category Filter",
-                              "fill": "$surface",
-                              "cornerRadius": 6,
-                              "stroke": "$line",
-                              "strokeWidth": 1,
+                              "id": "u47CTb",
+                              "name": "Tab Confirmed",
+                              "stroke": "$text",
+                              "strokeWidth": {
+                                "bottom": 2
+                              },
+                              "padding": [
+                                10,
+                                0
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "EGeR4",
+                                  "name": "Label",
+                                  "fill": "$text",
+                                  "content": "Confirmed",
+                                  "fontFamily": "$font-sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "swc66",
+                              "name": "Tab Drafts",
                               "gap": 6,
                               "padding": [
-                                6,
-                                10
+                                10,
+                                0
                               ],
                               "alignItems": "center",
                               "children": [
                                 {
                                   "type": "text",
-                                  "id": "wP0mt",
+                                  "id": "WSEVx",
                                   "name": "Label",
-                                  "fill": "$text",
-                                  "content": "All categories",
+                                  "fill": "$text-muted",
+                                  "content": "Drafts",
                                   "fontFamily": "$font-sans",
                                   "fontSize": 13,
                                   "fontWeight": "500"
                                 },
                                 {
-                                  "type": "icon",
-                                  "id": "DjaCc",
-                                  "name": "Chevron",
-                                  "width": 14,
-                                  "height": 14,
-                                  "icon": "chevron-down",
-                                  "library": "lucide",
-                                  "fill": "$text-muted"
+                                  "type": "frame",
+                                  "id": "h4oyD1",
+                                  "name": "Draft Count",
+                                  "fill": "$warn-bg",
+                                  "cornerRadius": 999,
+                                  "padding": [
+                                    1,
+                                    7
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "A6JPb1",
+                                      "name": "Count",
+                                      "fill": "$warn-fg",
+                                      "content": "3",
+                                      "fontFamily": "$font-num",
+                                      "fontSize": 11,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
                                 }
                               ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "UDkpH",
+                          "name": "Category Filter",
+                          "fill": "#00000000",
+                          "cornerRadius": 6,
+                          "gap": 6,
+                          "padding": [
+                            6,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "Q1v3Ni",
+                              "name": "Filter Icon",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "list-filter",
+                              "library": "lucide",
+                              "fill": "$text-muted"
                             },
                             {
                               "type": "text",
-                              "id": "w0Iwl",
-                              "name": "Month Total",
+                              "id": "eKHsp",
+                              "name": "Label",
                               "fill": "$text",
-                              "content": "Rp2.480.000",
-                              "fontFamily": "$font-num",
-                              "fontSize": 18,
-                              "fontWeight": "600"
+                              "content": "All categories",
+                              "fontFamily": "$font-sans",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "icon",
+                              "id": "OHKBn",
+                              "name": "Chevron",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "chevron-down",
+                              "library": "lucide",
+                              "fill": "$text-muted"
                             }
                           ]
                         }
@@ -3992,7 +4146,7 @@
                   "id": "ASgjC",
                   "layoutPosition": "absolute",
                   "x": 556,
-                  "y": 154,
+                  "y": 206,
                   "name": "Row Menu (open on Uniqlo)",
                   "width": 140,
                   "fill": "$surface",
@@ -4166,38 +4320,36 @@
           "children": [
             {
               "type": "frame",
-              "id": "ZVBtf",
+              "id": "M0kYTz",
               "name": "Filter Bar",
               "width": "fill_container",
-              "stroke": "$line",
-              "strokeWidth": {
-                "bottom": 1
-              },
               "layout": "vertical",
-              "gap": 8,
+              "gap": 2,
               "padding": [
-                16,
+                12,
+                0,
+                0,
                 0
               ],
               "children": [
                 {
                   "type": "frame",
-                  "id": "l8AYd",
-                  "name": "Row",
+                  "id": "LOQvF",
+                  "name": "Title Row",
                   "width": "fill_container",
                   "justifyContent": "space_between",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "yJkSi",
+                      "id": "Xah8F",
                       "name": "Month Stepper",
                       "gap": 6,
                       "alignItems": "center",
                       "children": [
                         {
                           "type": "icon",
-                          "id": "qeC93",
+                          "id": "vl8vF",
                           "name": "Prev",
                           "width": 18,
                           "height": 18,
@@ -4207,17 +4359,17 @@
                         },
                         {
                           "type": "text",
-                          "id": "EbDUA",
+                          "id": "tuoTS",
                           "name": "Month",
                           "fill": "$text",
                           "content": "Nov 2026",
                           "fontFamily": "$font-sans",
-                          "fontSize": 18,
+                          "fontSize": 17,
                           "fontWeight": "600"
                         },
                         {
                           "type": "icon",
-                          "id": "D30b4x",
+                          "id": "ZC8zG",
                           "name": "Next",
                           "width": 18,
                           "height": 18,
@@ -4228,51 +4380,178 @@
                       ]
                     },
                     {
-                      "type": "text",
-                      "id": "W5LYp",
-                      "name": "Month Total",
-                      "fill": "$text",
-                      "content": "Rp2.480.000",
-                      "fontFamily": "$font-num",
-                      "fontSize": 15,
-                      "fontWeight": "600"
+                      "type": "frame",
+                      "id": "N2Ckw",
+                      "name": "Add Expense",
+                      "width": 36,
+                      "height": 36,
+                      "fill": "$accent",
+                      "cornerRadius": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "whJzX",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "plus",
+                          "library": "lucide",
+                          "fill": "$accent-fg"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
                   "type": "frame",
-                  "id": "h1Pth",
-                  "name": "Category Filter",
-                  "fill": "$surface",
-                  "cornerRadius": 6,
-                  "stroke": "$line",
-                  "strokeWidth": 1,
-                  "gap": 6,
+                  "id": "cM6MB",
+                  "name": "Total",
+                  "gap": 8,
                   "padding": [
                     6,
-                    10
+                    0,
+                    6,
+                    24
                   ],
-                  "alignItems": "center",
+                  "alignItems": "end",
                   "children": [
                     {
                       "type": "text",
-                      "id": "UIft4",
-                      "name": "Label",
+                      "id": "mZXy7",
+                      "name": "Amount",
                       "fill": "$text",
-                      "content": "All categories",
-                      "fontFamily": "$font-sans",
-                      "fontSize": 13,
-                      "fontWeight": "500"
+                      "content": "Rp2.480.000",
+                      "fontFamily": "$font-num",
+                      "fontSize": 24,
+                      "fontWeight": "600"
                     },
                     {
-                      "type": "icon",
-                      "id": "U0eEtB",
-                      "name": "Chevron",
-                      "width": 14,
-                      "height": 14,
-                      "icon": "chevron-down",
-                      "library": "lucide",
-                      "fill": "$text-muted"
+                      "type": "text",
+                      "id": "Xg0jE",
+                      "name": "Meta",
+                      "fill": "$text-muted",
+                      "content": "9 expenses",
+                      "lineHeight": 1.8,
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "p6kNh",
+                  "name": "Toolbar",
+                  "width": "fill_container",
+                  "stroke": "$line",
+                  "strokeWidth": {
+                    "bottom": 1
+                  },
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "kh3qd",
+                      "name": "View Tabs",
+                      "gap": 20,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ZiQhK",
+                          "name": "Tab Confirmed",
+                          "stroke": "$text",
+                          "strokeWidth": {
+                            "bottom": 2
+                          },
+                          "padding": [
+                            10,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "B1RFro",
+                              "name": "Label",
+                              "fill": "$text",
+                              "content": "Confirmed",
+                              "fontFamily": "$font-sans",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "UHNii",
+                          "name": "Tab Drafts",
+                          "gap": 6,
+                          "padding": [
+                            10,
+                            0
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Ht1gY",
+                              "name": "Label",
+                              "fill": "$text-muted",
+                              "content": "Drafts",
+                              "fontFamily": "$font-sans",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "cVpwL",
+                              "name": "Draft Count",
+                              "fill": "$warn-bg",
+                              "cornerRadius": 999,
+                              "padding": [
+                                1,
+                                7
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "A6mGOs",
+                                  "name": "Count",
+                                  "fill": "$warn-fg",
+                                  "content": "3",
+                                  "fontFamily": "$font-num",
+                                  "fontSize": 11,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "PSGfe",
+                      "name": "Filter Button",
+                      "width": 32,
+                      "height": 32,
+                      "cornerRadius": 6,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "txXFb",
+                          "name": "Icon",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "list-filter",
+                          "library": "lucide",
+                          "fill": "$text"
+                        }
+                      ]
                     }
                   ]
                 }
@@ -6726,37 +7005,36 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "C8ly1i",
+                  "id": "S09mI",
                   "name": "Filter Bar",
                   "width": "fill_container",
-                  "stroke": "$line",
-                  "strokeWidth": {
-                    "bottom": 1
-                  },
                   "layout": "vertical",
+                  "gap": 4,
                   "padding": [
                     16,
+                    0,
+                    0,
                     0
                   ],
                   "children": [
                     {
                       "type": "frame",
-                      "id": "borOd",
-                      "name": "Row",
+                      "id": "M47Hg",
+                      "name": "Title Row",
                       "width": "fill_container",
                       "justifyContent": "space_between",
                       "alignItems": "center",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "S8iSQ1",
+                          "id": "Z64Rna",
                           "name": "Month Stepper",
                           "gap": 8,
                           "alignItems": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "id": "k1p5oC",
+                              "id": "RncvJ",
                               "name": "Prev",
                               "width": 18,
                               "height": 18,
@@ -6766,7 +7044,7 @@
                             },
                             {
                               "type": "text",
-                              "id": "Yc40j",
+                              "id": "ZwuIx",
                               "name": "Month",
                               "fill": "$text",
                               "content": "November 2026",
@@ -6776,7 +7054,7 @@
                             },
                             {
                               "type": "icon",
-                              "id": "b4NZs",
+                              "id": "Gk2ct",
                               "name": "Next",
                               "width": 18,
                               "height": 18,
@@ -6788,58 +7066,213 @@
                         },
                         {
                           "type": "frame",
-                          "id": "cTU6s",
-                          "name": "Filter Group",
-                          "layout": "vertical",
-                          "gap": 4,
+                          "id": "YA89N",
+                          "name": "Add Expense",
+                          "fill": "$accent",
+                          "cornerRadius": 6,
+                          "gap": 6,
+                          "padding": [
+                            7,
+                            12,
+                            7,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "lu0CR",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "plus",
+                              "library": "lucide",
+                              "fill": "$accent-fg"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ITF1z",
+                              "name": "Label",
+                              "fill": "$accent-fg",
+                              "content": "Add expense",
+                              "fontFamily": "$font-sans",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "P8eu6m",
+                      "name": "Total",
+                      "gap": 10,
+                      "padding": [
+                        8,
+                        0,
+                        4,
+                        26
+                      ],
+                      "alignItems": "end",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "s3DzD",
+                          "name": "Amount",
+                          "fill": "$text",
+                          "content": "Rp2.480.000",
+                          "fontFamily": "$font-num",
+                          "fontSize": 28,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "I3e7lP",
+                          "name": "Meta",
+                          "fill": "$text-muted",
+                          "content": "spent · 9 expenses",
+                          "lineHeight": 2,
+                          "fontFamily": "$font-sans",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "JGYBZ",
+                      "name": "Toolbar",
+                      "width": "fill_container",
+                      "stroke": "$line",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "GCXic",
+                          "name": "View Tabs",
+                          "gap": 20,
                           "alignItems": "end",
                           "children": [
                             {
                               "type": "frame",
-                              "id": "WO5te",
-                              "name": "Category Filter",
-                              "fill": "$surface-2",
-                              "cornerRadius": 6,
-                              "stroke": "$ring",
-                              "strokeWidth": 1,
+                              "id": "O3Gh0E",
+                              "name": "Tab Confirmed",
+                              "stroke": "$text",
+                              "strokeWidth": {
+                                "bottom": 2
+                              },
+                              "padding": [
+                                10,
+                                0
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "iSzhj",
+                                  "name": "Label",
+                                  "fill": "$text",
+                                  "content": "Confirmed",
+                                  "fontFamily": "$font-sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "c5Kz1",
+                              "name": "Tab Drafts",
                               "gap": 6,
                               "padding": [
-                                6,
-                                10
+                                10,
+                                0
                               ],
                               "alignItems": "center",
                               "children": [
                                 {
                                   "type": "text",
-                                  "id": "ExVRn",
+                                  "id": "FNv0W",
                                   "name": "Label",
-                                  "fill": "$text",
-                                  "content": "All categories",
+                                  "fill": "$text-muted",
+                                  "content": "Drafts",
                                   "fontFamily": "$font-sans",
                                   "fontSize": 13,
                                   "fontWeight": "500"
                                 },
                                 {
-                                  "type": "icon",
-                                  "id": "A9AlQ",
-                                  "name": "Chevron",
-                                  "width": 14,
-                                  "height": 14,
-                                  "icon": "chevron-up",
-                                  "library": "lucide",
-                                  "fill": "$text-muted"
+                                  "type": "frame",
+                                  "id": "k3JjQI",
+                                  "name": "Draft Count",
+                                  "fill": "$warn-bg",
+                                  "cornerRadius": 999,
+                                  "padding": [
+                                    1,
+                                    7
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "VSXAE",
+                                      "name": "Count",
+                                      "fill": "$warn-fg",
+                                      "content": "3",
+                                      "fontFamily": "$font-num",
+                                      "fontSize": 11,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
                                 }
                               ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "iiEml",
+                          "name": "Category Filter",
+                          "fill": "$surface-2",
+                          "cornerRadius": 6,
+                          "gap": 6,
+                          "padding": [
+                            6,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "N85rJ",
+                              "name": "Filter Icon",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "list-filter",
+                              "library": "lucide",
+                              "fill": "$text-muted"
                             },
                             {
                               "type": "text",
-                              "id": "gbWbY",
-                              "name": "Month Total",
+                              "id": "t4sh4B",
+                              "name": "Label",
                               "fill": "$text",
-                              "content": "Rp2.480.000",
-                              "fontFamily": "$font-num",
-                              "fontSize": 18,
-                              "fontWeight": "600"
+                              "content": "All categories",
+                              "fontFamily": "$font-sans",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "icon",
+                              "id": "Wopxc",
+                              "name": "Chevron",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "chevron-down",
+                              "library": "lucide",
+                              "fill": "$text-muted"
                             }
                           ]
                         }
@@ -7095,7 +7528,7 @@
           "id": "XDSWF",
           "layoutPosition": "absolute",
           "x": 712,
-          "y": 122,
+          "y": 212,
           "name": "Category Popover",
           "width": 264,
           "fill": "$surface",
@@ -11153,6 +11586,3023 @@
                           "fontWeight": "normal"
                         }
                       ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "dxtcm",
+      "x": 3402,
+      "y": 3122,
+      "name": "Expense Header — Explorations",
+      "clip": true,
+      "width": 1664,
+      "fill": "$bg",
+      "layout": "vertical",
+      "gap": 40,
+      "padding": 56,
+      "children": [
+        {
+          "type": "frame",
+          "id": "EepXZ",
+          "name": "Intro",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 8,
+          "children": [
+            {
+              "type": "text",
+              "id": "q6IJUk",
+              "name": "Title",
+              "fill": "$text",
+              "content": "Expense list header — explorations",
+              "fontFamily": "$font-sans",
+              "fontSize": 24,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "DYhpT",
+              "name": "Problem",
+              "fill": "$text-muted",
+              "textGrowth": "fixed-width",
+              "width": 900,
+              "content": "Today five controls share one line: month, Confirmed | Drafts, Category, Add expense, and the total wedged under them. They all look the same weight, the total floats under a button it has nothing to do with, and the primary action (Add expense) reads as just another filter. Each option below groups controls by job: where am I (month + total), what am I looking at (view + filter), what can I do (add).",
+              "lineHeight": 1.5,
+              "fontFamily": "$font-sans",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "s9FME",
+          "name": "Desktop Row 1",
+          "width": "fill_container",
+          "gap": 48,
+          "children": [
+            {
+              "type": "frame",
+              "id": "R6c5pC",
+              "name": "Option A — Stacked hierarchy",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "iJIRD",
+                  "name": "Caption",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "SGzHV",
+                      "name": "Tag Row",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Ef1Ft",
+                          "name": "Tag",
+                          "fill": "$text-muted",
+                          "content": "OPTION A",
+                          "fontFamily": "$font-num",
+                          "fontSize": 11,
+                          "fontWeight": "600",
+                          "letterSpacing": 1
+                        },
+                        {
+                          "type": "frame",
+                          "id": "l5uma1",
+                          "name": "Recommended",
+                          "fill": "$accent",
+                          "cornerRadius": 999,
+                          "padding": [
+                            2,
+                            8
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "OJqyO",
+                              "name": "Label",
+                              "fill": "$accent-fg",
+                              "content": "Chosen",
+                              "fontFamily": "$font-sans",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "xxvbz",
+                      "name": "Title",
+                      "fill": "$text",
+                      "content": "Stacked hierarchy",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "FHhvM",
+                      "name": "Description",
+                      "fill": "$text-muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Three tiers, read top to bottom. Where: month stepper with the one primary action (Add expense, filled) opposite it. How much: the total gets its own line at display size with a quiet count. What: a toolbar of underline tabs (Drafts carries a count, so pending work is visible without switching) and the Category filter, sitting on the list's top rule.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "E7P2Y0",
+                  "name": "Screen",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "$bg",
+                  "cornerRadius": 12,
+                  "stroke": "$line",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "padding": [
+                    8,
+                    24,
+                    16,
+                    24
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "f8UvGB",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 4,
+                      "padding": [
+                        16,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "AFHZ9",
+                          "name": "Title Row",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "K1o5LQ",
+                              "name": "Month Stepper",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "C2AJm",
+                                  "name": "Prev",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "chevron-left",
+                                  "library": "lucide",
+                                  "fill": "$text-muted"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "pJTAw",
+                                  "name": "Month",
+                                  "fill": "$text",
+                                  "content": "November 2026",
+                                  "fontFamily": "$font-sans",
+                                  "fontSize": 18,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "c66SZx",
+                                  "name": "Next",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "chevron-right",
+                                  "library": "lucide",
+                                  "fill": "$text-muted"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "UgFVh",
+                              "name": "Add Expense",
+                              "fill": "$accent",
+                              "cornerRadius": 6,
+                              "gap": 6,
+                              "padding": [
+                                7,
+                                12,
+                                7,
+                                10
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "JZAMa",
+                                  "name": "Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "plus",
+                                  "library": "lucide",
+                                  "fill": "$accent-fg"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "L9B2P",
+                                  "name": "Label",
+                                  "fill": "$accent-fg",
+                                  "content": "Add expense",
+                                  "fontFamily": "$font-sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "VDDht",
+                          "name": "Total",
+                          "gap": 10,
+                          "padding": [
+                            8,
+                            0,
+                            4,
+                            26
+                          ],
+                          "alignItems": "end",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "PyZWp",
+                              "name": "Amount",
+                              "fill": "$text",
+                              "content": "Rp2.480.000",
+                              "fontFamily": "$font-num",
+                              "fontSize": 28,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "V0cSw",
+                              "name": "Meta",
+                              "fill": "$text-muted",
+                              "content": "spent · 9 expenses",
+                              "lineHeight": 2,
+                              "fontFamily": "$font-sans",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "C6RMV",
+                          "name": "Toolbar",
+                          "width": "fill_container",
+                          "stroke": "$line",
+                          "strokeWidth": {
+                            "bottom": 1
+                          },
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "w6eqC",
+                              "name": "View Tabs",
+                              "gap": 20,
+                              "alignItems": "end",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "gM9RS",
+                                  "name": "Tab Confirmed",
+                                  "stroke": "$text",
+                                  "strokeWidth": {
+                                    "bottom": 2
+                                  },
+                                  "padding": [
+                                    10,
+                                    0
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "XU7iL",
+                                      "name": "Label",
+                                      "fill": "$text",
+                                      "content": "Confirmed",
+                                      "fontFamily": "$font-sans",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "vPaeY",
+                                  "name": "Tab Drafts",
+                                  "gap": 6,
+                                  "padding": [
+                                    10,
+                                    0
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "UGEfW",
+                                      "name": "Label",
+                                      "fill": "$text-muted",
+                                      "content": "Drafts",
+                                      "fontFamily": "$font-sans",
+                                      "fontSize": 13,
+                                      "fontWeight": "500"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "K9vFb",
+                                      "name": "Draft Count",
+                                      "fill": "$warn-bg",
+                                      "cornerRadius": 999,
+                                      "padding": [
+                                        1,
+                                        7
+                                      ],
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "yrcoU",
+                                          "name": "Count",
+                                          "fill": "$warn-fg",
+                                          "content": "3",
+                                          "fontFamily": "$font-num",
+                                          "fontSize": 11,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "SckFo",
+                              "name": "Category Filter",
+                              "fill": "#00000000",
+                              "cornerRadius": 6,
+                              "gap": 6,
+                              "padding": [
+                                6,
+                                10
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "NLPWo",
+                                  "name": "Filter Icon",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "list-filter",
+                                  "library": "lucide",
+                                  "fill": "$text-muted"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "mOQmn",
+                                  "name": "Label",
+                                  "fill": "$text",
+                                  "content": "All categories",
+                                  "fontFamily": "$font-sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "YbNbp",
+                                  "name": "Chevron",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "chevron-down",
+                                  "library": "lucide",
+                                  "fill": "$text-muted"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "GbkS3",
+                      "name": "Rows",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "id": "k2dAw",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Uniqlo",
+                          "width": "fill_container",
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "24 Nov"
+                            },
+                            "E78zl": {
+                              "content": "Uniqlo"
+                            },
+                            "c2cWW/Xi2ut": {
+                              "content": "Shopping"
+                            },
+                            "ABXBI": {
+                              "content": "Rp70.000"
+                            }
+                          }
+                        },
+                        {
+                          "id": "KuRZh",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Warung Bu Tini",
+                          "width": "fill_container",
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "24 Nov"
+                            },
+                            "E78zl": {
+                              "content": "Warung Bu Tini"
+                            },
+                            "c2cWW/Xi2ut": {
+                              "content": "Eating out"
+                            },
+                            "ABXBI": {
+                              "content": "Rp25.000"
+                            }
+                          }
+                        },
+                        {
+                          "id": "JRRey",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Gojek",
+                          "width": "fill_container",
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "23 Nov"
+                            },
+                            "E78zl": {
+                              "content": "Gojek"
+                            },
+                            "c2cWW/Xi2ut": {
+                              "content": "Transport"
+                            },
+                            "ABXBI": {
+                              "content": "Rp18.000"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mM1Er",
+              "name": "Option B — Drafts as a nudge",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "jXjt6",
+                  "name": "Caption",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "O1MYJ3",
+                      "name": "Tag Row",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "G05nx",
+                          "name": "Tag",
+                          "fill": "$text-muted",
+                          "content": "OPTION B",
+                          "fontFamily": "$font-num",
+                          "fontSize": 11,
+                          "fontWeight": "600",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "ErYvd",
+                      "name": "Title",
+                      "fill": "$text",
+                      "content": "Drafts as a nudge",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "I3quFG",
+                      "name": "Description",
+                      "fill": "$text-muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Drafts are the exception, not a second mode — so drop the switch. The header shrinks to two clusters: month + total on the left (total as the stepper's subtitle), filter + Add expense on the right. When drafts exist, an inline notice above the list says how many and links to them; it disappears at zero. One less control, and drafts get attention exactly when they need it.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "WPOzA",
+                  "name": "Screen",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "$bg",
+                  "cornerRadius": 12,
+                  "stroke": "$line",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "padding": [
+                    8,
+                    24,
+                    16,
+                    24
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "sG5AV",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "stroke": "$line",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "padding": [
+                        16,
+                        0
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Toyxz",
+                          "name": "Summary",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "E0n2W",
+                              "name": "Month Stepper",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "u3Y8nS",
+                                  "name": "Prev",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "chevron-left",
+                                  "library": "lucide",
+                                  "fill": "$text-muted"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "E9tF3",
+                                  "name": "Month",
+                                  "fill": "$text",
+                                  "content": "November 2026",
+                                  "fontFamily": "$font-sans",
+                                  "fontSize": 18,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "QL6SO",
+                                  "name": "Next",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "chevron-right",
+                                  "library": "lucide",
+                                  "fill": "$text-muted"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "D6NJBd",
+                              "name": "Total Indent",
+                              "padding": [
+                                0,
+                                0,
+                                0,
+                                26
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "fc3qC",
+                                  "name": "Total",
+                                  "fill": "$text-muted",
+                                  "content": "Rp2.480.000 · 9 expenses",
+                                  "fontFamily": "$font-num",
+                                  "fontSize": 14,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "raRJp",
+                          "name": "Actions",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "m58vxM",
+                              "name": "Category Filter",
+                              "fill": "$surface",
+                              "cornerRadius": 6,
+                              "stroke": "$line",
+                              "strokeWidth": 1,
+                              "gap": 6,
+                              "padding": [
+                                6,
+                                10
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "XfxtE",
+                                  "name": "Filter Icon",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "list-filter",
+                                  "library": "lucide",
+                                  "fill": "$text-muted"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "TORSD",
+                                  "name": "Label",
+                                  "fill": "$text",
+                                  "content": "All categories",
+                                  "fontFamily": "$font-sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "B4Yuz",
+                                  "name": "Chevron",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "chevron-down",
+                                  "library": "lucide",
+                                  "fill": "$text-muted"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "W5sc8",
+                              "name": "Add Expense",
+                              "fill": "$accent",
+                              "cornerRadius": 6,
+                              "gap": 6,
+                              "padding": [
+                                7,
+                                12,
+                                7,
+                                10
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "e5PR9W",
+                                  "name": "Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "plus",
+                                  "library": "lucide",
+                                  "fill": "$accent-fg"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "D2Ry8Z",
+                                  "name": "Label",
+                                  "fill": "$accent-fg",
+                                  "content": "Add expense",
+                                  "fontFamily": "$font-sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pl1Am",
+                      "name": "Notice Spacing",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        12,
+                        0,
+                        4,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "W819k",
+                          "name": "Drafts Notice",
+                          "width": "fill_container",
+                          "fill": "$warn-bg",
+                          "cornerRadius": 8,
+                          "gap": 8,
+                          "padding": [
+                            10,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "Oo2aJ",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "file-pen-line",
+                              "library": "lucide",
+                              "fill": "$warn-fg"
+                            },
+                            {
+                              "type": "text",
+                              "id": "o3jYQg",
+                              "name": "Text",
+                              "fill": "$warn-fg",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "3 drafts waiting to be confirmed",
+                              "fontFamily": "$font-sans",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Yk4H7",
+                              "name": "Review Link",
+                              "gap": 4,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Q0ehqG",
+                                  "name": "Label",
+                                  "fill": "$warn-fg",
+                                  "content": "Review",
+                                  "fontFamily": "$font-sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "WeGsC",
+                                  "name": "Arrow",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "arrow-right",
+                                  "library": "lucide",
+                                  "fill": "$warn-fg"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "FutWE",
+                      "name": "Rows",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "id": "WaRab",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Uniqlo",
+                          "width": "fill_container",
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "24 Nov"
+                            },
+                            "E78zl": {
+                              "content": "Uniqlo"
+                            },
+                            "c2cWW/Xi2ut": {
+                              "content": "Shopping"
+                            },
+                            "ABXBI": {
+                              "content": "Rp70.000"
+                            }
+                          }
+                        },
+                        {
+                          "id": "o7wI5Q",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Warung Bu Tini",
+                          "width": "fill_container",
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "24 Nov"
+                            },
+                            "E78zl": {
+                              "content": "Warung Bu Tini"
+                            },
+                            "c2cWW/Xi2ut": {
+                              "content": "Eating out"
+                            },
+                            "ABXBI": {
+                              "content": "Rp25.000"
+                            }
+                          }
+                        },
+                        {
+                          "id": "r6UboT",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Gojek",
+                          "width": "fill_container",
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "23 Nov"
+                            },
+                            "E78zl": {
+                              "content": "Gojek"
+                            },
+                            "c2cWW/Xi2ut": {
+                              "content": "Transport"
+                            },
+                            "ABXBI": {
+                              "content": "Rp18.000"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "bwMYA",
+          "name": "Desktop Row 2",
+          "width": "fill_container",
+          "gap": 48,
+          "children": [
+            {
+              "type": "frame",
+              "id": "D4L4yo",
+              "name": "Option C — Two-line split",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "mCAVO",
+                  "name": "Caption",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "e4iT1",
+                      "name": "Tag Row",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "mPRnM",
+                          "name": "Tag",
+                          "fill": "$text-muted",
+                          "content": "OPTION C",
+                          "fontFamily": "$font-num",
+                          "fontSize": 11,
+                          "fontWeight": "600",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "LVsMj",
+                      "name": "Title",
+                      "fill": "$text",
+                      "content": "Two-line split",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "z9vi6",
+                      "name": "Description",
+                      "fill": "$text-muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Smallest change from today. Line one is the summary — month on the left, total on the right, the same baseline, so the number reads as the month's total. Line two is the toolbar — Confirmed | Drafts switch (with a draft count) and the filter on the left, Add expense on the right as a secondary button. Every control keeps its current component; only the grouping changes.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "k3iyh",
+                  "name": "Screen",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "$bg",
+                  "cornerRadius": 12,
+                  "stroke": "$line",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "padding": [
+                    8,
+                    24,
+                    16,
+                    24
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "a6KkZ",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "stroke": "$line",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "layout": "vertical",
+                      "gap": 14,
+                      "padding": [
+                        16,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ws9Pm",
+                          "name": "Summary Row",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "v682r",
+                              "name": "Month Stepper",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "KmryJ",
+                                  "name": "Prev",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "chevron-left",
+                                  "library": "lucide",
+                                  "fill": "$text-muted"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "iW6BP",
+                                  "name": "Month",
+                                  "fill": "$text",
+                                  "content": "November 2026",
+                                  "fontFamily": "$font-sans",
+                                  "fontSize": 18,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "V506U",
+                                  "name": "Next",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "chevron-right",
+                                  "library": "lucide",
+                                  "fill": "$text-muted"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "EhKJv",
+                              "name": "Month Total",
+                              "fill": "$text",
+                              "content": "Rp2.480.000",
+                              "fontFamily": "$font-num",
+                              "fontSize": 18,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "RjqnL",
+                          "name": "Toolbar",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "hifNX",
+                              "name": "View Controls",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "KhOO2",
+                                  "name": "View Switch",
+                                  "fill": "$surface-2",
+                                  "cornerRadius": 8,
+                                  "gap": 2,
+                                  "padding": 3,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "RPbMF",
+                                      "name": "Seg Confirmed",
+                                      "fill": "$surface",
+                                      "cornerRadius": 6,
+                                      "effect": {
+                                        "type": "shadow",
+                                        "shadowType": "outer",
+                                        "color": "#00000014",
+                                        "offset": {
+                                          "x": 0,
+                                          "y": 1
+                                        },
+                                        "blur": 2
+                                      },
+                                      "padding": [
+                                        4,
+                                        10
+                                      ],
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "evSb9",
+                                          "name": "Label",
+                                          "fill": "$text",
+                                          "content": "Confirmed",
+                                          "fontFamily": "$font-sans",
+                                          "fontSize": 13,
+                                          "fontWeight": "500"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "VT3fw",
+                                      "name": "Seg Drafts",
+                                      "cornerRadius": 6,
+                                      "gap": 6,
+                                      "padding": [
+                                        4,
+                                        10
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "WkBUf",
+                                          "name": "Label",
+                                          "fill": "$text-muted",
+                                          "content": "Drafts",
+                                          "fontFamily": "$font-sans",
+                                          "fontSize": 13,
+                                          "fontWeight": "500"
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "PNeir",
+                                          "name": "Draft Count",
+                                          "fill": "$warn-bg",
+                                          "cornerRadius": 999,
+                                          "padding": [
+                                            1,
+                                            7
+                                          ],
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "apKP4",
+                                              "name": "Count",
+                                              "fill": "$warn-fg",
+                                              "content": "3",
+                                              "fontFamily": "$font-num",
+                                              "fontSize": 11,
+                                              "fontWeight": "600"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "C4i3F",
+                                  "name": "Category Filter",
+                                  "fill": "$surface",
+                                  "cornerRadius": 6,
+                                  "stroke": "$line",
+                                  "strokeWidth": 1,
+                                  "gap": 6,
+                                  "padding": [
+                                    6,
+                                    10
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "i4wTV",
+                                      "name": "Filter Icon",
+                                      "width": 14,
+                                      "height": 14,
+                                      "icon": "list-filter",
+                                      "library": "lucide",
+                                      "fill": "$text-muted"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "FozCY",
+                                      "name": "Label",
+                                      "fill": "$text",
+                                      "content": "All categories",
+                                      "fontFamily": "$font-sans",
+                                      "fontSize": 13,
+                                      "fontWeight": "500"
+                                    },
+                                    {
+                                      "type": "icon",
+                                      "id": "x5Igl",
+                                      "name": "Chevron",
+                                      "width": 14,
+                                      "height": 14,
+                                      "icon": "chevron-down",
+                                      "library": "lucide",
+                                      "fill": "$text-muted"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "N2PvhX",
+                              "name": "Add Expense",
+                              "fill": "$surface",
+                              "cornerRadius": 6,
+                              "stroke": "$line",
+                              "strokeWidth": 1,
+                              "gap": 6,
+                              "padding": [
+                                6,
+                                12,
+                                6,
+                                10
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "taQSZ",
+                                  "name": "Icon",
+                                  "width": 15,
+                                  "height": 15,
+                                  "icon": "plus",
+                                  "library": "lucide",
+                                  "fill": "$text"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "FAMcv",
+                                  "name": "Label",
+                                  "fill": "$text",
+                                  "content": "Add expense",
+                                  "fontFamily": "$font-sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "VgmGC",
+                      "name": "Rows",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "id": "m2D82n",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Uniqlo",
+                          "width": "fill_container",
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "24 Nov"
+                            },
+                            "E78zl": {
+                              "content": "Uniqlo"
+                            },
+                            "c2cWW/Xi2ut": {
+                              "content": "Shopping"
+                            },
+                            "ABXBI": {
+                              "content": "Rp70.000"
+                            }
+                          }
+                        },
+                        {
+                          "id": "T16XL",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Warung Bu Tini",
+                          "width": "fill_container",
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "24 Nov"
+                            },
+                            "E78zl": {
+                              "content": "Warung Bu Tini"
+                            },
+                            "c2cWW/Xi2ut": {
+                              "content": "Eating out"
+                            },
+                            "ABXBI": {
+                              "content": "Rp25.000"
+                            }
+                          }
+                        },
+                        {
+                          "id": "Hh6ph",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Gojek",
+                          "width": "fill_container",
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "23 Nov"
+                            },
+                            "E78zl": {
+                              "content": "Gojek"
+                            },
+                            "c2cWW/Xi2ut": {
+                              "content": "Transport"
+                            },
+                            "ABXBI": {
+                              "content": "Rp18.000"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "UyIpJ",
+              "name": "Option D — Add where it lands",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "I3Cmxr",
+                  "name": "Caption",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "bqISS",
+                      "name": "Tag Row",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Haszb",
+                          "name": "Tag",
+                          "fill": "$text-muted",
+                          "content": "OPTION D",
+                          "fontFamily": "$font-num",
+                          "fontSize": 11,
+                          "fontWeight": "600",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "JHzWZ",
+                      "name": "Title",
+                      "fill": "$text",
+                      "content": "Add where it lands",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "f8iJDM",
+                      "name": "Description",
+                      "fill": "$text-muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "The header only answers \"which month, how much\" and \"which slice\". Add expense leaves the header and becomes the first row of the list — a dashed ghost row that opens the form in place, right where the new expense will appear. Tabs + filter form the toolbar. Cleanest header; trade-off is that the add action scrolls away on long months (pair with N shortcut / sticky toolbar).",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "KulCf",
+                  "name": "Screen",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "$bg",
+                  "cornerRadius": 12,
+                  "stroke": "$line",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "padding": [
+                    8,
+                    24,
+                    16,
+                    24
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "VehQJ",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": [
+                        16,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "d0xl3",
+                          "name": "Summary Row",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "end",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "ybCKJ",
+                              "name": "Month Stepper",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "SwCFe",
+                                  "name": "Prev",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "chevron-left",
+                                  "library": "lucide",
+                                  "fill": "$text-muted"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "NlOhs",
+                                  "name": "Month",
+                                  "fill": "$text",
+                                  "content": "November 2026",
+                                  "fontFamily": "$font-sans",
+                                  "fontSize": 18,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "ovfte",
+                                  "name": "Next",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "chevron-right",
+                                  "library": "lucide",
+                                  "fill": "$text-muted"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "rd90d",
+                              "name": "Total",
+                              "layout": "vertical",
+                              "alignItems": "end",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "dnOTg",
+                                  "name": "Caption",
+                                  "fill": "$text-muted",
+                                  "content": "Spent this month",
+                                  "fontFamily": "$font-sans",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "yqIu3",
+                                  "name": "Amount",
+                                  "fill": "$text",
+                                  "content": "Rp2.480.000",
+                                  "fontFamily": "$font-num",
+                                  "fontSize": 20,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "tURbw",
+                          "name": "Toolbar",
+                          "width": "fill_container",
+                          "stroke": "$line",
+                          "strokeWidth": {
+                            "bottom": 1
+                          },
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "TRh78",
+                              "name": "View Tabs",
+                              "gap": 20,
+                              "alignItems": "end",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "YaJE6",
+                                  "name": "Tab Confirmed",
+                                  "stroke": "$text",
+                                  "strokeWidth": {
+                                    "bottom": 2
+                                  },
+                                  "padding": [
+                                    10,
+                                    0
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "F9cye",
+                                      "name": "Label",
+                                      "fill": "$text",
+                                      "content": "Confirmed",
+                                      "fontFamily": "$font-sans",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "rB5xW",
+                                  "name": "Tab Drafts",
+                                  "gap": 6,
+                                  "padding": [
+                                    10,
+                                    0
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "sHARm",
+                                      "name": "Label",
+                                      "fill": "$text-muted",
+                                      "content": "Drafts",
+                                      "fontFamily": "$font-sans",
+                                      "fontSize": 13,
+                                      "fontWeight": "500"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "LIlXW",
+                                      "name": "Draft Count",
+                                      "fill": "$warn-bg",
+                                      "cornerRadius": 999,
+                                      "padding": [
+                                        1,
+                                        7
+                                      ],
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "ZuNyt",
+                                          "name": "Count",
+                                          "fill": "$warn-fg",
+                                          "content": "3",
+                                          "fontFamily": "$font-num",
+                                          "fontSize": 11,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "LCD2S",
+                              "name": "Category Filter",
+                              "fill": "#00000000",
+                              "cornerRadius": 6,
+                              "gap": 6,
+                              "padding": [
+                                6,
+                                10
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "LjHJi",
+                                  "name": "Filter Icon",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "list-filter",
+                                  "library": "lucide",
+                                  "fill": "$text-muted"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "S9E7Kx",
+                                  "name": "Label",
+                                  "fill": "$text",
+                                  "content": "All categories",
+                                  "fontFamily": "$font-sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "S8TZmi",
+                                  "name": "Chevron",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "chevron-down",
+                                  "library": "lucide",
+                                  "fill": "$text-muted"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "upnY4",
+                      "name": "Add Row",
+                      "width": "fill_container",
+                      "padding": [
+                        8,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "byUA4",
+                          "name": "Ghost",
+                          "width": "fill_container",
+                          "height": 40,
+                          "cornerRadius": 8,
+                          "stroke": "$line",
+                          "strokeWidth": 1,
+                          "strokeDash": [
+                            4,
+                            4
+                          ],
+                          "gap": 8,
+                          "padding": [
+                            0,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "MboW2",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "plus",
+                              "library": "lucide",
+                              "fill": "$text-muted"
+                            },
+                            {
+                              "type": "text",
+                              "id": "S9bt8L",
+                              "name": "Label",
+                              "fill": "$text-muted",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Add expense",
+                              "fontFamily": "$font-sans",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "L89Vw",
+                              "name": "Shortcut",
+                              "fill": "$surface-2",
+                              "cornerRadius": 4,
+                              "padding": [
+                                1,
+                                6
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "eV3al",
+                                  "name": "Key",
+                                  "fill": "$text-muted",
+                                  "content": "N",
+                                  "fontFamily": "$font-num",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Tj9sB",
+                      "name": "Rows",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "id": "pijGF",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Uniqlo",
+                          "width": "fill_container",
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "24 Nov"
+                            },
+                            "E78zl": {
+                              "content": "Uniqlo"
+                            },
+                            "c2cWW/Xi2ut": {
+                              "content": "Shopping"
+                            },
+                            "ABXBI": {
+                              "content": "Rp70.000"
+                            }
+                          }
+                        },
+                        {
+                          "id": "cK0SJ",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Warung Bu Tini",
+                          "width": "fill_container",
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "24 Nov"
+                            },
+                            "E78zl": {
+                              "content": "Warung Bu Tini"
+                            },
+                            "c2cWW/Xi2ut": {
+                              "content": "Eating out"
+                            },
+                            "ABXBI": {
+                              "content": "Rp25.000"
+                            }
+                          }
+                        },
+                        {
+                          "id": "qPmdp",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Gojek",
+                          "width": "fill_container",
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "23 Nov"
+                            },
+                            "E78zl": {
+                              "content": "Gojek"
+                            },
+                            "c2cWW/Xi2ut": {
+                              "content": "Transport"
+                            },
+                            "ABXBI": {
+                              "content": "Rp18.000"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "KntQm",
+          "name": "Mobile Row",
+          "width": "fill_container",
+          "gap": 48,
+          "children": [
+            {
+              "type": "frame",
+              "id": "NFmTz",
+              "name": "Option A · Mobile — Stacked hierarchy",
+              "width": 390,
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "sartC",
+                  "name": "Caption",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "y3fBb",
+                      "name": "Tag",
+                      "fill": "$text-muted",
+                      "content": "OPTION A · MOBILE",
+                      "fontFamily": "$font-num",
+                      "fontSize": 11,
+                      "fontWeight": "600",
+                      "letterSpacing": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "bYNCZ",
+                      "name": "Title",
+                      "fill": "$text",
+                      "content": "Stacked hierarchy",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "b5Jlc",
+                      "name": "Description",
+                      "fill": "$text-muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Same three tiers. Add expense collapses to a 36px icon button beside the month (labelled for screen readers); the filter becomes an icon button at the end of the tab row.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "N34pPh",
+                  "name": "Phone",
+                  "clip": true,
+                  "width": 390,
+                  "fill": "$bg",
+                  "cornerRadius": 16,
+                  "stroke": "$line",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    0,
+                    16,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "N5QM07",
+                      "type": "ref",
+                      "ref": "v3SJWy",
+                      "width": "fill_container",
+                      "name": "Top Bar",
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "descendants": {
+                        "vqik7": {
+                          "width": "fill_container"
+                        },
+                        "cZRI5": {
+                          "fill": "#00000000",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "enabled": false,
+                            "color": "#000000"
+                          }
+                        },
+                        "QvWau": {
+                          "fill": "$text-muted"
+                        },
+                        "qUzSk": {
+                          "fill": "$text-muted"
+                        },
+                        "nLT7r": {
+                          "fill": "$surface",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#00000014",
+                            "offset": {
+                              "x": 0,
+                              "y": 1
+                            },
+                            "blur": 2
+                          }
+                        },
+                        "DxrXQ": {
+                          "fill": "$text"
+                        },
+                        "Vsl3i": {
+                          "fill": "$text"
+                        }
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "hSRjq",
+                      "name": "List Column",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "zlJae",
+                          "name": "Header",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "padding": [
+                            12,
+                            0,
+                            0,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "T8GPR2",
+                              "name": "Title Row",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "vWE8H",
+                                  "name": "Month Stepper",
+                                  "gap": 6,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "osAd0",
+                                      "name": "Prev",
+                                      "width": 18,
+                                      "height": 18,
+                                      "icon": "chevron-left",
+                                      "library": "lucide",
+                                      "fill": "$text-muted"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "SoICR",
+                                      "name": "Month",
+                                      "fill": "$text",
+                                      "content": "Nov 2026",
+                                      "fontFamily": "$font-sans",
+                                      "fontSize": 17,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "icon",
+                                      "id": "i3dlcC",
+                                      "name": "Next",
+                                      "width": 18,
+                                      "height": 18,
+                                      "icon": "chevron-right",
+                                      "library": "lucide",
+                                      "fill": "$text-muted"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "ibF3E",
+                                  "name": "Add Expense",
+                                  "width": 36,
+                                  "height": 36,
+                                  "fill": "$accent",
+                                  "cornerRadius": 8,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "ICKRU",
+                                      "name": "Icon",
+                                      "width": 18,
+                                      "height": 18,
+                                      "icon": "plus",
+                                      "library": "lucide",
+                                      "fill": "$accent-fg"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "H4mg9",
+                              "name": "Total",
+                              "gap": 8,
+                              "padding": [
+                                6,
+                                0,
+                                6,
+                                24
+                              ],
+                              "alignItems": "end",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "m42t9",
+                                  "name": "Amount",
+                                  "fill": "$text",
+                                  "content": "Rp2.480.000",
+                                  "fontFamily": "$font-num",
+                                  "fontSize": 24,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "Egbbk",
+                                  "name": "Meta",
+                                  "fill": "$text-muted",
+                                  "content": "9 expenses",
+                                  "lineHeight": 1.8,
+                                  "fontFamily": "$font-sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "g6jIV",
+                              "name": "Toolbar",
+                              "width": "fill_container",
+                              "stroke": "$line",
+                              "strokeWidth": {
+                                "bottom": 1
+                              },
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "GCChy",
+                                  "name": "View Tabs",
+                                  "gap": 20,
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "O7z73A",
+                                      "name": "Tab Confirmed",
+                                      "stroke": "$text",
+                                      "strokeWidth": {
+                                        "bottom": 2
+                                      },
+                                      "padding": [
+                                        10,
+                                        0
+                                      ],
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "J2bDki",
+                                          "name": "Label",
+                                          "fill": "$text",
+                                          "content": "Confirmed",
+                                          "fontFamily": "$font-sans",
+                                          "fontSize": 13,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "PIKz5",
+                                      "name": "Tab Drafts",
+                                      "gap": 6,
+                                      "padding": [
+                                        10,
+                                        0
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "Hei0I",
+                                          "name": "Label",
+                                          "fill": "$text-muted",
+                                          "content": "Drafts",
+                                          "fontFamily": "$font-sans",
+                                          "fontSize": 13,
+                                          "fontWeight": "500"
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "OKR1N",
+                                          "name": "Draft Count",
+                                          "fill": "$warn-bg",
+                                          "cornerRadius": 999,
+                                          "padding": [
+                                            1,
+                                            7
+                                          ],
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "DOZq8",
+                                              "name": "Count",
+                                              "fill": "$warn-fg",
+                                              "content": "3",
+                                              "fontFamily": "$font-num",
+                                              "fontSize": 11,
+                                              "fontWeight": "600"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "iQofl",
+                                  "name": "Filter Button",
+                                  "width": 32,
+                                  "height": 32,
+                                  "cornerRadius": 6,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "orntM",
+                                      "name": "Icon",
+                                      "width": 16,
+                                      "height": 16,
+                                      "icon": "list-filter",
+                                      "library": "lucide",
+                                      "fill": "$text"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "id": "IFFgQ",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Uniqlo",
+                          "width": "fill_container",
+                          "padding": 0,
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "24 Nov",
+                              "width": 56
+                            },
+                            "E78zl": {
+                              "content": "Uniqlo"
+                            },
+                            "c2cWW": {
+                              "enabled": false
+                            },
+                            "ABXBI": {
+                              "content": "Rp70.000",
+                              "width": 100
+                            },
+                            "o6clm5": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "id": "Go7cF",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Warung Bu Tini",
+                          "width": "fill_container",
+                          "padding": 0,
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "24 Nov",
+                              "width": 56
+                            },
+                            "E78zl": {
+                              "content": "Warung Bu Tini"
+                            },
+                            "c2cWW": {
+                              "enabled": false
+                            },
+                            "ABXBI": {
+                              "content": "Rp25.000",
+                              "width": 100
+                            },
+                            "o6clm5": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "id": "s2f7bY",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Gojek",
+                          "width": "fill_container",
+                          "padding": 0,
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "23 Nov",
+                              "width": 56
+                            },
+                            "E78zl": {
+                              "content": "Gojek"
+                            },
+                            "c2cWW": {
+                              "enabled": false
+                            },
+                            "ABXBI": {
+                              "content": "Rp18.000",
+                              "width": 100
+                            },
+                            "o6clm5": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "id": "i8ckZz",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Indomaret",
+                          "width": "fill_container",
+                          "padding": 0,
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "22 Nov",
+                              "width": 56
+                            },
+                            "E78zl": {
+                              "content": "Indomaret"
+                            },
+                            "c2cWW": {
+                              "enabled": false
+                            },
+                            "ABXBI": {
+                              "content": "Rp146.500",
+                              "width": 100
+                            },
+                            "o6clm5": {
+                              "enabled": false
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "iHeRQ",
+              "name": "Option B · Mobile — Drafts as a nudge",
+              "width": 390,
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "T9cKyJ",
+                  "name": "Caption",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "DK3zI",
+                      "name": "Tag",
+                      "fill": "$text-muted",
+                      "content": "OPTION B · MOBILE",
+                      "fontFamily": "$font-num",
+                      "fontSize": 11,
+                      "fontWeight": "600",
+                      "letterSpacing": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "jkYzv",
+                      "name": "Title",
+                      "fill": "$text",
+                      "content": "Drafts as a nudge",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "s0Rxu4",
+                      "name": "Description",
+                      "fill": "$text-muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Summary + add on one line, filter on its own full-width line, drafts notice only when there are drafts.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "kafCA",
+                  "name": "Phone",
+                  "clip": true,
+                  "width": 390,
+                  "fill": "$bg",
+                  "cornerRadius": 16,
+                  "stroke": "$line",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    0,
+                    16,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "T6PUr",
+                      "type": "ref",
+                      "ref": "v3SJWy",
+                      "width": "fill_container",
+                      "name": "Top Bar",
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "descendants": {
+                        "vqik7": {
+                          "width": "fill_container"
+                        },
+                        "cZRI5": {
+                          "fill": "#00000000",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "enabled": false,
+                            "color": "#000000"
+                          }
+                        },
+                        "QvWau": {
+                          "fill": "$text-muted"
+                        },
+                        "qUzSk": {
+                          "fill": "$text-muted"
+                        },
+                        "nLT7r": {
+                          "fill": "$surface",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#00000014",
+                            "offset": {
+                              "x": 0,
+                              "y": 1
+                            },
+                            "blur": 2
+                          }
+                        },
+                        "DxrXQ": {
+                          "fill": "$text"
+                        },
+                        "Vsl3i": {
+                          "fill": "$text"
+                        }
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "o0OJPN",
+                      "name": "List Column",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Lrdf7",
+                          "name": "Header",
+                          "width": "fill_container",
+                          "stroke": "$line",
+                          "strokeWidth": {
+                            "bottom": 1
+                          },
+                          "layout": "vertical",
+                          "gap": 12,
+                          "padding": [
+                            12,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Gqj0h",
+                              "name": "Title Row",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "HKybJ",
+                                  "name": "Summary",
+                                  "layout": "vertical",
+                                  "gap": 2,
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "EiOgE",
+                                      "name": "Month Stepper",
+                                      "gap": 6,
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "wrNoA",
+                                          "name": "Prev",
+                                          "width": 18,
+                                          "height": 18,
+                                          "icon": "chevron-left",
+                                          "library": "lucide",
+                                          "fill": "$text-muted"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "tuhyJ",
+                                          "name": "Month",
+                                          "fill": "$text",
+                                          "content": "Nov 2026",
+                                          "fontFamily": "$font-sans",
+                                          "fontSize": 17,
+                                          "fontWeight": "600"
+                                        },
+                                        {
+                                          "type": "icon",
+                                          "id": "NgvQD",
+                                          "name": "Next",
+                                          "width": 18,
+                                          "height": 18,
+                                          "icon": "chevron-right",
+                                          "library": "lucide",
+                                          "fill": "$text-muted"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "O44MWq",
+                                      "name": "Total Indent",
+                                      "padding": [
+                                        0,
+                                        0,
+                                        0,
+                                        24
+                                      ],
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "YrGPE",
+                                          "name": "Total",
+                                          "fill": "$text-muted",
+                                          "content": "Rp2.480.000 · 9 expenses",
+                                          "fontFamily": "$font-num",
+                                          "fontSize": 13,
+                                          "fontWeight": "500"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "g4hRZ",
+                                  "name": "Add Expense",
+                                  "width": 36,
+                                  "height": 36,
+                                  "fill": "$accent",
+                                  "cornerRadius": 8,
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "RscKn",
+                                      "name": "Icon",
+                                      "width": 18,
+                                      "height": 18,
+                                      "icon": "plus",
+                                      "library": "lucide",
+                                      "fill": "$accent-fg"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "yNAwH",
+                              "name": "Category Filter",
+                              "width": "fill_container",
+                              "fill": "$surface",
+                              "cornerRadius": 6,
+                              "stroke": "$line",
+                              "strokeWidth": 1,
+                              "gap": 6,
+                              "padding": [
+                                8,
+                                10
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "SO0Sl",
+                                  "name": "Filter Icon",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "list-filter",
+                                  "library": "lucide",
+                                  "fill": "$text-muted"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "YhWqg",
+                                  "name": "Label",
+                                  "fill": "$text",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "All categories",
+                                  "fontFamily": "$font-sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "YARLW",
+                                  "name": "Chevron",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "chevron-down",
+                                  "library": "lucide",
+                                  "fill": "$text-muted"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "b3hnJU",
+                          "name": "Notice Spacing",
+                          "width": "fill_container",
+                          "padding": [
+                            12,
+                            0,
+                            4,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "mVrNd",
+                              "name": "Drafts Notice",
+                              "width": "fill_container",
+                              "fill": "$warn-bg",
+                              "cornerRadius": 8,
+                              "gap": 8,
+                              "padding": [
+                                10,
+                                12
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "NN5x5",
+                                  "name": "Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "file-pen-line",
+                                  "library": "lucide",
+                                  "fill": "$warn-fg"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "wTZs5",
+                                  "name": "Text",
+                                  "fill": "$warn-fg",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "3 drafts to confirm",
+                                  "fontFamily": "$font-sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "d0Dn91",
+                                  "name": "Review Link",
+                                  "gap": 4,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "z9GHSV",
+                                      "name": "Label",
+                                      "fill": "$warn-fg",
+                                      "content": "Review",
+                                      "fontFamily": "$font-sans",
+                                      "fontSize": 13,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "icon",
+                                      "id": "hPt3Q",
+                                      "name": "Arrow",
+                                      "width": 14,
+                                      "height": 14,
+                                      "icon": "arrow-right",
+                                      "library": "lucide",
+                                      "fill": "$warn-fg"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "id": "UTZ2L",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Uniqlo",
+                          "width": "fill_container",
+                          "padding": 0,
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "24 Nov",
+                              "width": 56
+                            },
+                            "E78zl": {
+                              "content": "Uniqlo"
+                            },
+                            "c2cWW": {
+                              "enabled": false
+                            },
+                            "ABXBI": {
+                              "content": "Rp70.000",
+                              "width": 100
+                            },
+                            "o6clm5": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "id": "d9AglC",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Warung Bu Tini",
+                          "width": "fill_container",
+                          "padding": 0,
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "24 Nov",
+                              "width": 56
+                            },
+                            "E78zl": {
+                              "content": "Warung Bu Tini"
+                            },
+                            "c2cWW": {
+                              "enabled": false
+                            },
+                            "ABXBI": {
+                              "content": "Rp25.000",
+                              "width": 100
+                            },
+                            "o6clm5": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "id": "xwUNY",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Gojek",
+                          "width": "fill_container",
+                          "padding": 0,
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "23 Nov",
+                              "width": 56
+                            },
+                            "E78zl": {
+                              "content": "Gojek"
+                            },
+                            "c2cWW": {
+                              "enabled": false
+                            },
+                            "ABXBI": {
+                              "content": "Rp18.000",
+                              "width": 100
+                            },
+                            "o6clm5": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "id": "TyFaj",
+                          "type": "ref",
+                          "ref": "dcrb0",
+                          "name": "Row Indomaret",
+                          "width": "fill_container",
+                          "padding": 0,
+                          "descendants": {
+                            "QNj7j": {
+                              "content": "22 Nov",
+                              "width": 56
+                            },
+                            "E78zl": {
+                              "content": "Indomaret"
+                            },
+                            "c2cWW": {
+                              "enabled": false
+                            },
+                            "ABXBI": {
+                              "content": "Rp146.500",
+                              "width": 100
+                            },
+                            "o6clm5": {
+                              "enabled": false
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "D1YhW",
+              "name": "Recommendation",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": 12,
+              "stroke": "$line",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Ae56r",
+                  "name": "Title",
+                  "fill": "$text",
+                  "content": "Decision: Option A — applied to the Expense List screens",
+                  "fontFamily": "$font-sans",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "qXWk3",
+                  "name": "Point",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "dTHvu",
+                      "name": "Head",
+                      "fill": "$text",
+                      "content": "Go with A.",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "qsInj",
+                      "name": "Body",
+                      "fill": "$text-muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "It's the only option where each tier has a single job and a clear visual weight: one filled button (Add), one display number (total), one quiet toolbar (view + filter).",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Y4LNqK",
+                  "name": "Point",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "eWZ4m",
+                      "name": "Head",
+                      "fill": "$text",
+                      "content": "Drafts count on the tab",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "b120IB",
+                      "name": "Body",
+                      "fill": "$text-muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "The warn-tinted badge surfaces pending drafts without leaving Confirmed — the main reason the switch existed.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "nJ7Oi",
+                  "name": "Point",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "mCvKU",
+                      "name": "Head",
+                      "fill": "$text",
+                      "content": "Borrow from B if drafts are rare.",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "k1Hz6",
+                      "name": "Body",
+                      "fill": "$text-muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "If most months have zero drafts, hide the Drafts tab at zero and show the B-style notice instead.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Cen3j",
+                  "name": "Point",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "gabAP",
+                      "name": "Head",
+                      "fill": "$text",
+                      "content": "Keep from D",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "pF77m",
+                      "name": "Body",
+                      "fill": "$text-muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Bind N to Add expense on desktop; the hint can live in the button's tooltip.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "P7jJkS",
+                  "name": "Point",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "k8SM1",
+                      "name": "Head",
+                      "fill": "$text",
+                      "content": "Spec deltas vs DESIGN.md",
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "P50xU",
+                      "name": "Body",
+                      "fill": "$text-muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Total moves below the month at 28px mono (24px mobile) with an \"N expenses\" meta. Confirmed | Drafts becomes underline tabs on the toolbar rule. Add expense becomes Button/Primary with a + icon; icon-only 36px on mobile. Category filter becomes a ghost trigger with a filter icon.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-sans",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
                     }
                   ]
                 }

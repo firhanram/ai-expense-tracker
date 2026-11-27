@@ -91,9 +91,8 @@ test("asks for this month on the user's clock and shows rows in the API's order"
   await showAs(page, "desktop", "light")
   const { calls } = await openAt(page, november)
 
-  expect(calls.find((call) => call.url.startsWith("/api/expenses"))?.url).toBe(
-    "/api/expenses?from=2026-11-01&to=2026-11-30",
-  )
+  // The Drafts tab's count asks for `status=draft`; the list itself is confirmed.
+  expect(calls.map((call) => call.url)).toContain("/api/expenses?from=2026-11-01&to=2026-11-30")
   const rows = page.getByRole("list", { name: "Expenses" }).getByRole("listitem")
   await expect(rows.first()).toContainText("24 Nov")
   await expect(rows.last()).toContainText("17 Nov")
