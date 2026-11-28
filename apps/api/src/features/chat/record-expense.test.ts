@@ -348,3 +348,52 @@ describe("a client that leaves mid-reply", () => {
     })
   })
 })
+
+describe("what the model is shown of Expenses it rendered", () => {
+  it("sends the model back when it shows a card for an id no tool returned", async () => {
+    const invented = "7f3c2a91-5d64-4b18-9e07-2c81b6a4d3f5"
+    const model = scriptedLanguageModel(
+      textReply(`Here is your draft:\n${cards([invented])}`),
+      proposeCloth,
+      showDrafts,
+    )
+
+    await sendChat(model.layer, { message: "buy cloth 70rb", clientDate })
+
+    expect(model.calls).toHaveLength(3)
+    expect(model.calls[1]!.prompt.content.at(-1)).toMatchObject({
+      role: "system",
+      content: expect.stringContaining(invented),
+    })
+    expect(await drafts()).toMatchObject([{ amount: 70000, note: "cloth" }])
+  })
+
+  it("lets the model show again a card from an earlier reply without a tool call", async () => {
+    const id = await recordCloth()
+    const model = scriptedLanguageModel(textReply(`That one:\n${cards([id])}`))
+
+    await sendChat(model.layer, { message: "show the cloth again", clientDate })
+
+    expect(model.calls).toHaveLength(1)
+  })
+
+  it("tells the model where each Expense shown earlier stands now, since cards do not update the Chat", async () => {
+    const confirmed = await recordCloth()
+    await callApi(`/api/expenses/${confirmed}/confirm`, { method: "POST" })
+    const discarded = await recordCloth()
+    await callApi(`/api/expenses/${discarded}/discard`, { method: "POST" })
+    const pending = await recordCloth()
+    const model = scriptedLanguageModel(textReply("ok"))
+
+    await sendChat(model.layer, { message: "what is still pending?", clientDate })
+
+    const notes = model.calls[0]!.prompt.content.flatMap((message) =>
+      message.role === "system" ? [message.content] : [],
+    )
+    const note = notes.find((content) => content.includes(confirmed))
+    expect(note).toBeDefined()
+    expect(note).toMatch(new RegExp(`${confirmed}[^\\n]*confirmed`))
+    expect(note).toMatch(new RegExp(`${discarded}[^\\n]*discarded`))
+    expect(note).toMatch(new RegExp(`${pending}[^\\n]*draft`))
+  })
+})

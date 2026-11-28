@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { testIssuer } from "../../testing/access.ts"
 import { callApiWithModel, sendChat } from "../../testing/callWithModel.ts"
 import { anError, readData, readError } from "../../testing/envelope.ts"
+import { shownEarlier } from "../../testing/shownEarlier.ts"
 import {
   failsMidway,
   makeFakeLanguageModel,
@@ -96,6 +97,7 @@ describe("POST /api/chat", () => {
       'c = ExpenseCard("exp_1")\n```\nAnything else?',
     ]
     const model = scriptedLanguageModel(textReply(...reply))
+    await shownEarlier("exp_1")
 
     const response = await sendChat(model.layer, { message: "show exp_1", clientDate })
 
@@ -113,11 +115,12 @@ describe("POST /api/chat", () => {
       textReply('Done.\n```openui-lang\nroot = Stack([ExpenseCard("exp_1")])\n```'),
       textReply("Sure."),
     )
+    await shownEarlier("exp_1")
     await sendChat(model.layer, { message: "show it", clientDate })
 
     await sendChat(model.layer, { message: "thanks", clientDate })
 
-    expect(transcript(model.calls[1]!.prompt)[2]).toBe(
+    expect(transcript(model.calls[1]!.prompt)[3]).toBe(
       'assistant: Done.\n\n```openui-lang\nroot = Stack([ExpenseCard("exp_1")])\n```',
     )
   })

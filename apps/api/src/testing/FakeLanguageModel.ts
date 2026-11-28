@@ -11,6 +11,8 @@ export type FakeReply =
 export interface FakeCall {
   readonly prompt: Prompt.Prompt
   readonly toolNames: ReadonlyArray<string>
+  /** How the model was told to use its tools on this call. */
+  readonly toolChoice: LanguageModel.ProviderOptions["toolChoice"]
 }
 
 const usage = { inputTokens: {}, outputTokens: {} }
@@ -65,7 +67,11 @@ export const makeFakeLanguageModel = (
       streamText: (options) =>
         Stream.suspend(() => {
           const reply = respond(calls.length, options.prompt)
-          calls.push({ prompt: options.prompt, toolNames: options.tools.map((tool) => tool.name) })
+          calls.push({
+            prompt: options.prompt,
+            toolNames: options.tools.map((tool) => tool.name),
+            toolChoice: options.toolChoice,
+          })
           if (reply instanceof AiError.AiError) return Stream.fail(reply)
           return Stream.isStream(reply) ? reply : Stream.fromIterable(reply)
         }),
