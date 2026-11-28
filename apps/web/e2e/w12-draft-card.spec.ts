@@ -26,7 +26,14 @@ const message = (
   role: ChatMessage["role"],
   content: string,
   uiText: string | null = null,
-): ChatMessage => ({ id, role, content, uiText, createdAt: "2026-11-25T03:00:00.000Z" })
+): ChatMessage => ({
+  id,
+  role,
+  content,
+  uiText,
+  receiptKey: null,
+  createdAt: "2026-11-25T03:00:00.000Z",
+})
 
 const readEdit = Schema.decodeUnknownSync(EditExpense)
 const readExpense = Schema.decodeUnknownSync(Expense)

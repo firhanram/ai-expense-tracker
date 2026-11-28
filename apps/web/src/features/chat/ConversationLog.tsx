@@ -1,6 +1,7 @@
 import type { ChatMessage } from "@expense/contract"
 import { splitReply } from "@expense/ui/server"
-import { useEffect, useLayoutEffect, useRef } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { receiptUrl } from "../receipts/index.ts"
 import { AssistantMessage } from "./AssistantMessage.tsx"
 import { SystemLine } from "./SystemLine.tsx"
 import type { ReplyFailure, Turn } from "./useChatSession.ts"
@@ -12,6 +13,19 @@ const nearBottomPx = 96
 const distanceFromBottom = () =>
   document.documentElement.scrollHeight - window.scrollY - window.innerHeight
 
+/** A URL for a picked photo, revoked when the message leaves the page. */
+const usePhotoUrl = (photo: File | null) => {
+  const [url, setUrl] = useState<string | null>(null)
+  useEffect(() => {
+    const made = photo === null ? null : URL.createObjectURL(photo)
+    setUrl(made)
+    return () => {
+      if (made !== null) URL.revokeObjectURL(made)
+    }
+  }, [photo])
+  return photo === null ? null : url
+}
+
 const TurnView = ({
   turn,
   redraw,
@@ -22,9 +36,12 @@ const TurnView = ({
   readonly onRetry: () => void
 }) => {
   const { reply } = turn
+  const photo = usePhotoUrl(turn.request.receipt)
   return (
     <>
-      <UserMessage content={turn.request.message} attachment={turn.request.receipt?.name ?? null} />
+      {turn.request.receipt !== null && photo === null ? null : (
+        <UserMessage content={turn.request.message} receipt={photo} />
+      )}
       {reply.state === "streaming" || reply.state === "done" ? (
         <AssistantMessage
           reply={redraw.replyFor(reply.messageId, splitReply(reply.text))}
@@ -123,7 +140,11 @@ export const ConversationLog = ({
       )}
       {history.map((message) =>
         message.role === "user" ? (
-          <UserMessage key={message.id} content={message.content} />
+          <UserMessage
+            key={message.id}
+            content={message.content}
+            receipt={message.receiptKey === null ? null : receiptUrl(message.receiptKey)}
+          />
         ) : (
           <AssistantMessage
             key={message.id}

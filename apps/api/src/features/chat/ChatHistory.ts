@@ -1,4 +1,9 @@
-import { type ChatHistoryPage, type ChatMessage, ChatRole } from "@expense/contract"
+import {
+  type ChatHistoryPage,
+  type ChatMessage,
+  ChatRole,
+  type ReceiptKey,
+} from "@expense/contract"
 import { Effect, Option, Schema } from "effect"
 import { SqlClient, SqlSchema } from "effect/sql"
 
@@ -7,6 +12,7 @@ const Row = Schema.Struct({
   role: ChatRole,
   content: Schema.String,
   ui_text: Schema.NullOr(Schema.String),
+  receipt_key: Schema.NullOr(Schema.String),
   created_at: Schema.String,
 })
 
@@ -15,6 +21,7 @@ const toMessage = (row: typeof Row.Type): ChatMessage => ({
   role: row.role,
   content: row.content,
   uiText: row.ui_text,
+  receiptKey: row.receipt_key,
   createdAt: row.created_at,
 })
 
@@ -24,6 +31,8 @@ export interface NewChatMessage {
   readonly role: ChatRole
   readonly content: string
   readonly uiText?: string | null | undefined
+  /** The Receipt a user message was sent with. */
+  readonly receiptKey?: ReceiptKey | null | undefined
 }
 
 /**
@@ -38,7 +47,7 @@ export const makeChatHistory = Effect.gen(function* () {
     Request: Schema.Struct({ before: Schema.NullOr(Schema.String), limit: Schema.Int }),
     Result: Row,
     execute: ({ before, limit }) => sql`
-      SELECT id, role, content, ui_text, created_at FROM chat_message
+      SELECT id, role, content, ui_text, receipt_key, created_at FROM chat_message
       WHERE ${before === null ? sql`1 = 1` : sql`rowid < (SELECT rowid FROM chat_message WHERE id = ${before})`}
       ORDER BY rowid DESC
       LIMIT ${limit}`,
@@ -50,6 +59,7 @@ export const makeChatHistory = Effect.gen(function* () {
       role: message.role,
       content: message.content,
       ui_text: message.uiText ?? null,
+      receipt_key: message.receiptKey ?? null,
       created_at: new Date().toISOString(),
     })}`.pipe(Effect.asVoid, Effect.orDie)
 
@@ -75,7 +85,7 @@ export const makeChatHistory = Effect.gen(function* () {
     Request: Schema.String,
     Result: Row,
     execute: (id) => sql`
-      SELECT id, role, content, ui_text, created_at FROM chat_message WHERE id = ${id}`,
+      SELECT id, role, content, ui_text, receipt_key, created_at FROM chat_message WHERE id = ${id}`,
   })
 
   /** One message by id, if the Chat has it. */

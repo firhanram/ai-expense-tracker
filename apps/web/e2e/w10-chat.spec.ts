@@ -11,6 +11,7 @@ const message = (id: string, role: ChatMessage["role"], content: string): ChatMe
   role,
   content,
   uiText: null,
+  receiptKey: null,
   createdAt: "2026-11-25T03:00:00.000Z",
 })
 

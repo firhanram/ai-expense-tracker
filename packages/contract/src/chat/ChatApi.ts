@@ -15,6 +15,8 @@ export const ChatMessage = Schema.Struct({
   content: Schema.String,
   /** Raw OpenUI Lang the assistant wrote; null for user turns and for prose-only replies. */
   uiText: Schema.NullOr(Schema.String),
+  /** The Receipt a user message was sent with; null for assistant turns and messages without one. */
+  receiptKey: Schema.NullOr(ReceiptKey),
   /** ISO 8601 UTC. */
   createdAt: Schema.String,
 })

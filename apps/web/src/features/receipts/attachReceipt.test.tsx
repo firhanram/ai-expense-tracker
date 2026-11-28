@@ -97,7 +97,9 @@ describe("attaching a Receipt", () => {
     expect(sent).toEqual([
       { message: "here's the indomaret one", clientDate: "2026-11-25", receiptKey: "rk-1" },
     ])
-    expect(within(log()).getByText("indomaret.jpg")).toBeInTheDocument()
+    const mine = within(log()).getByRole("article", { name: "You" })
+    expect(within(mine).getByRole("img", { name: "Receipt" })).toBeInTheDocument()
+    expect(within(mine).getByText("here's the indomaret one")).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: /indomaret.jpg/ })).toBeNull()
   })
 
