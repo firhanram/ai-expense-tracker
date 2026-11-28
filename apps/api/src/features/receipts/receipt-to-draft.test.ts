@@ -77,6 +77,25 @@ describe("a Chat turn with a Receipt", () => {
     )
   })
 
+  it("keeps the Receipt on the stored user message, so the Chat still shows it after a reload", async () => {
+    const receiptKey = await upload()
+    const model = scriptedLanguageModel(textReply("Reading it."))
+
+    await sendChat(model.layer, { message: "this one", clientDate, receiptKey })
+    await sendChat(scriptedLanguageModel(textReply("Noted.")).layer, {
+      message: "and lunch 25rb",
+      clientDate,
+    })
+
+    const history = await callApi("/api/chat").then(readData<ChatHistoryPage>)
+    expect(history.messages.toReversed()).toMatchObject([
+      { role: "user", content: "this one", receiptKey },
+      { role: "assistant", receiptKey: null },
+      { role: "user", content: "and lunch 25rb", receiptKey: null },
+      { role: "assistant", receiptKey: null },
+    ])
+  })
+
   it("proposes a Draft that holds the Receipt and is marked for review when the model was unsure", async () => {
     const receiptKey = await upload()
     const model = scriptedLanguageModel(proposeFromReceipt(84500, true), showDraft)

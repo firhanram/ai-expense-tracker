@@ -39,7 +39,8 @@ const message = (
   role: ChatMessage["role"],
   content: string,
   uiText: string | null = null,
-): ChatMessage => ({ id, role, content, uiText, createdAt: "2026-11-25T03:00:00.000Z" })
+  receiptKey: string | null = null,
+): ChatMessage => ({ id, role, content, uiText, receiptKey, createdAt: "2026-11-25T03:00:00.000Z" })
 
 const card = (id: string) => `root = Stack([c0])\nc0 = DraftExpenseCard("${id}")`
 const fenced = (prose: string, program: string) =>
@@ -145,7 +146,9 @@ test("attaches from the picker, uploads a downscaled JPEG on send, and sends its
 
   await expect(draftCard(page, "Rp146.500")).toBeVisible()
   await expect(attachment(page).getByRole("listitem")).toHaveCount(0)
-  await expect(log(page).getByText("IMG_2041.jpg")).toBeVisible()
+  const mine = log(page).getByRole("article", { name: "You" })
+  await expect(mine.getByRole("img", { name: "Receipt" })).toBeVisible()
+  await expect(mine.getByText("IMG_2041.jpg")).toHaveCount(0)
 
   expect(uploads(calls)).toHaveLength(1)
   const upload = uploads(calls)[0]
@@ -297,6 +300,47 @@ for (const viewport of ["desktop", "mobile"] as const) {
       await page.keyboard.press("Escape")
       await expect(dialog).toBeHidden()
       await expect(indomaretCard.getByRole("button", { name: "Open receipt photo" })).toBeFocused()
+    })
+  }
+}
+
+for (const viewport of ["desktop", "mobile"] as const) {
+  for (const theme of themes) {
+    test(`a reloaded Chat still shows the Receipt in the user's message, ${viewport}, ${theme}`, async ({
+      page,
+    }) => {
+      await showAs(page, viewport, theme)
+      await chat(page, {
+        history: [
+          message("m1", "user", "tadi pagi", null, "rk-indomaret"),
+          message("m2", "assistant", "Logged it from your receipt.", card(indomaret.id)),
+          message("m3", "user", "Here's a receipt.", null, "rk-superindo"),
+          message("m4", "assistant", "Got it.", null),
+        ],
+      })
+
+      const mine = log(page).getByRole("article", { name: "You" })
+      await expect(mine).toHaveCount(2)
+      await expect(mine.nth(0).getByText("tadi pagi")).toBeVisible()
+      // A Receipt sent with no words shows only the photo.
+      await expect(mine.nth(1).getByText("Here's a receipt.")).toHaveCount(0)
+      await Promise.all(
+        (await mine.all()).map((bubble) =>
+          expect
+            .poll(() =>
+              bubble
+                .getByRole("img", { name: "Receipt" })
+                .evaluate((img: HTMLImageElement) => img.naturalWidth),
+            )
+            .toBeGreaterThan(0),
+        ),
+      )
+      await expect(draftCard(page, "Rp146.500")).toBeVisible()
+      await page.mouse.move(0, 0)
+      await screenshot(page, "w14", `history-${viewport}-${theme}`)
+
+      await mine.nth(0).getByRole("button", { name: "Open receipt photo" }).click()
+      await expect(page.getByRole("dialog", { name: "Receipt" })).toBeVisible()
     })
   }
 }

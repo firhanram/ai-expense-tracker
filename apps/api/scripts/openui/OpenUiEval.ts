@@ -290,6 +290,7 @@ export const casePrompt = (evalCase: EvalCase): Prompt.RawInput =>
       role,
       content,
       uiText,
+      receiptKey: null,
       createdAt: `${evalClientDate}T00:00:00.000Z`,
     })),
     { message: evalCase.message, clientDate: evalClientDate },

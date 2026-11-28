@@ -177,7 +177,11 @@ export interface ChatTurnDeps {
 export const runChatTurn = (deps: ChatTurnDeps, request: SendChatMessage, receipt?: TurnReceipt) =>
   Effect.gen(function* () {
     const history = yield* deps.history.recent(contextMessages)
-    yield* deps.history.append({ role: "user", content: request.message })
+    yield* deps.history.append({
+      role: "user",
+      content: request.message,
+      receiptKey: receipt?.key ?? null,
+    })
 
     const shown = shownIds(history).slice(-maxShownLookups)
     const shownNote =
