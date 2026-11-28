@@ -27,6 +27,17 @@ export interface AgentLoopOptions<Tools extends Record<string, Tool.Any>> {
    * Expense has been proposed (#12). Asked only when the loop would go on.
    */
   readonly stopAfter?: ((step: AgentStep<Tools>) => boolean) | undefined
+  /**
+   * How the model must use its tools on the first call; later calls are
+   * `"auto"`. A Receipt turn sets it so the model cannot skip proposing.
+   */
+  readonly firstToolChoice?: LanguageModel.ToolChoice<ToolOf<Tools>["name"]> | undefined
+  /**
+   * Asked after every step: a note telling the model what it got wrong, or
+   * undefined. A note sends the model back, with the note after its reply,
+   * even if the step ran no tools or `stopAfter` would end the turn.
+   */
+  readonly correct?: ((step: AgentStep<Tools>) => string | undefined) | undefined
 }
 
 /** Any one of the toolkit's tools, the shape `Tool`'s type helpers take. */
@@ -55,9 +66,10 @@ const ranTools = (parts: ReadonlyArray<Response.AnyPart>) =>
 /**
  * The tool-call loop. `LanguageModel.streamText` resolves tool calls and
  * returns; it does not call the model again. This does: while a step ran
- * tools, it appends that step's calls and results to the prompt and calls
- * again, until the model answers without tools, `stopAfter` says so, or
- * `maxSteps` calls have been made.
+ * tools, or `correct` objected to it, it appends that step's calls and
+ * results (and the correction) to the prompt and calls again, until the
+ * model answers without tools, `stopAfter` says so, or `maxSteps` calls
+ * have been made.
  *
  * Every step's parts stream through as they arrive, so prose reaches the
  * caller while the model is still writing it.
@@ -67,21 +79,31 @@ export const runAgentLoop = <Tools extends Record<string, Tool.Any> = {}>(
 ): AgentStream<Tools> => {
   const step = (index: number, prompt: Prompt.Prompt): AgentStream<Tools> => {
     const parts: Array<Response.StreamPart<Tools, "opaque">> = []
+    const toolChoice = (index === 0 ? options.firstToolChoice : undefined) ?? "auto"
     const call = (
       options.toolkit === undefined
         ? LanguageModel.streamText({ prompt })
-        : LanguageModel.streamText({ prompt, toolkit: options.toolkit })
+        : LanguageModel.streamText({ prompt, toolkit: options.toolkit, toolChoice })
     ) satisfies AgentStream<Tools>
     return Stream.concat(
       call.pipe(Stream.tap((part) => Effect.sync(() => parts.push(part)))),
       Stream.suspend((): AgentStream<Tools> => {
-        if (!ranTools(parts) || options.stopAfter?.({ index, parts })) return Stream.empty
+        const correction = options.correct?.({ index, parts })
+        if (correction === undefined) {
+          if (!ranTools(parts) || options.stopAfter?.({ index, parts })) return Stream.empty
+        }
         if (index + 1 >= maxSteps) {
           return Stream.drain(
             Stream.fromEffect(Effect.logWarning(`Chat turn hit the ${maxSteps}-step cap`)),
           )
         }
-        return step(index + 1, Prompt.concat(prompt, Prompt.fromResponseParts(parts)))
+        const next = Prompt.concat(prompt, Prompt.fromResponseParts(parts))
+        return step(
+          index + 1,
+          correction === undefined
+            ? next
+            : Prompt.concat(next, Prompt.make([{ role: "system", content: correction }])),
+        )
       }),
     )
   }

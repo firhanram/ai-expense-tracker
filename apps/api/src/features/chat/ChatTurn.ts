@@ -1,5 +1,7 @@
 import {
   type ChatMessage,
+  type Expense,
+  type ExpenseId,
   ModelRateLimited,
   ModelUnreachable,
   type SendChatMessage,
@@ -12,11 +14,58 @@ import { WaitUntil } from "../../WaitUntil.ts"
 import { type AgentLoopError, runAgentLoop } from "./AgentLoop.ts"
 import type { NewChatMessage } from "./ChatHistory.ts"
 import type { ChatTools } from "./ChatToolkit.ts"
-import { draftsShown } from "./DraftShown.ts"
+import { cardIds, draftsShown, inventedCards } from "./DraftShown.ts"
 import { SystemPrompt } from "./SystemPrompt.ts"
 
 /** How much of the Chat the model sees each turn. */
 export const contextMessages = 20
+
+/** D1 binds at most 100 parameters per statement. */
+const maxShownLookups = 100
+
+/** The ids of the Expenses the earlier replies in `history` showed as cards. */
+const shownIds = (history: ReadonlyArray<ChatMessage>) => [
+  ...new Set(
+    history.flatMap((message) => (message.uiText === null ? [] : cardIds(message.uiText))),
+  ),
+]
+
+const standing = (expense: Expense) => {
+  const label = [expense.merchant, expense.note].filter((text) => text !== null).join(", ")
+  const what = `Rp${expense.amount}${label === "" ? "" : `, ${label}`}, ${expense.occurredAt}`
+  const where =
+    expense.status === "draft"
+      ? "still a draft, waiting for the user"
+      : expense.status === "confirmed"
+        ? "confirmed by the user, recorded"
+        : "discarded by the user"
+  return `- Expense ${expense.id} (${what}): ${where}`
+}
+
+/**
+ * Where the Expenses the Chat showed stand now. The user confirms and
+ * discards on a card, outside the Chat, so an earlier reply's
+ * `DraftExpenseCard` says nothing about it; without this the model takes
+ * a confirmed Expense for a Draft still waiting. An id with no Expense
+ * was deleted (or never existed).
+ */
+export const shownExpensesNote = (
+  ids: ReadonlyArray<string>,
+  expenses: ReadonlyArray<Expense>,
+): string | undefined => {
+  if (ids.length === 0) return undefined
+  const byId = new Map(expenses.map((expense) => [expense.id, expense]))
+  return [
+    "Where each Expense shown in the Chat above stands now (cards in earlier replies do not show this; the user confirms or discards on the card):",
+    ...ids.map((id) => {
+      const expense = byId.get(id)
+      return expense === undefined
+        ? `- Expense ${id}: deleted, it no longer exists`
+        : standing(expense)
+    }),
+    "Only a draft can still be changed or discarded. Do not call a confirmed or discarded Expense a pending Draft, and do not show it again unless the user asks about it.",
+  ].join("\n")
+}
 
 /**
  * The prompt for one turn: the system prompt, the recent Chat, then the
@@ -24,13 +73,15 @@ export const contextMessages = 20
  * the prefix stays cacheable across days (ADR-0008, ADR-0009). Earlier
  * replies carry their programs, so the model sees the ids it rendered.
  * A Receipt rides on the new message as an image (PLAN, "The chat turn"),
- * with a note saying which Draft, if any, it already became.
+ * with a note saying which Draft, if any, it already became. `shownNote`
+ * (`shownExpensesNote`) says where the Expenses the history shows stand now.
  */
 export const buildPrompt = (
   systemPrompt: string,
   history: ReadonlyArray<ChatMessage>,
   request: SendChatMessage,
   receipt?: TurnReceipt,
+  shownNote?: string,
 ): Array<Prompt.MessageEncoded> => [
   { role: "system", content: systemPrompt },
   ...history.map((message): Prompt.MessageEncoded =>
@@ -39,6 +90,7 @@ export const buildPrompt = (
       : { role: "assistant", content: [{ type: "text", text: joinReply(message) }] },
   ),
   { role: "system", content: `The user's local date today is ${request.clientDate}.` },
+  ...(shownNote === undefined ? [] : [{ role: "system", content: shownNote } as const]),
   ...(receipt === undefined ? [] : [{ role: "system", content: receiptNote(receipt) } as const]),
   {
     role: "user",
@@ -99,6 +151,10 @@ export interface ChatTurnDeps {
    * to guarantee the Receipt a Draft (`draftForUnreadReceipt`).
    */
   readonly afterModel?: ((reply: string) => Effect.Effect<string>) | undefined
+  /** The Expenses with these ids, whatever their status, for `shownExpensesNote`. */
+  readonly findExpenses?:
+    | ((ids: ReadonlyArray<ExpenseId>) => Effect.Effect<ReadonlyArray<Expense>>)
+    | undefined
 }
 
 /**
@@ -123,11 +179,21 @@ export const runChatTurn = (deps: ChatTurnDeps, request: SendChatMessage, receip
     const history = yield* deps.history.recent(contextMessages)
     yield* deps.history.append({ role: "user", content: request.message })
 
+    const shown = shownIds(history).slice(-maxShownLookups)
+    const shownNote =
+      deps.findExpenses === undefined
+        ? undefined
+        : shownExpensesNote(shown, yield* deps.findExpenses(shown))
+
     const systemPrompt = yield* SystemPrompt
     const prose = runAgentLoop({
-      prompt: buildPrompt(systemPrompt, history, request, receipt),
+      prompt: buildPrompt(systemPrompt, history, request, receipt, shownNote),
       toolkit: deps.toolkit,
       stopAfter: draftsShown(),
+      // A Receipt no Expense holds yet must become a Draft: a model left to
+      // choose has written the Draft's card with an invented id instead.
+      firstToolChoice: receipt?.expense === null ? { tool: "propose_expense" } : undefined,
+      correct: inventedCards(shown),
     }).pipe(
       Stream.filter((part): part is Response.TextDeltaPart => part.type === "text-delta"),
       Stream.map((part) => part.delta),

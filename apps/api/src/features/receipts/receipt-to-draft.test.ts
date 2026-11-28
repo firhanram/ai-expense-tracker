@@ -187,6 +187,59 @@ describe("a Chat turn with a Receipt", () => {
     expect(response.body.match(/DraftExpenseCard/g)).toHaveLength(1)
   })
 
+  it("makes the model propose a Draft first when the Receipt is not yet one", async () => {
+    const receiptKey = await upload()
+    const model = scriptedLanguageModel(proposeFromReceipt(84500, false), showDraft)
+
+    await sendChat(model.layer, { message: "this one", clientDate, receiptKey })
+
+    expect(model.calls.map((call) => call.toolChoice)).toEqual([
+      { tool: "propose_expense" },
+      "auto",
+    ])
+  })
+
+  it("leaves the tools to the model when the Receipt is already a Draft", async () => {
+    const receiptKey = await upload()
+    await sendChat(scriptedLanguageModel(proposeFromReceipt(84500, true), showDraft).layer, {
+      message: "this one",
+      clientDate,
+      receiptKey,
+    })
+    const [draft] = await drafts()
+
+    const again = scriptedLanguageModel(textReply(`Still this one:\n${card(draft!.id)}`))
+    await sendChat(again.layer, { message: "and this?", clientDate, receiptKey })
+
+    expect(again.calls.map((call) => call.toolChoice)).toEqual(["auto"])
+  })
+
+  it("sends the model back when it shows a card with an id no tool returned, so the Receipt gets its real Draft", async () => {
+    const receiptKey = await upload()
+    const invented = "7f3c2a91-5d64-4b18-9e07-2c81b6a4d3f5"
+    const model = scriptedLanguageModel(
+      textReply(`Totalnya Rp9.800 di Alfamart:\n${card(invented)}`),
+      proposeFromReceipt(9800, false),
+      showDraft,
+    )
+
+    const response = await sendChat(model.layer, {
+      message: "Beli di Alfamidi",
+      clientDate,
+      receiptKey,
+    })
+
+    const correction = model.calls[1]!.prompt.content.at(-1)
+    expect(correction).toMatchObject({ role: "system", content: expect.stringContaining(invented) })
+    const [draft, ...others] = await drafts()
+    expect(others).toEqual([])
+    expect(draft).toMatchObject({ amount: 9800, receiptKey })
+    expect(response.body).not.toContain("I could not read everything")
+    const { messages } = await callApi("/api/chat").then(readData<ChatHistoryPage>)
+    const children = parseProgram(messages[0]!.uiText!).root?.props["children"]
+    expect(children).toMatchObject([{ typeName: "DraftExpenseCard", props: { id: draft!.id } }])
+  })
+
   it("refuses a key with no stored Receipt and keeps nothing of the turn", async () => {
     const model = scriptedLanguageModel()
 

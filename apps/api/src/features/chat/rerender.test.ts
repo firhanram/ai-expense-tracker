@@ -12,6 +12,7 @@ import {
   unreachable,
   type FakeReply,
 } from "../../testing/FakeLanguageModel.ts"
+import { shownEarlier } from "../../testing/shownEarlier.ts"
 
 const clientDate = "2026-11-25"
 
@@ -38,6 +39,7 @@ const chatWithBrokenReply = async (rerenderReply: FakeReply | (() => FakeReply))
     if (call === 0) return textReply(brokenReply)
     return typeof rerenderReply === "function" ? rerenderReply() : rerenderReply
   })
+  await shownEarlier("exp_1")
   await sendChat(model.layer, { message: "show exp_1", clientDate })
   const [reply] = await history(model.layer)
   return { model, reply: reply! }
@@ -67,7 +69,7 @@ describe("POST /api/chat/:messageId/rerender", () => {
     expect(model.calls[1]!.toolNames).toEqual([])
     expect(promptText(model.calls[1]!.prompt)).toContain("root = Stack([c, d])")
     const messages = await history(model.layer)
-    expect(messages).toHaveLength(2)
+    expect(messages).toHaveLength(3)
     expect(messages[0]).toEqual(updated)
   })
 
@@ -121,6 +123,7 @@ describe("POST /api/chat/:messageId/rerender", () => {
 
   it("answers 404 MESSAGE_NOT_FOUND for the user's own message", async () => {
     const model = scriptedLanguageModel(textReply(brokenReply))
+    await shownEarlier("exp_1")
     await sendChat(model.layer, { message: "show exp_1", clientDate })
     const user = (await history(model.layer)).find((message) => message.role === "user")!
 

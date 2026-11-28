@@ -6,6 +6,7 @@ import { HttpApiBuilder } from "effect/http-api"
 import { SqlClient } from "effect/sql"
 import { captureServices } from "../../captureServices.ts"
 import { ReceiptStore } from "../receipts/ReceiptStore.ts"
+import { findExpenses } from "../expenses/ExpenseStore.ts"
 import { draftForUnreadReceipt, loadTurnReceipt } from "../receipts/TurnReceipt.ts"
 import { makeChatHistory } from "./ChatHistory.ts"
 import { makeChatToolkit } from "./ChatToolkit.ts"
@@ -36,7 +37,17 @@ export const ChatLive = HttpApiBuilder.group(Api, "chat", (handlers) =>
               ? undefined
               : (reply: string) =>
                   withStores(draftForUnreadReceipt(receipt.key, payload.clientDate, reply))
-          const turn = yield* runChatTurn({ model, history, toolkit, afterModel }, payload, receipt)
+          const turn = yield* runChatTurn(
+            {
+              model,
+              history,
+              toolkit,
+              afterModel,
+              findExpenses: (ids) => withStores(findExpenses(ids)),
+            },
+            payload,
+            receipt,
+          )
           return HttpServerResponse.stream(Stream.encodeText(turn.reply), {
             contentType: "text/plain; charset=utf-8",
             headers: { [chatMessageIdHeader]: turn.messageId },

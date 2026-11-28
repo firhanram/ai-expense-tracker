@@ -72,6 +72,18 @@ export const findExpense = (id: ExpenseId) =>
     return Option.map(Option.fromUndefinedOr(row), toExpense)
   })
 
+/** The Expenses with these ids, whatever their status; an id with none is left out. D1 binds at most 100 parameters, so pass at most 100. */
+export const findExpenses = (ids: ReadonlyArray<ExpenseId>) =>
+  Effect.gen(function* () {
+    if (ids.length === 0) return []
+    const sql = yield* SqlClient.SqlClient
+    const rows = yield* sql`SELECT * FROM expense WHERE id IN ${sql.in(ids)}`.pipe(
+      Effect.flatMap(decodeRows),
+      Effect.orDie,
+    )
+    return rows.map(toExpense)
+  })
+
 /** `GET /expenses/:id`: the Expense with this id whatever its status, or ExpenseNotFound. */
 export const getExpense = (id: ExpenseId) =>
   findExpense(id).pipe(

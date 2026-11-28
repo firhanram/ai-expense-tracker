@@ -144,4 +144,47 @@ describe("the agent loop", () => {
 
     expect(asked).toEqual([])
   })
+
+  it("applies firstToolChoice to the first call only", async () => {
+    const model = scriptedLanguageModel(toolCallReply("lookup", { key: "a" }), textReply("done"))
+
+    await runTurn(model, { prompt: "go", firstToolChoice: { tool: "lookup" } })
+
+    expect(model.calls.map((call) => call.toolChoice)).toEqual([{ tool: "lookup" }, "auto"])
+  })
+
+  it("sends the model back with a correction when correct objects to a step", async () => {
+    const model = scriptedLanguageModel(textReply("first try"), textReply("second try"))
+
+    const text = await runTurn(model, {
+      prompt: "go",
+      correct: (step) => (step.index === 0 ? "That was wrong; try again." : undefined),
+    })
+
+    expect(text).toBe("first trysecond try")
+    expect(model.calls).toHaveLength(2)
+    const second = model.calls[1]!.prompt.content
+    expect(second.at(-2)).toMatchObject({ role: "assistant" })
+    expect(second.at(-1)).toMatchObject({ role: "system", content: "That was wrong; try again." })
+  })
+
+  it("corrects even after a step that stopAfter would end", async () => {
+    const model = scriptedLanguageModel(toolCallReply("lookup", { key: "a" }), textReply("fixed"))
+
+    await runTurn(model, {
+      prompt: "go",
+      stopAfter: () => true,
+      correct: (step) => (step.index === 0 ? "Not yet." : undefined),
+    })
+
+    expect(model.calls).toHaveLength(2)
+  })
+
+  it("does not correct past the step cap", async () => {
+    const model = makeFakeLanguageModel((): FakeReply => textReply("wrong"))
+
+    await runTurn(model, { prompt: "go", correct: () => "Again." })
+
+    expect(model.calls).toHaveLength(5)
+  })
 })
